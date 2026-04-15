@@ -5850,6 +5850,15 @@ function saveProject() {
     else data[inp.id]=inp.value;
   });
 
+  // Save NOI manual state
+  const _noiSave = el('fin_noi');
+  if(_noiSave) data['__noi_manual__'] = _noiSave.dataset.manual === 'true';
+
+  // Also save active financing structure so it can be restored on load
+  if(typeof ACTIVE_FIN !== 'undefined' && ACTIVE_FIN) {
+    data['__activeFin__'] = JSON.stringify(ACTIVE_FIN);
+  }
+
   const projects = _getAllProjects();
   projects[name] = { name, savedAt: new Date().toISOString(), data };
   try {
@@ -5872,27 +5881,59 @@ function loadProject(name) {
   const proj = projects[name];
   if(!proj) return;
 
-  // Restore all field values and fire events so dependent fields recalculate
+  // Step 1: Restore ALL field values SILENTLY — no events yet.
+  // Firing input/change events mid-loop corrupts dual-input pairs because
+  // the base field (e.g. pur_price) may not be set yet when a dependent
+  // field (e.g. fin_ins_pct) triggers its cascade, producing wrong $ values.
   Object.entries(proj.data).forEach(([id, val])=>{
+    if(id === '__activeFin__') return; // handled separately
     const el2 = document.getElementById(id);
     if(!el2) return;
     if(el2.type==='file') return;
     if(el2.id==='projNameInput') return;
-    if(el2.type==='checkbox'||el2.type==='radio') {
-      el2.checked = val;
-      el2.dispatchEvent(new Event('change', {bubbles:true}));
-    } else {
-      el2.value = val;
-      el2.dispatchEvent(new Event('input', {bubbles:true}));
-      el2.dispatchEvent(new Event('change', {bubbles:true}));
-    }
+    if(el2.type==='checkbox'||el2.type==='radio') el2.checked = val;
+    else el2.value = val;
   });
 
-  // Clear manual NOI override so it recalculates cleanly
+  // Step 2: Restore NOI manual/auto state
   const noiEl = document.getElementById('fin_noi');
-  if(noiEl) delete noiEl.dataset.manual;
+  const btn_noi = document.getElementById('btn_noi_toggle');
+  const noiForcedManual = proj.data['__noi_manual__'] === true;
+  if(noiEl) {
+    if(noiForcedManual) {
+      // Restore manual mode — keep the saved value, don't let R() overwrite it
+      noiEl.dataset.manual = 'true';
+      noiEl.readOnly = false;
+      noiEl.classList.add('manual-mode');
+      if(btn_noi){ btn_noi.textContent = '✏️ Manual'; btn_noi.classList.add('manual'); }
+    } else {
+      // Auto mode — clear flag so R() recalculates freely
+      noiEl.dataset.manual = 'false';
+      noiEl.readOnly = true;
+      noiEl.classList.remove('manual-mode');
+      if(btn_noi){ btn_noi.textContent = '🔒 Auto'; btn_noi.classList.remove('manual'); }
+    }
+  }
 
-  // Full recalculation chain
+  // Step 3: Fire input on each dual-input BASE field to cascade % → $ properly
+  // All values are now restored, so the cascade will compute correct $ amounts
+  ['pur_price','pur_arv','fin_gross'].forEach(baseId=>{
+    const baseEl = document.getElementById(baseId);
+    if(baseEl && baseEl.value) baseEl.dispatchEvent(new Event('input', {bubbles:true}));
+  });
+
+  // Step 4: Restore active financing structure if it was saved
+  const savedFin = proj.data['__activeFin__'];
+  if(savedFin) {
+    try {
+      const finObj = JSON.parse(savedFin);
+      if(typeof setActiveFin === 'function') setActiveFin(finObj);
+    } catch(e) {}
+  } else {
+    if(typeof clearActiveFin === 'function') clearActiveFin();
+  }
+
+  // Step 5: Full recalculation chain
   if(typeof updatePropertyType === 'function') updatePropertyType();
   if(typeof R === 'function') R();
   if(typeof updateCharts === 'function') updateCharts();
