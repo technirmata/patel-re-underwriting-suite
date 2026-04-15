@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>JP Real Estate Underwriting Suite v4</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -384,6 +385,37 @@ strong { color: #e2e8f0; }
 .api-provider-btn{flex:1;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;font-size:12px;font-weight:500;transition:.18s;text-align:center}
 .api-provider-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,.1)}
 
+/* ── Auth Modal ── */
+.auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.auth-modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:min(440px,95vw);box-shadow:0 32px 80px rgba(0,0,0,.7);overflow:hidden}
+.auth-modal-top{padding:32px 32px 0;text-align:center}
+.auth-logo{font-size:22px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.auth-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+.auth-tabs{display:flex;border-bottom:1px solid var(--border);margin:0 32px}
+.auth-tab{flex:1;padding:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;transition:var(--trans)}
+.auth-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.auth-body{padding:24px 32px 28px}
+.auth-field{margin-bottom:14px}
+.auth-field label{display:block;font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.auth-field input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:9px;font-size:14px;transition:var(--trans)}
+.auth-field input:focus{outline:none;border-color:var(--accent);background:var(--surface3)}
+.auth-field input.err{border-color:var(--red)}
+.auth-err{font-size:12px;color:var(--red);margin-top:4px;display:none}
+.auth-err.show{display:block}
+.auth-btn{width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;margin-top:6px;transition:var(--trans)}
+.auth-btn:hover{opacity:.9}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed}
+.auth-divider{text-align:center;font-size:11px;color:var(--muted);margin:16px 0;position:relative}
+.auth-divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border)}
+.auth-divider span{background:var(--surface);padding:0 10px;position:relative}
+.auth-guest{width:100%;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:var(--trans)}
+.auth-guest:hover{border-color:var(--accent);color:var(--text)}
+.auth-strength{height:3px;border-radius:2px;margin-top:5px;transition:all .3s;background:var(--surface3)}
+/* user badge in topbar */
+.user-badge{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px 4px 6px;font-size:12.5px;cursor:default}
+.user-avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+.user-name{font-weight:600;color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
 /* ── Projects Modal ── */
 .proj-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .proj-modal{background:var(--surface2);border:1px solid var(--border);border-radius:16px;width:min(600px,95vw);max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.6)}
@@ -407,10 +439,95 @@ strong { color: #e2e8f0; }
 </style>
 </head>
 <body>
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="authOverlay" style="display:none">
+  <div class="auth-modal">
+    <div class="auth-modal-top">
+      <div class="auth-logo">⚡ JP Underwriting Suite</div>
+      <div class="auth-sub">Sign in to save projects across devices</div>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="authTab_login" onclick="authSwitchTab('login')">Sign In</div>
+      <div class="auth-tab" id="authTab_register" onclick="authSwitchTab('register')">Create Account</div>
+      <div class="auth-tab" id="authTab_forgot" onclick="authSwitchTab('forgot')" style="font-size:12px;color:var(--muted)">Reset</div>
+    </div>
+
+    <!-- LOGIN PANEL -->
+    <div class="auth-body" id="authPanel_login">
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="auth_login_user" placeholder="your@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')authLogin()">
+        <div class="auth-err" id="auth_login_user_err"></div>
+      </div>
+      <div class="auth-field">
+        <label style="display:flex;justify-content:space-between;align-items:center">
+          Password
+          <span onclick="authSwitchTab('forgot')" style="font-size:11px;color:var(--accent);cursor:pointer;font-weight:400">Forgot password?</span>
+        </label>
+        <input type="password" id="auth_login_pass" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authLogin()">
+        <div class="auth-err" id="auth_login_pass_err"></div>
+      </div>
+      <div class="auth-err" id="auth_login_err" style="margin-bottom:10px;font-size:13px"></div>
+      <button class="auth-btn" onclick="authLogin()">Sign In</button>
+      <div class="auth-divider"><span>or</span></div>
+      <button class="auth-guest" onclick="authGuest()">Continue as Guest (local only)</button>
+    </div>
+
+    <!-- REGISTER PANEL -->
+    <div class="auth-body" id="authPanel_register" style="display:none">
+      <div class="auth-field">
+        <label>Display Name</label>
+        <input type="text" id="auth_reg_user" placeholder="Choose a username" maxlength="30" autocomplete="username">
+        <div class="auth-err" id="auth_reg_user_err"></div>
+      </div>
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="auth_reg_email" placeholder="your@email.com" autocomplete="email">
+        <div class="auth-err" id="auth_reg_email_err"></div>
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="auth_reg_pass" placeholder="Min 6 characters" autocomplete="new-password" oninput="authCheckStrength(this.value)">
+        <div class="auth-strength" id="auth_strength_bar"></div>
+        <div class="auth-err" id="auth_reg_pass_err"></div>
+      </div>
+      <div class="auth-field">
+        <label>Confirm Password</label>
+        <input type="password" id="auth_reg_pass2" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')authRegister()">
+        <div class="auth-err" id="auth_reg_pass2_err"></div>
+      </div>
+      <div class="auth-err" id="auth_reg_err" style="margin-bottom:10px;font-size:13px"></div>
+      <button class="auth-btn" onclick="authRegister()">Create Account</button>
+      <div class="auth-divider"><span>or</span></div>
+      <button class="auth-guest" onclick="authGuest()">Continue as Guest (local only)</button>
+    </div>
+
+    <!-- FORGOT PASSWORD PANEL -->
+    <div class="auth-body" id="authPanel_forgot" style="display:none">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Enter your account email and we'll send a password reset link.</div>
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="auth_forgot_email" placeholder="your@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')authForgotPassword()">
+        <div class="auth-err" id="auth_forgot_email_err"></div>
+      </div>
+      <div class="auth-err" id="auth_forgot_err" style="margin-bottom:10px;font-size:13px"></div>
+      <div class="auth-err" id="auth_forgot_ok" style="margin-bottom:10px;font-size:13px;color:var(--green)"></div>
+      <button class="auth-btn" onclick="authForgotPassword()">Send Reset Link</button>
+      <div class="auth-divider"><span>or</span></div>
+      <button class="auth-guest" onclick="authSwitchTab('login')">← Back to Sign In</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">⚡ JP Underwriting Suite v4</div>
   <div class="topbar-actions">
+    <div class="user-badge" id="topbarUserBadge" style="display:none">
+      <div class="user-avatar" id="topbarUserAvatar"></div>
+      <span class="user-name" id="topbarUserName"></span>
+      <button onclick="authLogout()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;margin-left:2px;padding:2px 4px;border-radius:4px" title="Sign out">⏻</button>
+    </div>
     <button class="gear-btn" onclick="openSettings()" title="AI Settings">⚙️</button>
     <button class="btn btn-outline btn-sm" onclick="clearAll()">🗑 Clear</button>
     <button class="btn btn-outline btn-sm" onclick="ST(9);refreshPitchDeckPreview()">🎯 Pitch Deck</button>
@@ -5466,6 +5583,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   initCharts();
   R();
   ST(0);
+  // Init auth (show login if no session)
+  authInit();
   // Init persistent projects file (File System Access API)
   initProjectsFile();
 });
@@ -5808,16 +5927,383 @@ function autoFillFromResearch(r) {
 
 // ══════════════════════════════════════════════ PROJECTS SYSTEM ══════════════
 
-const PROJ_KEY = 'jp_suite_projects'; // localStorage key
+// ══════════════════════════════════════════════════════════════════════════════
+// MULTI-USER AUTH SYSTEM
+// ══════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
+// SUPABASE CONFIG — fill in your values after creating a Supabase project
+// ══════════════════════════════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://ykcvmlhpfnruucsgcxhd.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_SgpxMN1uNPrunOvI2YspEQ_uyZJ1yK0';
+// ──────────────────────────────────────────────────────────────────────────────
+
+const JP_SESSION_KEY = 'jp_auth_session';
+
+// ── Supabase client (lazy init) ───────────────────────────────────────────────
+let _sb = null;
+function _sbClient() {
+  if(!_sb && SUPABASE_URL && SUPABASE_ANON) {
+    _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    // Keep our session cache in sync when Supabase auth state changes
+    _sb.auth.onAuthStateChange((event, session) => {
+      if(event === 'SIGNED_IN' && session?.user) {
+        const u = session.user;
+        const cached = _getSession();
+        if(!cached || cached.userId !== u.id) {
+          _setSession({ userId: u.id, username: u.user_metadata?.username || u.email.split('@')[0], email: u.email, loginTime: new Date().toISOString() });
+          _authUpdateTopbar();
+        }
+      } else if(event === 'SIGNED_OUT') {
+        _clearSession();
+        _authUpdateTopbar();
+      } else if(event === 'PASSWORD_RECOVERY') {
+        document.getElementById('authOverlay').style.display = 'flex';
+        authSwitchTab('forgot');
+      }
+    });
+  }
+  return _sb;
+}
+function _sbOk() { return !!(SUPABASE_URL && SUPABASE_ANON); }
+
+// ── Supabase project helpers ──────────────────────────────────────────────────
+async function _sbLoadProjects(userId) {
+  try {
+    const { data, error } = await _sbClient().from('user_projects')
+      .select('projects_json').eq('user_id', userId).maybeSingle();
+    if(error) { console.warn('Supabase load error:', error.message); return null; }
+    return data?.projects_json ? JSON.parse(data.projects_json) : {};
+  } catch(e) { console.warn('Supabase load error:', e); return null; }
+}
+
+async function _sbSaveProjects(userId, obj) {
+  try {
+    const { error } = await _sbClient().from('user_projects')
+      .upsert({ user_id: userId, projects_json: JSON.stringify(obj), updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+    if(error) console.warn('Supabase save error:', error.message);
+  } catch(e) { console.warn('Supabase save error:', e); }
+}
+
+// ── Session helpers (synchronous, localStorage cache) ────────────────────────
+function _getSession() {
+  try { return JSON.parse(localStorage.getItem(JP_SESSION_KEY)) || null; }
+  catch(e) { return null; }
+}
+function _setSession(obj) { localStorage.setItem(JP_SESSION_KEY, JSON.stringify(obj)); }
+function _clearSession() { localStorage.removeItem(JP_SESSION_KEY); }
+
+function authGetCurrentUser() { return _getSession(); }
+
+// ── localStorage-only fallback (when Supabase not configured) ─────────────────
+const _JP_USERS_KEY = 'jp_auth_users';
+function _getUsers() { try { return JSON.parse(localStorage.getItem(_JP_USERS_KEY))||{}; } catch(e){ return {}; } }
+function _setUsers(obj) { localStorage.setItem(_JP_USERS_KEY, JSON.stringify(obj)); }
+async function _hashPassword(pass) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function _genId() {
+  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+}
+
+function _authShowErr(id, msg) {
+  const e = document.getElementById(id);
+  if(!e) return;
+  e.textContent = msg; e.classList.add('show');
+}
+function _authClearErrs(...ids) {
+  ids.forEach(id=>{ const e=document.getElementById(id); if(e){ e.textContent=''; e.classList.remove('show'); e.classList.remove('err'); } });
+}
+function _authMarkErr(inputId, errId, msg) {
+  const inp = document.getElementById(inputId);
+  const err = document.getElementById(errId);
+  if(inp) inp.classList.add('err');
+  if(err) { err.textContent=msg; err.classList.add('show'); }
+}
+
+function authSwitchTab(tab) {
+  ['login','register','forgot'].forEach(t => {
+    const tabBtn = document.getElementById('authTab_' + t);
+    const panel  = document.getElementById('authPanel_' + t);
+    if(tabBtn) tabBtn.classList.toggle('active', t === tab);
+    if(panel)  panel.style.display = (t === tab) ? '' : 'none';
+  });
+  _authClearErrs('auth_login_user','auth_login_pass','auth_login_user_err','auth_login_pass_err','auth_login_err',
+                 'auth_reg_user','auth_reg_email','auth_reg_pass','auth_reg_pass2',
+                 'auth_reg_user_err','auth_reg_email_err','auth_reg_pass_err','auth_reg_pass2_err','auth_reg_err',
+                 'auth_forgot_email','auth_forgot_email_err','auth_forgot_err','auth_forgot_ok');
+}
+
+function authCheckStrength(pass) {
+  const bar = document.getElementById('auth_strength_bar');
+  if(!bar) return;
+  let score = 0;
+  if(pass.length >= 6)  score++;
+  if(pass.length >= 10) score++;
+  if(/[A-Z]/.test(pass)) score++;
+  if(/[0-9]/.test(pass)) score++;
+  if(/[^A-Za-z0-9]/.test(pass)) score++;
+  const colors = ['#ef4444','#f59e0b','#f59e0b','#22c55e','#22c55e','#6366f1'];
+  bar.style.width = (score/5*100)+'%'; bar.style.background = colors[score];
+}
+
+async function authRegister() {
+  const uEl = document.getElementById('auth_reg_user');
+  const eEl = document.getElementById('auth_reg_email');
+  const pEl = document.getElementById('auth_reg_pass');
+  const p2El = document.getElementById('auth_reg_pass2');
+  const username = uEl.value.trim();
+  const email = eEl.value.trim().toLowerCase();
+  const pass = pEl.value;
+  const pass2 = p2El.value;
+
+  _authClearErrs('auth_reg_user','auth_reg_email','auth_reg_pass','auth_reg_pass2',
+                 'auth_reg_user_err','auth_reg_email_err','auth_reg_pass_err','auth_reg_pass2_err','auth_reg_err');
+  let valid = true;
+  if(!username || username.length < 3) { _authMarkErr('auth_reg_user','auth_reg_user_err','Username must be at least 3 characters'); valid=false; }
+  if(!/^[a-zA-Z0-9_.-]+$/.test(username)) { _authMarkErr('auth_reg_user','auth_reg_user_err','Only letters, numbers, _ . - allowed'); valid=false; }
+  if(!email || !email.includes('@')) { _authMarkErr('auth_reg_email','auth_reg_email_err','Enter a valid email'); valid=false; }
+  if(!pass || pass.length < 6) { _authMarkErr('auth_reg_pass','auth_reg_pass_err','Password must be at least 6 characters'); valid=false; }
+  if(pass !== pass2) { _authMarkErr('auth_reg_pass2','auth_reg_pass2_err','Passwords do not match'); valid=false; }
+  if(!valid) return;
+
+  const btn = document.querySelector('#authPanelRegister .auth-btn');
+  if(btn) { btn.disabled=true; btn.textContent='Creating account…'; }
+
+  try {
+    const guestProjects = JSON.parse(localStorage.getItem('jp_suite_projects_guest')||'{}');
+    const hasGuest = Object.keys(guestProjects).length > 0;
+
+    if(_sbOk()) {
+      // ── Supabase path ──
+      const { data, error } = await _sbClient().auth.signUp({
+        email,
+        password: pass,
+        options: { data: { username } }
+      });
+      if(error) {
+        if(error.message.toLowerCase().includes('already')) _authMarkErr('auth_reg_email','auth_reg_email_err','Email already registered');
+        else _authShowErr('auth_reg_err', error.message);
+        return;
+      }
+      const userId = data.user.id;
+      if(hasGuest) {
+        localStorage.setItem(`jp_suite_projects_${userId}`, JSON.stringify(guestProjects));
+        localStorage.removeItem('jp_suite_projects_guest');
+        _sbSaveProjects(userId, guestProjects).catch(()=>{});
+      }
+      _setSession({ userId, username, email, loginTime: new Date().toISOString() });
+      _authDismiss();
+      _authUpdateTopbar();
+      if(!data.session) showProjToast('📧 Check your email to confirm your account!');
+      else showProjToast(`👋 Welcome, ${username}!`);
+
+    } else {
+      // ── localStorage-only fallback ──
+      const users = _getUsers();
+      const dup = Object.values(users).find(u => u.username.toLowerCase()===username.toLowerCase() || u.email===email);
+      if(dup){
+        if(dup.username.toLowerCase()===username.toLowerCase()) _authMarkErr('auth_reg_user','auth_reg_user_err','Username already taken');
+        else _authMarkErr('auth_reg_email','auth_reg_email_err','Email already registered');
+        return;
+      }
+      const userId = _genId();
+      const passwordHash = await _hashPassword(pass);
+      users[userId] = { userId, username, email, passwordHash, createdAt: new Date().toISOString() };
+      _setUsers(users);
+      if(hasGuest){
+        localStorage.setItem(`jp_suite_projects_${userId}`, JSON.stringify(guestProjects));
+        localStorage.removeItem('jp_suite_projects_guest');
+      }
+      _setSession({ userId, username, email, loginTime: new Date().toISOString() });
+      _authDismiss();
+      _authUpdateTopbar();
+      showProjToast(`👋 Welcome, ${username}!`);
+    }
+
+  } catch(err) {
+    _authShowErr('auth_reg_err', 'Error: ' + err.message);
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='Create Account'; }
+  }
+}
+
+async function authLogin() {
+  const uEl = document.getElementById('auth_login_user');
+  const pEl = document.getElementById('auth_login_pass');
+  const identifier = uEl.value.trim().toLowerCase();
+  const pass = pEl.value;
+
+  _authClearErrs('auth_login_user','auth_login_pass','auth_login_user_err','auth_login_pass_err','auth_login_err');
+  if(!identifier) { _authMarkErr('auth_login_user','auth_login_user_err','Enter your email'); return; }
+  if(!pass) { _authMarkErr('auth_login_pass','auth_login_pass_err','Enter your password'); return; }
+
+  const btn = document.querySelector('#authPanelLogin .auth-btn');
+  if(btn) { btn.disabled=true; btn.textContent='Signing in…'; }
+
+  try {
+    if(_sbOk()) {
+      // ── Supabase path ──
+      const { data, error } = await _sbClient().auth.signInWithPassword({ email: identifier, password: pass });
+      if(error) {
+        if(error.message.toLowerCase().includes('invalid') || error.message.toLowerCase().includes('credentials')) {
+          _authShowErr('auth_login_err', 'Incorrect email or password.');
+          document.getElementById('auth_login_pass')?.classList.add('err');
+        } else if(error.message.toLowerCase().includes('confirm')) {
+          _authShowErr('auth_login_err', 'Please confirm your email address first. Check your inbox.');
+        } else {
+          _authShowErr('auth_login_err', error.message);
+        }
+        return;
+      }
+      const user = data.user;
+      const username = user.user_metadata?.username || user.email.split('@')[0];
+      // Load projects from Supabase → localStorage cache
+      const sbProjects = await _sbLoadProjects(user.id);
+      const guestProjects = JSON.parse(localStorage.getItem('jp_suite_projects_guest')||'{}');
+      let allProjects = sbProjects || {};
+      if(Object.keys(guestProjects).length) {
+        allProjects = Object.assign({}, allProjects, guestProjects);
+        localStorage.removeItem('jp_suite_projects_guest');
+        _sbSaveProjects(user.id, allProjects).catch(()=>{});
+      }
+      localStorage.setItem(`jp_suite_projects_${user.id}`, JSON.stringify(allProjects));
+      _setSession({ userId: user.id, username, email: user.email, loginTime: new Date().toISOString() });
+
+    } else {
+      // ── localStorage-only fallback ──
+      const users = _getUsers();
+      const user = Object.values(users).find(u => u.username.toLowerCase()===identifier || u.email===identifier);
+      if(!user) { _authShowErr('auth_login_err','No account found.'); document.getElementById('auth_login_user')?.classList.add('err'); return; }
+      const hash = await _hashPassword(pass);
+      if(hash !== user.passwordHash) { _authShowErr('auth_login_err','Incorrect password.'); document.getElementById('auth_login_pass')?.classList.add('err'); return; }
+      const guestRaw = localStorage.getItem('jp_suite_projects_guest');
+      if(guestRaw) {
+        const merged = Object.assign({}, JSON.parse(localStorage.getItem(`jp_suite_projects_${user.userId}`)||'{}'), JSON.parse(guestRaw));
+        localStorage.setItem(`jp_suite_projects_${user.userId}`, JSON.stringify(merged));
+        localStorage.removeItem('jp_suite_projects_guest');
+      }
+      _setSession({ userId: user.userId, username: user.username, email: user.email, loginTime: new Date().toISOString() });
+    }
+
+    _authDismiss();
+    _authUpdateTopbar();
+    showProjToast(`👋 Welcome back, ${_getSession()?.username || ''}!`);
+
+  } catch(err) {
+    _authShowErr('auth_login_err', 'Error: ' + err.message);
+  } finally {
+    if(btn) { btn.disabled=false; btn.textContent='Sign In'; }
+  }
+}
+
+// ── Forgot Password ───────────────────────────────────────────────────────────
+async function authForgotPassword() {
+  const eEl = document.getElementById('auth_forgot_email');
+  const email = (eEl?.value||'').trim().toLowerCase();
+  _authClearErrs('auth_forgot_email','auth_forgot_email_err','auth_forgot_err','auth_forgot_ok');
+  if(!email || !email.includes('@')) { _authMarkErr('auth_forgot_email','auth_forgot_email_err','Enter a valid email'); return; }
+
+  const btn = document.querySelector('#authPanel_forgot .auth-btn');
+  if(btn) { btn.disabled=true; btn.textContent='Sending…'; }
+  try {
+    if(_sbOk()) {
+      const redirectTo = window.location.origin + window.location.pathname;
+      const { error } = await _sbClient().auth.resetPasswordForEmail(email, { redirectTo });
+      if(error) { _authShowErr('auth_forgot_err', error.message); return; }
+    }
+    // Always show success (don't reveal if email exists or not — security best practice)
+    const ok = document.getElementById('auth_forgot_ok');
+    if(ok) { ok.textContent = '✅ If that email exists, a reset link has been sent.'; ok.classList.add('show'); }
+    if(!_sbOk()) { const er=document.getElementById('auth_forgot_err'); if(er){er.textContent='⚠️ Connect Supabase to enable email reset.';er.classList.add('show');} }
+  } catch(err) {
+    _authShowErr('auth_forgot_err', 'Error: ' + err.message);
+  } finally {
+    if(btn) { btn.disabled=false; btn.textContent='Send Reset Link'; }
+  }
+}
+
+function authGuest() {
+  _clearSession();
+  if(_sbOk()) _sbClient().auth.signOut().catch(()=>{});
+  _authDismiss();
+  _authUpdateTopbar();
+}
+
+async function authLogout() {
+  if(!confirm('Sign out? Your projects stay saved.')) return;
+  if(_sbOk()) await _sbClient().auth.signOut().catch(()=>{});
+  _clearSession();
+  document.getElementById('authOverlay').style.display = 'flex';
+  _authUpdateTopbar();
+  ['auth_login_user','auth_login_pass'].forEach(id=>{ const e=el(id); if(e) e.value=''; });
+  authSwitchTab('login');
+}
+
+function _authDismiss() {
+  document.getElementById('authOverlay').style.display = 'none';
+}
+
+function _authUpdateTopbar() {
+  const session = _getSession();
+  const badge = document.getElementById('topbarUserBadge');
+  const avatar = document.getElementById('topbarUserAvatar');
+  const nameEl = document.getElementById('topbarUserName');
+  if(!badge) return;
+  if(session) {
+    badge.style.display = 'flex';
+    avatar.textContent = session.username.charAt(0).toUpperCase();
+    nameEl.textContent = session.username;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function authInit() {
+  if(_sbOk()) {
+    const sb = _sbClient(); // sets up onAuthStateChange listener
+    const { data: { session } } = await sb.auth.getSession();
+    if(session?.user) {
+      const u = session.user;
+      const cached = _getSession();
+      if(!cached || cached.userId !== u.id) {
+        const username = u.user_metadata?.username || u.email.split('@')[0];
+        const sbProjects = await _sbLoadProjects(u.id);
+        if(sbProjects) localStorage.setItem(`jp_suite_projects_${u.id}`, JSON.stringify(sbProjects));
+        _setSession({ userId: u.id, username, email: u.email, loginTime: new Date().toISOString() });
+      }
+      _authUpdateTopbar();
+      return; // Already signed in — don't show modal
+    }
+  } else {
+    const session = _getSession();
+    if(session) { _authUpdateTopbar(); return; }
+  }
+  document.getElementById('authOverlay').style.display = 'flex';
+  setTimeout(()=>{ document.getElementById('auth_login_user')?.focus(); }, 200);
+}
+
+// ── Projects key is now per-user ──────────────────────────────────────────────
+function _getProjKey() {
+  const s = _getSession();
+  return s ? `jp_suite_projects_${s.userId}` : 'jp_suite_projects_guest';
+}
+
+const PROJ_KEY = 'jp_suite_projects'; // legacy fallback (unused directly — use _getProjKey())
 
 function _getAllProjects() {
-  try { return JSON.parse(localStorage.getItem(PROJ_KEY)) || {}; }
+  try { return JSON.parse(localStorage.getItem(_getProjKey())) || {}; }
   catch(e) { return {}; }
 }
 
 function _setAllProjects(obj) {
-  try { localStorage.setItem(PROJ_KEY, JSON.stringify(obj)); }
+  try { localStorage.setItem(_getProjKey(), JSON.stringify(obj)); }
   catch(e) { throw new Error('Storage quota exceeded'); }
+  // Async sync to Supabase if configured
+  if(_sbOk()) {
+    const s = _getSession();
+    if(s?.userId) _sbSaveProjects(s.userId, obj).catch(()=>{});
+  }
   // Also persist to linked file if available
   if(_projFileHandle) _ensureFilePermission().then(ok=>{ if(ok) _writeProjectsToFile(obj); });
 }
@@ -6095,7 +6581,7 @@ async function linkProjectsFile() {
     const fromFile=await _readProjectsFromFile();
     if(fromFile){
       const merged=Object.assign({},_getAllProjects(),fromFile);
-      localStorage.setItem(PROJ_KEY,JSON.stringify(merged));
+      localStorage.setItem(_getProjKey(),JSON.stringify(merged));
     }
     renderProjList();
     _updateFileLinkStatus();
@@ -6140,7 +6626,7 @@ async function initProjectsFile() {
       const fromFile=await _readProjectsFromFile();
       if(fromFile){
         const merged=Object.assign({},_getAllProjects(),fromFile);
-        localStorage.setItem(PROJ_KEY,JSON.stringify(merged));
+        localStorage.setItem(_getProjKey(),JSON.stringify(merged));
       }
     } else {
       // Store for when user opens Projects panel and we can request permission
