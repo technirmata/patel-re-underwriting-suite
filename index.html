@@ -384,6 +384,26 @@ strong { color: #e2e8f0; }
 .api-provider-btn{flex:1;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;font-size:12px;font-weight:500;transition:.18s;text-align:center}
 .api-provider-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,.1)}
 
+/* ── Projects Modal ── */
+.proj-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.proj-modal{background:var(--surface2);border:1px solid var(--border);border-radius:16px;width:min(600px,95vw);max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.proj-modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.proj-modal-header h2{font-size:17px;font-weight:800;color:var(--text);margin:0}
+.proj-modal-body{padding:20px 24px;overflow-y:auto;flex:1}
+.proj-save-row{display:flex;gap:8px;margin-bottom:20px}
+.proj-save-row input{flex:1;background:var(--surface3);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:8px;font-size:13px}
+.proj-save-row input:focus{outline:none;border-color:var(--accent)}
+.proj-list{display:flex;flex-direction:column;gap:8px}
+.proj-item{display:flex;align-items:center;justify-content:space-between;background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;gap:10px;transition:.15s}
+.proj-item:hover{border-color:var(--accent)}
+.proj-item-info{flex:1;min-width:0}
+.proj-item-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proj-item-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.proj-item-actions{display:flex;gap:6px;flex-shrink:0}
+.proj-divider{font-size:11px;color:var(--muted);text-align:center;margin:16px 0 12px;border-top:1px solid var(--border);padding-top:14px}
+.proj-io-row{display:flex;gap:8px;justify-content:center}
+.proj-empty{text-align:center;color:var(--muted);font-size:13px;padding:32px 0}
+
 </style>
 </head>
 <body>
@@ -395,7 +415,39 @@ strong { color: #e2e8f0; }
     <button class="btn btn-outline btn-sm" onclick="clearAll()">🗑 Clear</button>
     <button class="btn btn-outline btn-sm" onclick="ST(9);refreshPitchDeckPreview()">🎯 Pitch Deck</button>
     <button class="btn btn-outline btn-sm" onclick="ST(7);updateExec()">📄 Exec Report</button>
+    <button class="btn btn-outline btn-sm" onclick="openProjects()" style="border-color:rgba(99,102,241,.5);color:#a5b4fc">💼 Projects</button>
     <button class="btn btn-primary btn-sm" onclick="ST(6);syncIntakeToLOI();buildLOI()">📝 Build LOI</button>
+  </div>
+</div>
+
+<!-- PROJECTS MODAL -->
+<div class="proj-overlay" id="projOverlay" style="display:none" onclick="if(event.target===this)closeProjects()">
+  <div class="proj-modal">
+    <div class="proj-modal-header">
+      <h2>💼 My Projects</h2>
+      <button onclick="closeProjects()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div class="proj-modal-body">
+      <!-- Save current -->
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:700">Save Current Deal</div>
+      <div class="proj-save-row">
+        <input type="text" id="projNameInput" placeholder="e.g. 123 Main St – Duplex Offer" maxlength="80" onkeydown="if(event.key==='Enter')saveProject()">
+        <button class="btn btn-primary btn-sm" onclick="saveProject()" style="white-space:nowrap">💾 Save</button>
+      </div>
+      <!-- Saved list -->
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;font-weight:700">Saved Projects</div>
+      <div class="proj-list" id="projList"></div>
+      <!-- Import / Export -->
+      <div class="proj-divider">Import &amp; Export</div>
+      <div class="proj-io-row">
+        <button class="btn btn-outline btn-sm" onclick="exportAllProjects()" style="font-size:11px">📤 Export All (JSON)</button>
+        <label class="btn btn-outline btn-sm" style="font-size:11px;cursor:pointer">
+          📥 Import JSON
+          <input type="file" accept=".json" style="display:none" onchange="importProjects(event)">
+        </label>
+      </div>
+      <div style="margin-top:10px;font-size:10.5px;color:var(--muted);text-align:center">Export saves all projects to a file you can import on any device or browser.</div>
+    </div>
   </div>
 </div>
 
@@ -616,41 +668,6 @@ strong { color: #e2e8f0; }
   </div>
 </div>
 
-<!-- ── NOI / Cap Rate / Price Quick Calculator — Intake ──────────────── -->
-<div class="card" style="margin-bottom:16px">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-    <div class="card-title" style="margin:0">🔢 NOI / Cap Rate / Price Calculator</div>
-    <div style="font-size:11px;color:var(--muted)">Enter any two — the third is calculated automatically</div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:end">
-    <div class="field" style="margin:0">
-      <label style="display:flex;align-items:center;gap:6px">Purchase Price ($)
-        <button onclick="ncp_clear('ncp_price','ncp_')" title="Clear to recalculate" style="background:none;border:1px solid rgba(255,255,255,.15);border-radius:4px;color:var(--muted);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1">✕</button>
-      </label>
-      <input type="number" id="ncp_price" placeholder="e.g. 1,500,000" oninput="calcNCP('ncp_')" style="font-size:16px;font-weight:700;color:#c4b5fd">
-    </div>
-    <div class="field" style="margin:0">
-      <label style="display:flex;align-items:center;gap:6px">Cap Rate (%)
-        <button onclick="ncp_clear('ncp_cap','ncp_')" title="Clear to recalculate" style="background:none;border:1px solid rgba(255,255,255,.15);border-radius:4px;color:var(--muted);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1">✕</button>
-      </label>
-      <input type="number" id="ncp_cap" placeholder="e.g. 6.5" step="0.1" oninput="calcNCP('ncp_')" style="font-size:16px;font-weight:700;color:#fbbf24">
-    </div>
-    <div class="field" style="margin:0">
-      <label style="display:flex;align-items:center;gap:6px">Net Operating Income / yr ($)
-        <button onclick="ncp_clear('ncp_noi','ncp_')" title="Clear to recalculate" style="background:none;border:1px solid rgba(255,255,255,.15);border-radius:4px;color:var(--muted);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1">✕</button>
-      </label>
-      <input type="number" id="ncp_noi" placeholder="e.g. 97,500" oninput="calcNCP('ncp_')" style="font-size:16px;font-weight:700;color:#86efac">
-    </div>
-  </div>
-  <div id="ncp_result" style="margin-top:12px;min-height:28px;font-size:13px;color:var(--text2);text-align:center"></div>
-  <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:10.5px;color:var(--muted);text-align:center">
-    Formula: <strong style="color:#c4b5fd">Price = NOI ÷ Cap Rate</strong> &nbsp;|&nbsp;
-    <strong style="color:#fbbf24">Cap Rate = NOI ÷ Price</strong> &nbsp;|&nbsp;
-    <strong style="color:#86efac">NOI = Price × Cap Rate</strong>
-    &nbsp;&nbsp;<button class="btn btn-outline btn-sm" onclick="ncp_push('ncp_')" style="font-size:10px;padding:2px 8px;margin-left:8px">⬆ Push Price to Intake</button>
-  </div>
-</div>
-
 <!-- ─── INCOME ─────────────────────────────────────────────── -->
 <div class="card">
   <div class="card-title">📊 Income</div>
@@ -808,6 +825,41 @@ strong { color: #e2e8f0; }
     </div>
   </div>
   <div class="field"><label>Notes (deal context)</label><textarea id="fin_notes" rows="2" placeholder="Seller motivation, market notes, condition…"></textarea></div>
+</div>
+
+<!-- ── NOI / Cap Rate / Price Quick Calculator — Intake ──────────────── -->
+<div class="card" style="margin-bottom:16px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <div class="card-title" style="margin:0">🔢 NOI / Cap Rate / Price Calculator</div>
+    <div style="font-size:11px;color:var(--muted)">Enter any two — the third is calculated automatically</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:end">
+    <div class="field" style="margin:0">
+      <label style="display:flex;align-items:center;gap:6px">Purchase Price ($)
+        <button onclick="ncp_clear('ncp_price','ncp_')" title="Clear to recalculate" style="background:none;border:1px solid rgba(255,255,255,.15);border-radius:4px;color:var(--muted);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1">✕</button>
+      </label>
+      <input type="number" id="ncp_price" placeholder="e.g. 1,500,000" oninput="calcNCP('ncp_')" style="font-size:16px;font-weight:700;color:#c4b5fd">
+    </div>
+    <div class="field" style="margin:0">
+      <label style="display:flex;align-items:center;gap:6px">Cap Rate (%)
+        <button onclick="ncp_clear('ncp_cap','ncp_')" title="Clear to recalculate" style="background:none;border:1px solid rgba(255,255,255,.15);border-radius:4px;color:var(--muted);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1">✕</button>
+      </label>
+      <input type="number" id="ncp_cap" placeholder="e.g. 6.5" step="0.1" oninput="calcNCP('ncp_')" style="font-size:16px;font-weight:700;color:#fbbf24">
+    </div>
+    <div class="field" style="margin:0">
+      <label style="display:flex;align-items:center;gap:6px">Net Operating Income / yr ($)
+        <button onclick="ncp_clear('ncp_noi','ncp_')" title="Clear to recalculate" style="background:none;border:1px solid rgba(255,255,255,.15);border-radius:4px;color:var(--muted);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1">✕</button>
+      </label>
+      <input type="number" id="ncp_noi" placeholder="e.g. 97,500" oninput="calcNCP('ncp_')" style="font-size:16px;font-weight:700;color:#86efac">
+    </div>
+  </div>
+  <div id="ncp_result" style="margin-top:12px;min-height:28px;font-size:13px;color:var(--text2);text-align:center"></div>
+  <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:10.5px;color:var(--muted);text-align:center">
+    Formula: <strong style="color:#c4b5fd">Price = NOI ÷ Cap Rate</strong> &nbsp;|&nbsp;
+    <strong style="color:#fbbf24">Cap Rate = NOI ÷ Price</strong> &nbsp;|&nbsp;
+    <strong style="color:#86efac">NOI = Price × Cap Rate</strong>
+    &nbsp;&nbsp;<button class="btn btn-outline btn-sm" onclick="ncp_push('ncp_')" style="font-size:10px;padding:2px 8px;margin-left:8px">⬆ Push Price to Intake</button>
+  </div>
 </div>
 
 <!-- ── PITI & Active Financing ─────────────────────────────────────────── -->
@@ -1630,12 +1682,32 @@ strong { color: #e2e8f0; }
       <option value="1">1 Year</option>
       <option value="2">2 Years</option>
       <option value="3">3 Years</option>
+      <option value="4">4 Years</option>
       <option value="5" selected>5 Years</option>
+      <option value="6">6 Years</option>
       <option value="7">7 Years</option>
+      <option value="8">8 Years</option>
+      <option value="9">9 Years</option>
       <option value="10">10 Years</option>
+      <option value="11">11 Years</option>
+      <option value="12">12 Years</option>
+      <option value="13">13 Years</option>
+      <option value="14">14 Years</option>
       <option value="15">15 Years</option>
+      <option value="16">16 Years</option>
+      <option value="17">17 Years</option>
+      <option value="18">18 Years</option>
+      <option value="19">19 Years</option>
       <option value="20">20 Years</option>
+      <option value="21">21 Years</option>
+      <option value="22">22 Years</option>
+      <option value="23">23 Years</option>
+      <option value="24">24 Years</option>
       <option value="25">25 Years</option>
+      <option value="26">26 Years</option>
+      <option value="27">27 Years</option>
+      <option value="28">28 Years</option>
+      <option value="29">29 Years</option>
       <option value="30">30 Years</option>
     </select>
   </div>
@@ -1649,8 +1721,74 @@ strong { color: #e2e8f0; }
   </table></div>
 </div>
 <div class="card">
-  <div class="card-title">📊 Exit Scenarios</div>
+  <div class="card-title">📊 Exit Summary</div>
+  <div id="execExitHold"></div>
+</div>
+<div class="card">
+  <div class="card-title">🚪 Exit Scenarios</div>
   <div id="execExits"></div>
+</div>
+<div class="card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div>
+      <div class="card-title" style="margin-bottom:2px">📈 IRR by Exit Year</div>
+      <div style="font-size:11px;color:var(--muted)">Projected IRR if you sell at the end of each year</div>
+    </div>
+    <select id="execIRRYears" onchange="updateExec()" style="background:var(--surface3);border:1px solid var(--border);color:#e2e8f0;padding:5px 12px;border-radius:7px;font-size:12px;cursor:pointer">
+      <option value="1">1 Year</option>
+      <option value="2">2 Years</option>
+      <option value="3">3 Years</option>
+      <option value="4">4 Years</option>
+      <option value="5">5 Years</option>
+      <option value="6">6 Years</option>
+      <option value="7">7 Years</option>
+      <option value="8">8 Years</option>
+      <option value="9">9 Years</option>
+      <option value="10" selected>10 Years</option>
+      <option value="11">11 Years</option>
+      <option value="12">12 Years</option>
+      <option value="13">13 Years</option>
+      <option value="14">14 Years</option>
+      <option value="15">15 Years</option>
+      <option value="16">16 Years</option>
+      <option value="17">17 Years</option>
+      <option value="18">18 Years</option>
+      <option value="19">19 Years</option>
+      <option value="20">20 Years</option>
+      <option value="21">21 Years</option>
+      <option value="22">22 Years</option>
+      <option value="23">23 Years</option>
+      <option value="24">24 Years</option>
+      <option value="25">25 Years</option>
+      <option value="26">26 Years</option>
+      <option value="27">27 Years</option>
+      <option value="28">28 Years</option>
+      <option value="29">29 Years</option>
+      <option value="30">30 Years</option>
+    </select>
+  </div>
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px" id="execIRRTable">
+      <thead>
+        <tr style="background:var(--surface3)">
+          <th style="padding:8px 10px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Year</th>
+          <th style="padding:8px 10px;text-align:right;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">IRR</th>
+          <th style="padding:8px 10px;text-align:right;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Exit Value</th>
+          <th style="padding:8px 10px;text-align:right;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Equity at Exit</th>
+          <th style="padding:8px 10px;text-align:right;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Cum. Cash Flow</th>
+          <th style="padding:8px 10px;text-align:right;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Total Return</th>
+          <th style="padding:8px 10px;text-align:right;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Eq. Multiple</th>
+          <th style="padding:8px 10px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Signal</th>
+        </tr>
+      </thead>
+      <tbody id="execIRRBody"></tbody>
+    </table>
+  </div>
+  <div style="margin-top:10px;font-size:10.5px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap">
+    <span><span style="color:var(--green);font-weight:700">●</span> IRR ≥ 15% — Strong</span>
+    <span><span style="color:#fbbf24;font-weight:700">●</span> IRR 10–14% — Adequate</span>
+    <span><span style="color:var(--red);font-weight:700">●</span> IRR &lt; 10% — Below Hurdle</span>
+  </div>
 </div>
 <div id="execVerdict" class="gonogo" style="display:none"></div>
 </div>
@@ -4182,9 +4320,28 @@ function updateExec() {
 
   // Title & thesis
   si('exec_title', addr);
-  const thesis = s.noi>0
-    ? `${type} acquisition in ${tier}-tier market. ${fp(s.capRate)} cap rate, ${fn(s.dscr)}x DSCR, ${fp(s.coc)} CoC return. ${s.cf>0?'Cash flow positive day one.':'Requires value-add to reach positive cash flow.'} ${hold}-year hold targeting ${fp(s.irr)} IRR.`
-    : 'Enter income and expense data to generate investment thesis.';
+  let thesis = '';
+  if(s.noi>0){
+    const capT      = tier==='A'?.045:tier==='B'?.06:.075;
+    const capQual   = s.capRate>=capT*1.1?'strong':'above-average';
+    const capCtx    = s.capRate>=capT?`The ${fp(s.capRate)} cap rate ${s.capRate>=capT*1.1?'comfortably exceeds':'meets'} the ${tier}-tier market benchmark of ${fp(capT)}, indicating solid income relative to price.`
+                    : `The ${fp(s.capRate)} cap rate falls below the ${tier}-tier benchmark of ${fp(capT)} — price sensitivity should be stress-tested.`;
+    const dscrCtx   = s.dscr>=1.25?`Debt coverage of ${fn(s.dscr)}x comfortably satisfies lender minimums.`
+                    : s.dscr>=1.1?`DSCR of ${fn(s.dscr)}x is marginal — leaves little buffer if income dips.`
+                    : `DSCR of ${fn(s.dscr)}x is below lender thresholds and will complicate financing.`;
+    const cocCtx    = s.coc>=.12?`Cash-on-cash return of ${fp(s.coc)} is strong.`
+                    : s.coc>=.06?`Cash-on-cash return of ${fp(s.coc)} is moderate.`
+                    : `Cash-on-cash return of ${fp(s.coc)} is below target — evaluate if appreciation upside justifies the yield.`;
+    const cfCtx     = s.cf>0?'The deal generates positive cash flow from day one.'
+                    : 'Negative initial cash flow requires a clear value-add plan to reach breakeven.';
+    const irrCtx    = s.irr>=.15?`On a ${hold}-year hold, the projected ${fp(s.irr)} IRR and ${(s.em||0).toFixed(2)}x equity multiple represent a compelling risk-adjusted return.`
+                    : s.irr>=.10?`A ${hold}-year hold projects a ${fp(s.irr)} IRR — adequate but negotiate harder for equity upside.`
+                    : `The ${hold}-year projected IRR of ${fp(s.irr)} is below the 10% hurdle rate for this asset class.`;
+    const unitCtx   = units>1?`This ${units}-unit ${type.toLowerCase()}`:`This ${type.toLowerCase()}`;
+    thesis = `${unitCtx} in a ${tier}-tier / Class ${cls} market is listed at ${fd(s.price)}. ${capCtx} ${dscrCtx} ${cocCtx} ${cfCtx} ${irrCtx}`;
+  } else {
+    thesis = 'Enter income and expense data to generate your investment thesis.';
+  }
   si('exec_thesis', thesis);
 
   // Key metrics
@@ -4322,6 +4479,47 @@ function updateExec() {
         <div class="sum-row"><span>Cash Back</span><span style="color:var(--green)">${fd(Math.max(0,s.price*Math.pow(1+appr,2)*.80-(execLoan>0?balFn(execLoan,execRate,30,2):0)))}</span></div>
       </div>
     </div>`);
+
+  // IRR by Exit Year table
+  const irrYrCount = parseInt((el('execIRRYears')&&el('execIRRYears').value)||10);
+  let irrHtml = '';
+  let cumCFirr = 0;
+  for(let y = 1; y <= irrYrCount; y++){
+    // Build cash flow array: year 0 = -investment, years 1..y = annual CF, year y adds exit proceeds
+    const cfs = [-s.totalCashIn];
+    let runCF = 0;
+    for(let i = 1; i <= y; i++){
+      const annCF = s.noi * Math.pow(1+rg, i-1) - execAnnPmt;
+      runCF += annCF;
+      if(i < y){
+        cfs.push(annCF);
+      } else {
+        const exitV = s.price * Math.pow(1+appr, y);
+        const loanB = execLoan > 0 ? balFn(execLoan, execRate, 30, Math.min(y,30)) : 0;
+        cfs.push(annCF + exitV - loanB);
+      }
+    }
+    const yIRR   = irrFn(cfs);
+    const exitV  = s.price * Math.pow(1+appr, y);
+    const loanB  = execLoan > 0 ? balFn(execLoan, execRate, 30, Math.min(y,30)) : 0;
+    const eqExit = exitV - loanB;
+    const emExit = s.totalCashIn > 0 ? (eqExit + runCF) / s.totalCashIn : 0;
+    const totalRet = eqExit + runCF - s.totalCashIn;
+    const irrColor = yIRR >= .15 ? 'var(--green)' : yIRR >= .10 ? '#fbbf24' : 'var(--red)';
+    const signal   = yIRR >= .15 ? '🟢 Strong' : yIRR >= .10 ? '🟡 Adequate' : '🔴 Low';
+    const isMile   = y===1||y===5||y===10||y===15||y===20||y===25||y===30;
+    irrHtml += `<tr style="border-bottom:1px solid var(--border);${isMile?'border-top:2px solid rgba(99,102,241,.3);':''}background:${isMile?'rgba(99,102,241,.04)':'transparent'}">
+      <td style="padding:7px 10px;font-weight:${isMile?'700':'500'};color:${isMile?'#c4b5fd':'var(--text)'}">Yr ${y}${y===irrYrCount?' ★':''}</td>
+      <td style="padding:7px 10px;text-align:right;font-size:15px;font-weight:800;color:${irrColor}">${fp(yIRR)}</td>
+      <td style="padding:7px 10px;text-align:right;color:var(--text2)">${fd(exitV)}</td>
+      <td style="padding:7px 10px;text-align:right;color:var(--green);font-weight:600">${fd(eqExit)}</td>
+      <td style="padding:7px 10px;text-align:right;color:${runCF>=0?'var(--green)':'var(--red)'}">${fd(runCF)}</td>
+      <td style="padding:7px 10px;text-align:right;color:${totalRet>=0?'var(--green)':'var(--red)'};font-weight:700">${fd(totalRet)}</td>
+      <td style="padding:7px 10px;text-align:right;color:${emExit>=2?'var(--green)':emExit>=1.5?'#fbbf24':'var(--text)'};font-weight:600">${emExit.toFixed(2)}x</td>
+      <td style="padding:7px 10px;font-size:11px">${signal}</td>
+    </tr>`;
+  }
+  si('execIRRBody', irrHtml);
 
   // Go/No-Go
   const vEl = el('execVerdict');
@@ -5596,6 +5794,162 @@ function autoFillFromResearch(r) {
   // Update cap rate benchmark display info
   updateCapBenchmarks();
   R(); // Refresh all calculations
+}
+
+// ══════════════════════════════════════════════ PROJECTS SYSTEM ══════════════
+
+const PROJ_KEY = 'jp_suite_projects'; // localStorage key
+
+function _getAllProjects() {
+  try { return JSON.parse(localStorage.getItem(PROJ_KEY)) || {}; }
+  catch(e) { return {}; }
+}
+
+function _setAllProjects(obj) {
+  localStorage.setItem(PROJ_KEY, JSON.stringify(obj));
+}
+
+function openProjects() {
+  renderProjList();
+  el('projOverlay').style.display = 'flex';
+  setTimeout(()=>{ const n=el('projNameInput'); if(n) n.focus(); }, 100);
+}
+
+function closeProjects() {
+  el('projOverlay').style.display = 'none';
+}
+
+function saveProject() {
+  const nameEl = el('projNameInput');
+  const name = (nameEl.value||'').trim();
+  if(!name){ nameEl.focus(); nameEl.style.borderColor='var(--red)'; setTimeout(()=>nameEl.style.borderColor='',1500); return; }
+
+  // Collect all input/select/textarea values
+  const data = {};
+  document.querySelectorAll('input[id],select[id],textarea[id]').forEach(inp=>{
+    if(!inp.id) return;
+    if(inp.type==='checkbox'||inp.type==='radio') data[inp.id]=inp.checked;
+    else data[inp.id]=inp.value;
+  });
+
+  const projects = _getAllProjects();
+  projects[name] = { name, savedAt: new Date().toISOString(), data };
+  _setAllProjects(projects);
+
+  nameEl.value = '';
+  renderProjList();
+
+  // Flash confirmation
+  const btn = document.querySelector('.proj-save-row .btn-primary');
+  if(btn){ const orig=btn.textContent; btn.textContent='✅ Saved!'; btn.style.background='var(--green)'; setTimeout(()=>{ btn.textContent=orig; btn.style.background=''; }, 1800); }
+}
+
+function loadProject(name) {
+  const projects = _getAllProjects();
+  const proj = projects[name];
+  if(!proj) return;
+
+  // Restore all field values
+  Object.entries(proj.data).forEach(([id, val])=>{
+    const el2 = document.getElementById(id);
+    if(!el2) return;
+    if(el2.type==='checkbox'||el2.type==='radio') el2.checked = val;
+    else el2.value = val;
+  });
+
+  // Recalculate everything
+  if(typeof R === 'function') R();
+  if(typeof updatePropertyType === 'function') updatePropertyType();
+
+  closeProjects();
+
+  // Brief toast
+  showProjToast(`📂 Loaded: ${name}`);
+}
+
+function deleteProject(name) {
+  if(!confirm(`Delete project "${name}"? This cannot be undone.`)) return;
+  const projects = _getAllProjects();
+  delete projects[name];
+  _setAllProjects(projects);
+  renderProjList();
+}
+
+function renderProjList() {
+  const list = el('projList');
+  if(!list) return;
+  const projects = _getAllProjects();
+  const keys = Object.keys(projects).sort((a,b)=>new Date(projects[b].savedAt)-new Date(projects[a].savedAt));
+
+  if(keys.length === 0){
+    list.innerHTML = '<div class="proj-empty">No saved projects yet.<br>Type a name above and click Save.</div>';
+    return;
+  }
+
+  list.innerHTML = keys.map(name => {
+    const p = projects[name];
+    const d = new Date(p.savedAt);
+    const when = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    const addr = p.data['prop_address']||'';
+    const price = p.data['pur_price'] ? '$'+Number(p.data['pur_price']).toLocaleString() : '';
+    const meta = [addr, price].filter(Boolean).join(' · ') || 'No address entered';
+    return `<div class="proj-item">
+      <div class="proj-item-info">
+        <div class="proj-item-name">${name}</div>
+        <div class="proj-item-meta">${meta} &nbsp;·&nbsp; Saved ${when}</div>
+      </div>
+      <div class="proj-item-actions">
+        <button class="btn btn-primary btn-sm" style="font-size:11px;padding:4px 12px" onclick="loadProject(${JSON.stringify(name)})">📂 Load</button>
+        <button class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 10px;color:var(--red);border-color:var(--red)" onclick="deleteProject(${JSON.stringify(name)})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function exportAllProjects() {
+  const projects = _getAllProjects();
+  const json = JSON.stringify(projects, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'JP_Underwriting_Projects_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importProjects(evt) {
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const incoming = JSON.parse(e.target.result);
+      const existing = _getAllProjects();
+      const merged = Object.assign({}, existing, incoming);
+      _setAllProjects(merged);
+      renderProjList();
+      showProjToast(`✅ Imported ${Object.keys(incoming).length} project(s)`);
+    } catch(err) {
+      alert('Invalid file. Please select a JP Underwriting Projects JSON file.');
+    }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+
+function showProjToast(msg) {
+  let t = document.getElementById('projToast');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'projToast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid var(--border);color:var(--text);padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.4);transition:opacity .3s';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._to);
+  t._to = setTimeout(()=>{ t.style.opacity='0'; }, 2500);
 }
 
 </script>
