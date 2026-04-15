@@ -437,6 +437,14 @@ strong { color: #e2e8f0; }
       <!-- Saved list -->
       <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;font-weight:700">Saved Projects</div>
       <div class="proj-list" id="projList"></div>
+      <!-- Persistent File Link -->
+      <div class="proj-divider">📁 Persistent File (Cross-Device)</div>
+      <div id="projFileLinkStatus" style="font-size:11.5px;color:var(--muted);margin-bottom:10px;line-height:1.5">Checking…</div>
+      <div class="proj-io-row" style="margin-bottom:6px">
+        <button class="btn btn-outline btn-sm" onclick="linkProjectsFile()" style="font-size:11px;border-color:rgba(99,102,241,.5);color:#a5b4fc">🔗 Link Existing File</button>
+        <button class="btn btn-outline btn-sm" onclick="createProjectsFile()" style="font-size:11px;border-color:rgba(34,197,94,.4);color:#86efac">✨ Create New File</button>
+      </div>
+      <div style="font-size:10.5px;color:var(--muted);margin-bottom:16px;line-height:1.5">Link a <code style="background:var(--surface3);padding:1px 4px;border-radius:3px">JP_Projects.json</code> file on your computer. Projects auto-save to it — works on any URL or browser.</div>
       <!-- Import / Export -->
       <div class="proj-divider">Import &amp; Export</div>
       <div class="proj-io-row">
@@ -5458,6 +5466,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   initCharts();
   R();
   ST(0);
+  // Init persistent projects file (File System Access API)
+  initProjectsFile();
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -5806,13 +5816,19 @@ function _getAllProjects() {
 }
 
 function _setAllProjects(obj) {
-  localStorage.setItem(PROJ_KEY, JSON.stringify(obj));
+  try { localStorage.setItem(PROJ_KEY, JSON.stringify(obj)); }
+  catch(e) { throw new Error('Storage quota exceeded'); }
+  // Also persist to linked file if available
+  if(_projFileHandle) _ensureFilePermission().then(ok=>{ if(ok) _writeProjectsToFile(obj); });
 }
 
 function openProjects() {
   renderProjList();
+  _updateFileLinkStatus();
   el('projOverlay').style.display = 'flex';
   setTimeout(()=>{ const n=el('projNameInput'); if(n) n.focus(); }, 100);
+  // Request file permission if handle exists but not yet granted
+  if(_projFileHandle) _ensureFilePermission().then(ok=>{ if(ok) _updateFileLinkStatus(); });
 }
 
 function closeProjects() {
@@ -5824,17 +5840,24 @@ function saveProject() {
   const name = (nameEl.value||'').trim();
   if(!name){ nameEl.focus(); nameEl.style.borderColor='var(--red)'; setTimeout(()=>nameEl.style.borderColor='',1500); return; }
 
-  // Collect all input/select/textarea values
+  // Collect all input/select/textarea values — skip file inputs and the project name field itself
   const data = {};
   document.querySelectorAll('input[id],select[id],textarea[id]').forEach(inp=>{
     if(!inp.id) return;
+    if(inp.type==='file') return;
+    if(inp.id==='projNameInput') return;
     if(inp.type==='checkbox'||inp.type==='radio') data[inp.id]=inp.checked;
     else data[inp.id]=inp.value;
   });
 
   const projects = _getAllProjects();
   projects[name] = { name, savedAt: new Date().toISOString(), data };
-  _setAllProjects(projects);
+  try {
+    _setAllProjects(projects);
+  } catch(e) {
+    alert('Could not save: storage may be full. Export and clear old projects first.');
+    return;
+  }
 
   nameEl.value = '';
   renderProjList();
@@ -5849,21 +5872,34 @@ function loadProject(name) {
   const proj = projects[name];
   if(!proj) return;
 
-  // Restore all field values
+  // Restore all field values and fire events so dependent fields recalculate
   Object.entries(proj.data).forEach(([id, val])=>{
     const el2 = document.getElementById(id);
     if(!el2) return;
-    if(el2.type==='checkbox'||el2.type==='radio') el2.checked = val;
-    else el2.value = val;
+    if(el2.type==='file') return;
+    if(el2.id==='projNameInput') return;
+    if(el2.type==='checkbox'||el2.type==='radio') {
+      el2.checked = val;
+      el2.dispatchEvent(new Event('change', {bubbles:true}));
+    } else {
+      el2.value = val;
+      el2.dispatchEvent(new Event('input', {bubbles:true}));
+      el2.dispatchEvent(new Event('change', {bubbles:true}));
+    }
   });
 
-  // Recalculate everything
-  if(typeof R === 'function') R();
+  // Clear manual NOI override so it recalculates cleanly
+  const noiEl = document.getElementById('fin_noi');
+  if(noiEl) delete noiEl.dataset.manual;
+
+  // Full recalculation chain
   if(typeof updatePropertyType === 'function') updatePropertyType();
+  if(typeof R === 'function') R();
+  if(typeof updateCharts === 'function') updateCharts();
+  if(typeof seedFA === 'function') seedFA(true);
+  if(typeof buildProjection === 'function') buildProjection();
 
   closeProjects();
-
-  // Brief toast
   showProjToast(`📂 Loaded: ${name}`);
 }
 
@@ -5886,21 +5922,24 @@ function renderProjList() {
     return;
   }
 
-  list.innerHTML = keys.map(name => {
+  // Store projects map by index to avoid quote-escaping issues in onclick attrs
+  window._projKeys = keys;
+  list.innerHTML = keys.map((name, idx) => {
     const p = projects[name];
     const d = new Date(p.savedAt);
     const when = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     const addr = p.data['prop_address']||'';
     const price = p.data['pur_price'] ? '$'+Number(p.data['pur_price']).toLocaleString() : '';
     const meta = [addr, price].filter(Boolean).join(' · ') || 'No address entered';
+    const safeName = name.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     return `<div class="proj-item">
       <div class="proj-item-info">
-        <div class="proj-item-name">${name}</div>
+        <div class="proj-item-name">${safeName}</div>
         <div class="proj-item-meta">${meta} &nbsp;·&nbsp; Saved ${when}</div>
       </div>
       <div class="proj-item-actions">
-        <button class="btn btn-primary btn-sm" style="font-size:11px;padding:4px 12px" onclick="loadProject(${JSON.stringify(name)})">📂 Load</button>
-        <button class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 10px;color:var(--red);border-color:var(--red)" onclick="deleteProject(${JSON.stringify(name)})">🗑</button>
+        <button class="btn btn-primary btn-sm" style="font-size:11px;padding:4px 12px" onclick="loadProject(window._projKeys[${idx}])">📂 Load</button>
+        <button class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 10px;color:var(--red);border-color:var(--red)" onclick="deleteProject(window._projKeys[${idx}])">🗑</button>
       </div>
     </div>`;
   }).join('');
@@ -5936,6 +5975,147 @@ function importProjects(evt) {
   };
   reader.readAsText(file);
   evt.target.value = '';
+}
+
+// ── Persistent File System (cross-origin project storage) ─────────────────────
+const _PROJ_IDB = 'jp_suite_idb';
+const _PROJ_IDB_STORE = 'fileHandles';
+const _PROJ_IDB_KEY = 'projectsFileHandle';
+let _projFileHandle = null;
+
+function _openIDB() {
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open(_PROJ_IDB,1);
+    r.onupgradeneeded=e=>e.target.result.createObjectStore(_PROJ_IDB_STORE);
+    r.onsuccess=e=>res(e.target.result);
+    r.onerror=e=>rej(e);
+  });
+}
+
+async function _getHandleFromIDB() {
+  try {
+    const db=await _openIDB();
+    return new Promise(res=>{
+      const tx=db.transaction(_PROJ_IDB_STORE,'readonly');
+      const req=tx.objectStore(_PROJ_IDB_STORE).get(_PROJ_IDB_KEY);
+      req.onsuccess=()=>res(req.result||null);
+      req.onerror=()=>res(null);
+    });
+  } catch(e){ return null; }
+}
+
+async function _saveHandleToIDB(handle) {
+  try {
+    const db=await _openIDB();
+    return new Promise(res=>{
+      const tx=db.transaction(_PROJ_IDB_STORE,'readwrite');
+      tx.objectStore(_PROJ_IDB_STORE).put(handle,_PROJ_IDB_KEY);
+      tx.oncomplete=res; tx.onerror=res;
+    });
+  } catch(e){}
+}
+
+async function _writeProjectsToFile(obj) {
+  if(!_projFileHandle) return;
+  try {
+    const w=await _projFileHandle.createWritable();
+    await w.write(JSON.stringify(obj,null,2));
+    await w.close();
+  } catch(e){ console.warn('Projects file write failed:',e); }
+}
+
+async function _readProjectsFromFile() {
+  if(!_projFileHandle) return null;
+  try {
+    const file=await _projFileHandle.getFile();
+    return JSON.parse(await file.text());
+  } catch(e){ return null; }
+}
+
+function _updateFileLinkStatus() {
+  const s=document.getElementById('projFileLinkStatus');
+  if(!s) return;
+  if(_projFileHandle){
+    s.innerHTML=`<span style="color:var(--green)">✅ Linked: <strong>${_projFileHandle.name}</strong> — projects auto-save to this file</span>&nbsp;&nbsp;<button onclick="unlinkProjectsFile()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;text-decoration:underline">Unlink</button>`;
+  } else {
+    s.innerHTML=`<span style="color:var(--muted)">No file linked — projects stored in this browser only.</span>`;
+  }
+}
+
+async function linkProjectsFile() {
+  if(!('showOpenFilePicker' in window)){ alert('File System Access API requires Chrome or Edge.'); return; }
+  try {
+    const [h]=await window.showOpenFilePicker({
+      types:[{description:'JP Projects File',accept:{'application/json':['.json']}}],
+      multiple:false
+    });
+    _projFileHandle=h;
+    await _saveHandleToIDB(h);
+    const fromFile=await _readProjectsFromFile();
+    if(fromFile){
+      const merged=Object.assign({},_getAllProjects(),fromFile);
+      localStorage.setItem(PROJ_KEY,JSON.stringify(merged));
+    }
+    renderProjList();
+    _updateFileLinkStatus();
+    showProjToast('🔗 Projects file linked!');
+  } catch(e){ if(e.name!=='AbortError') console.error(e); }
+}
+
+async function createProjectsFile() {
+  if(!('showSaveFilePicker' in window)){ alert('File System Access API requires Chrome or Edge.'); return; }
+  try {
+    const h=await window.showSaveFilePicker({
+      types:[{description:'JP Projects File',accept:{'application/json':['.json']}}],
+      suggestedName:'JP_Projects.json'
+    });
+    _projFileHandle=h;
+    await _saveHandleToIDB(h);
+    await _writeProjectsToFile(_getAllProjects());
+    _updateFileLinkStatus();
+    showProjToast('✅ Projects file created & linked!');
+  } catch(e){ if(e.name!=='AbortError') console.error(e); }
+}
+
+async function unlinkProjectsFile() {
+  _projFileHandle=null;
+  try {
+    const db=await _openIDB();
+    const tx=db.transaction(_PROJ_IDB_STORE,'readwrite');
+    tx.objectStore(_PROJ_IDB_STORE).delete(_PROJ_IDB_KEY);
+  } catch(e){}
+  _updateFileLinkStatus();
+  showProjToast('🔓 File unlinked');
+}
+
+async function initProjectsFile() {
+  if(!('showOpenFilePicker' in window)){ _updateFileLinkStatus(); return; }
+  const handle=await _getHandleFromIDB();
+  if(!handle){ _updateFileLinkStatus(); return; }
+  try {
+    const perm=await handle.queryPermission({mode:'readwrite'});
+    if(perm==='granted'){
+      _projFileHandle=handle;
+      const fromFile=await _readProjectsFromFile();
+      if(fromFile){
+        const merged=Object.assign({},_getAllProjects(),fromFile);
+        localStorage.setItem(PROJ_KEY,JSON.stringify(merged));
+      }
+    } else {
+      // Store for when user opens Projects panel and we can request permission
+      _projFileHandle=handle;
+    }
+  } catch(e){ console.warn('Could not restore file handle:',e); }
+  _updateFileLinkStatus();
+}
+
+async function _ensureFilePermission() {
+  if(!_projFileHandle) return false;
+  try {
+    let perm=await _projFileHandle.queryPermission({mode:'readwrite'});
+    if(perm==='prompt') perm=await _projFileHandle.requestPermission({mode:'readwrite'});
+    return perm==='granted';
+  } catch(e){ return false; }
 }
 
 function showProjToast(msg) {
