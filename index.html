@@ -178,6 +178,23 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .btn-sm{padding:5px 12px;font-size:11px}
 .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 /* ── section divider ── */
+/* ── Exec Report section visibility toggles ── */
+.exec-hidden { display:none !important; }
+.exec-sec-bar { display:flex; flex-wrap:wrap; gap:6px; padding:10px 16px 6px;
+  background:var(--surface); border-bottom:1px solid var(--border); }
+.exec-sec-bar .esb-label { font-size:10px; color:var(--muted); font-weight:700;
+  text-transform:uppercase; letter-spacing:.5px; align-self:center; margin-right:4px; }
+.exec-sec-pill { display:inline-flex; align-items:center; gap:5px;
+  padding:4px 11px; border-radius:20px; font-size:11px; font-weight:600;
+  cursor:pointer; border:1px solid var(--border); background:var(--surface2);
+  color:var(--text2); transition:all .15s; user-select:none; }
+.exec-sec-pill:hover { border-color:var(--accent); color:var(--text); }
+.exec-sec-pill.on { background:rgba(99,102,241,.18); border-color:var(--accent);
+  color:#a5b4fc; }
+.exec-sec-pill .esp-dot { width:6px; height:6px; border-radius:50%;
+  background:var(--muted); flex-shrink:0; }
+.exec-sec-pill.on .esp-dot { background:var(--accent); }
+
 .sec-title{font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.7px;margin:18px 0 10px;display:flex;align-items:center;gap:8px}
 .sec-title::after{content:"";flex:1;height:1px;background:var(--border)}
 /* ── proj table ── */
@@ -1870,8 +1887,9 @@ strong { color: #e2e8f0; }
 
 <!-- ══════════════════════════════════════════════ PANEL 7: EXECUTIVE SUMMARY -->
 <div class="panel" id="panel7">
+<div id="execSectionBar" class="exec-sec-bar"><span class="esb-label">Sections</span><!-- pills injected by _execBarInit() --></div>
 <div id="execContent">
-<div class="exec-header">
+<div class="exec-header" data-exec-section="header" data-exec-label="Key Metrics">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
     <div>
       <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Investment Analysis Report</div>
@@ -1879,7 +1897,7 @@ strong { color: #e2e8f0; }
       <div id="exec_thesis" class="exec-thesis"></div>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-outline btn-sm" onclick="printExecPDF()" style="border-color:rgba(99,102,241,.5);color:#a5b4fc">⬇ Save PDF</button>
       <button class="btn btn-primary btn-sm" onclick="updateExec()">🔄 Refresh</button>
     </div>
   </div>
@@ -1888,21 +1906,21 @@ strong { color: #e2e8f0; }
 
 <div class="g2">
 <div>
-<div class="card">
+<div class="card" data-exec-section="snapshot" data-exec-label="Property Snapshot">
   <div class="card-title">🏠 Property Snapshot</div>
   <div id="execSnapshot"></div>
 </div>
-<div class="card">
+<div class="card" data-exec-section="financing" data-exec-label="Financing">
   <div class="card-title">💰 Financing Summary</div>
   <div id="execFinancing"></div>
 </div>
-<div class="card">
+<div class="card" data-exec-section="risks" data-exec-label="Risk Factors">
   <div class="card-title">🚩 Risk Factors</div>
   <div id="execRisks"></div>
 </div>
 </div>
 <div>
-<div class="card">
+<div class="card" data-exec-section="projection" data-exec-label="Returns Projection">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
     <div class="card-title" style="margin-bottom:0">📅 Returns Projection</div>
     <select id="execProjYears" onchange="updateExec()" style="background:var(--surface3);border:1px solid var(--border);color:#e2e8f0;padding:5px 12px;border-radius:7px;font-size:12px;cursor:pointer">
@@ -1947,15 +1965,15 @@ strong { color: #e2e8f0; }
     <tbody id="execProjBody"></tbody>
   </table></div>
 </div>
-<div class="card">
+<div class="card" data-exec-section="exit-summary" data-exec-label="Exit Summary">
   <div class="card-title">📊 Exit Summary</div>
   <div id="execExitHold"></div>
 </div>
-<div class="card">
+<div class="card" data-exec-section="exit-scenarios" data-exec-label="Exit Scenarios">
   <div class="card-title">🚪 Exit Scenarios</div>
   <div id="execExits"></div>
 </div>
-<div class="card">
+<div class="card" data-exec-section="irr" data-exec-label="IRR Table">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
     <div>
       <div class="card-title" style="margin-bottom:2px">📈 IRR by Exit Year</div>
@@ -2017,7 +2035,7 @@ strong { color: #e2e8f0; }
     <span><span style="color:var(--red);font-weight:700">●</span> IRR &lt; 10% — Below Hurdle</span>
   </div>
 </div>
-<div id="execVerdict" class="gonogo" style="display:none"></div>
+<div id="execVerdict" class="gonogo" data-exec-section="verdict" data-exec-label="Go / No-Go" style="display:none"></div>
 </div>
 </div>
 </div><!-- execContent -->
@@ -4477,6 +4495,140 @@ body{font-family:'Times New Roman',Times,serif;color:#1a1a2e;background:#fff}
   setTimeout(()=>{ w.print(); }, 400);
 }
 
+/* ── Executive Summary — Save as styled PDF ── */
+function printExecPDF() {
+  const src = document.getElementById('execContent');
+  if(!src) return;
+  const clone = src.cloneNode(true);
+
+  // Remove buttons and interactive controls
+  clone.querySelectorAll('button, input[type=file], #importProjInput').forEach(el=>el.remove());
+
+  // Convert selects → static text badges
+  clone.querySelectorAll('select').forEach(sel=>{
+    const chosen = sel.options[sel.selectedIndex];
+    const badge = document.createElement('span');
+    badge.textContent = chosen ? chosen.textContent : sel.value;
+    badge.style.cssText = 'font-size:11px;color:#a5b4fc;font-weight:600;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:6px;padding:3px 10px;display:inline-block';
+    sel.parentNode.replaceChild(badge, sel);
+  });
+
+  // Strip overflow / max-height / sticky from inline styles
+  clone.querySelectorAll('*').forEach(function(el){
+    const cs=el.style;
+    if(cs.overflow)  cs.overflow='visible';
+    if(cs.overflowX) cs.overflowX='visible';
+    if(cs.overflowY) cs.overflowY='visible';
+    if(cs.maxHeight) cs.maxHeight='none';
+    if(cs.position==='sticky') cs.position='static';
+    const tag=el.tagName.toLowerCase();
+    if(cs.height&&cs.height.indexOf('px')!==-1&&(tag==='div'||tag==='section'))cs.height='auto';
+  });
+  clone.querySelectorAll('th').forEach(th=>{th.style.position='static';});
+
+  // Remove sections toggled off by the user before printing
+  clone.querySelectorAll('.exec-hidden').forEach(function(el){el.remove();});
+
+  // Date stamp
+  const stamp=document.createElement('div');
+  stamp.style.cssText='font-size:10px;color:#64748b;text-align:right;margin-bottom:14px;letter-spacing:.4px';
+  stamp.textContent='Generated: '+new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  clone.insertBefore(stamp,clone.firstChild);
+
+  // ── Pull the ACTUAL app CSS directly from the page's <style> tags ──────────
+  // This is the only reliable way to get identical rendering — no manual copy.
+  const appCSS = Array.from(document.querySelectorAll('style'))
+    .map(s=>s.textContent).join('\n');
+
+  const html = clone.innerHTML;
+
+  const w = window.open('','_blank','width=1000,height=800');
+  if(!w){alert('Pop-up blocked — please allow pop-ups for this page and try again.');return;}
+
+  w.document.write('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
+    +'<title>Executive Summary \u2014 JP Underwriting Suite</title>'
+    +'<style>'+appCSS+'</style>'
+    +'<style>'
+    // Print essentials on top — these are the ONLY overrides needed
+    +'* { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }'
+    +'@page { margin:.6in .65in; size:letter; }'
+    // Show background (dark theme)
+    +'html,body { background:var(--bg) !important; }'
+    // Remove ALL scroll/clip constraints
+    +'* { overflow:visible !important; max-height:none !important; }'
+    +'th { position:static !important; }'
+    // Hide everything that isn't exec content (topbar, tabs, panels, etc.)
+    +'.topbar,.livebar,.tabs,.panel:not(#panel7),'
+    +'#panel1,#panel2,#panel3,#panel4,#panel5,#panel6,#panel8,#panel9 { display:none !important; }'
+    // Make the panel itself visible and full-width
+    +'.panel { display:block !important; padding:0 !important; max-width:none !important; }'
+    // Page-break helpers
+    +'.card,.exec-header,.mc,.exec-mc,.gonogo { page-break-inside:avoid; }'
+    +'tr { page-break-inside:avoid; }'
+    +'</style>'
+    +'</head><body>'
+    +html
+    +'</body></html>');
+  w.document.close();
+  setTimeout(()=>{w.print();},600);
+}
+
+
+/* ── Exec Report — Section Visibility Toggles ── */
+(function(){
+  // Track which sections are hidden. Default: all visible.
+  var _hidden = {};
+
+  function _execBarInit() {
+    var bar = document.getElementById('execSectionBar');
+    if (!bar) return;
+    // Remove old pills (re-init safe)
+    bar.querySelectorAll('.exec-sec-pill').forEach(function(p){ p.remove(); });
+    // Build pills from tagged sections
+    var sections = document.querySelectorAll('#execContent [data-exec-section]');
+    sections.forEach(function(el) {
+      var key   = el.getAttribute('data-exec-section');
+      var label = el.getAttribute('data-exec-label') || key;
+      var pill  = document.createElement('span');
+      pill.className = 'exec-sec-pill' + (_hidden[key] ? '' : ' on');
+      pill.setAttribute('data-sec', key);
+      pill.title = (_hidden[key] ? 'Show' : 'Hide') + ' ' + label;
+      pill.innerHTML = '<span class="esp-dot"></span>' + label;
+      pill.onclick = function(){ _execToggleSec(key, label, pill); };
+      bar.appendChild(pill);
+    });
+  }
+
+  function _execToggleSec(key, label, pill) {
+    var el = document.querySelector('#execContent [data-exec-section="' + key + '"]');
+    if (!el) return;
+    if (_hidden[key]) {
+      // Show it
+      delete _hidden[key];
+      el.classList.remove('exec-hidden');
+      // Special case: verdict uses its own display logic — let updateExec() re-evaluate
+      if (key === 'verdict') { updateExec(); return; }
+      pill.classList.add('on');
+      pill.title = 'Hide ' + label;
+    } else {
+      // Hide it
+      _hidden[key] = true;
+      el.classList.add('exec-hidden');
+      pill.classList.remove('on');
+      pill.title = 'Show ' + label;
+    }
+  }
+
+  // Expose init so the tab-switch / updateExec can call it
+  window._execBarInit = _execBarInit;
+
+  // Auto-init whenever panel7 becomes active
+  var _origST = window.ST;
+  window.ST = function(n) {
+    _origST(n);
+    if (n === 7) { setTimeout(_execBarInit, 80); }
+  };
+})();
 /* ── Download as Word (.doc via HTML-in-Word method) ── */
 function downloadLOI_doc() {
   buildLOI();
@@ -6982,10 +7134,29 @@ function _selUpdateBar(){
   bar.innerHTML='<span class="sel-count">'+lbl+'</span>'
     +'<span class="sel-hint">Shift+click for range · Drag to box-select</span>'
     +'<span class="sel-spacer"></span>'
+    +'<button style="background:var(--accent);color:#fff;border-color:var(--accent)" onclick="_selLoadSelected()">📂 Open</button>'
     +'<button onclick="_selBulkMoveDialog()">&#x1F4E6; Move…</button>'
     +'<button class="sel-danger" onclick="_selBulkDelete()">🗑️ Delete</button>'
     +'<button onclick="_selClear()">Clear</button>';
   bar.classList.add('active');
+}
+function _selLoadSelected(){
+  const n=_selected.size;
+  if(n===0){showProjToast('No item selected.');return;}
+  if(n>1){
+    showProjToast('⚠️ Select only one project to open.',true);
+    return;
+  }
+  // Exactly one item selected — figure out what type it is
+  const key=[..._selected][0];
+  const{type,id}=_selParse(key);
+  if(type==='folder'){
+    _enterFolder(id);
+    _selClear();
+  } else {
+    loadProject(id);
+    _selClear();
+  }
 }
 function _selBulkDelete(){
   if(!_selected.size)return;
@@ -7375,18 +7546,28 @@ async function _ensureFilePermission() {
   } catch(e){ return false; }
 }
 
-function showProjToast(msg) {
+function showProjToast(msg, isWarn) {
   let t = document.getElementById('projToast');
   if(!t){
     t = document.createElement('div');
     t.id = 'projToast';
-    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid var(--border);color:var(--text);padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.4);transition:opacity .3s';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.4);transition:opacity .3s';
     document.body.appendChild(t);
   }
   t.textContent = msg;
+  // Warn = amber; default = dark surface
+  if(isWarn){
+    t.style.background='rgba(120,53,15,.85)';
+    t.style.border='1px solid rgba(245,158,11,.55)';
+    t.style.color='#fcd34d';
+  } else {
+    t.style.background='#1e293b';
+    t.style.border='1px solid var(--border)';
+    t.style.color='var(--text)';
+  }
   t.style.opacity = '1';
   clearTimeout(t._to);
-  t._to = setTimeout(()=>{ t.style.opacity='0'; }, 2500);
+  t._to = setTimeout(()=>{ t.style.opacity='0'; }, isWarn ? 3200 : 2500);
 }
 
 </script>
