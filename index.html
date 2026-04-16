@@ -652,6 +652,8 @@ strong { color: #e2e8f0; }
         </div>
         <button class="proj-tb-btn" onclick="createFolder()">📁 New Folder</button>
         <button class="proj-tb-btn" onclick="_selAll()">&#x2611; Select All</button>
+        <button class="proj-tb-btn" onclick="importProjectFile()" title="Import a .jpdeals file shared by someone">📥 Import</button>
+        <input type="file" id="importProjInput" accept=".jpdeals,.json" style="display:none" onchange="importProjectFileHandler(event)">
       </div>
       <div class="proj-list" id="projList"></div>
       <!-- Persistent File Link -->
@@ -844,7 +846,7 @@ strong { color: #e2e8f0; }
 <div class="card">
   <div class="card-title">💰 Purchase & Hold</div>
   <div class="g2">
-    <div class="field"><label>Purchase Price ($)</label><input type="number" id="pur_price" placeholder="300000"></div>
+    <div class="field"><label>Purchase Price ($) <span id="price_sync_hint" style="font-size:10px;color:#818cf8;font-weight:400;opacity:0;transition:opacity 1.5s" title="Price synced from calculator"></span></label><input type="number" id="pur_price" placeholder="300000"></div>
     <div class="field"><label>After Repair Value ($)</label><input type="number" id="pur_arv" placeholder="320000"></div>
   </div>
   <div class="g3">
@@ -2658,10 +2660,10 @@ function cumSummaryHTML(loanAmt, rate, amortYrs, annualDebtService, holdYrs, ext
   </div>`;
 }
 
-function amortSchedule(pv, annR, amortYrs, maxYrs) {
+function amortSchedule(pv, annR, amortYrs, maxYrs, pmtOverride) {
   const rows=[]; let bal=pv, cumInt=0;
   const r=annR/12;
-  const mPmt=pmtFn(pv,annR,amortYrs);
+  const mPmt=pmtOverride||pmtFn(pv,annR,amortYrs);
   const limit=Math.min(maxYrs||amortYrs, amortYrs);
   for(let y=1;y<=limit;y++){
     const begBal=bal; let annInt=0, annPrin=0;
@@ -3413,7 +3415,7 @@ function renderAmort(tbodyId, rows, balloonYr, extraCols) {
 // ── Conventional ──────────────────────────────────────────────────────────────
 function calcConv() {
   const price  = gv('c_price')||S.price||300000;
-  const dpPct  = gv('c_down_pct')/100;
+  const dpPct  = (gv('c_down_pct')||20)/100;
   const rate   = gv('c_rate')/100;
   const points = gv('c_points')/100;
   const amort  = gv('c_amort')||30;
@@ -3472,7 +3474,7 @@ function calcConv() {
 // ── FHA ───────────────────────────────────────────────────────────────────────
 function calcFHA() {
   const price  = gv('fha_price')||S.price||300000;
-  const dpPct  = gv('fha_down_pct')/100;
+  const dpPct  = (gv('fha_down_pct')||3.5)/100;
   const rate   = gv('fha_rate')/100;
   const rehab  = gv('fha_rehab');
   const amort  = gv('fha_amort')||30;
@@ -3524,8 +3526,8 @@ function calcHM() {
   const price  = gv('hm_price');
   const rehab  = gv('hm_rehab');
   const arv    = gv('hm_arv');
-  const ltc    = gv('hm_ltc')/100;
-  const rate   = gv('hm_rate')/100;
+  const ltc    = (gv('hm_ltc')||75)/100;
+  const rate   = (gv('hm_rate')||11)/100;
   const points = gv('hm_points')/100;
   const termMo = gv('hm_term');
   const io     = gvs('hm_io')==='yes';
@@ -3575,7 +3577,7 @@ function calcHM() {
 // ── DSCR ──────────────────────────────────────────────────────────────────────
 function calcDSCR() {
   const price   = gv('dscr_price')||S.price||300000;
-  const ltvPct  = gv('dscr_ltv')/100;
+  const ltvPct  = (gv('dscr_ltv')||75)/100;
   const rate    = gv('dscr_rate')/100;
   const points  = gv('dscr_points')/100;
   const amort   = gv('dscr_amort')||30;
@@ -3682,7 +3684,8 @@ function calcSubTo() {
     ${cumSummaryHTML(bal, rate, remain, pmt*12, S.hold||5, '', 0)}`);
 
   // Amort schedule using locked payment
-  const rows = amortSchedule(bal, rate, remain, remain);
+  // Use user's entered locked payment for accurate paydown schedule
+  const rows = amortSchedule(bal, rate, remain, remain, pmt||pmtFn(bal,rate,remain));
   si('stAmortBody', rows.map(r=>`<tr>
     <td>${r.yr}</td><td>${fd(r.begBal)}</td>
     <td><span style="color:#86efac">${fd(r.annPmt)} 🔒</span></td>
@@ -3865,8 +3868,8 @@ function calcMorby() {
   const scRate    = gv('mb_sc_rate')/100;
   const scAmort   = gv('mb_sc_amort')||10;
   const scBalloon = gv('mb_sc_balloon')||10;
-  const bankLTV   = gv('mb_bank_ltv')/100;
-  const bankRate  = gv('mb_bank_rate')/100;
+  const bankLTV   = (gv('mb_bank_ltv')||75)/100;
+  const bankRate  = (gv('mb_bank_rate')||7.5)/100;
   const bankAmort = gv('mb_bank_amort')||30;
   const bankPts   = gv('mb_bank_points')/100;
   const rent      = gv('mb_rent');
@@ -5160,10 +5163,58 @@ function clearAll(){
 
   // 3. Restore intake defaults (fields with meaningful starting values)
   const setDef = (id,val) => { const e=el(id); if(e) e.value=val; };
+  // ── Intake defaults ──
   setDef('pur_hold', '5');
   setDef('pur_appr', '3');
   setDef('pur_rate', '7.000');
   setDef('fin_vac',  '5');
+  setDef('fin_mgmt_pct', '10');
+  // ── Conventional defaults ──
+  setDef('c_down_pct', '20');
+  setDef('c_amort',    '30');
+  setDef('c_term',     '30');
+  setDef('c_pmi',      '0.5');
+  setDef('c_points',   '0');
+  // ── FHA defaults ──
+  setDef('fha_down_pct', '3.5');
+  setDef('fha_amort',    '30');
+  // ── Hard Money defaults ──
+  setDef('hm_ltc',       '75');
+  setDef('hm_rate',      '11');
+  setDef('hm_points',    '2');
+  setDef('hm_term',      '12');
+  setDef('hm_refi_rate', '7.0');
+  setDef('hm_refi_ltv',  '75');
+  // ── DSCR defaults ──
+  setDef('dscr_ltv',    '75');
+  setDef('dscr_points', '1');
+  setDef('dscr_amort',  '30');
+  setDef('dscr_balloon','30');
+  setDef('dscr_io_yrs', '0');
+  setDef('dscr_min',    '1.25');
+  // ── Seller Finance defaults ──
+  setDef('sf1_amort',  '30');
+  setDef('sf1_term',   '30');
+  setDef('sf1_points', '0');
+  setDef('sf2_rate',   '0');
+  setDef('sf2_amort',  '10');
+  setDef('sf2_term',   '10');
+  setDef('sf2_points', '0');
+  setDef('sf3_amort',  '5');
+  setDef('sf3_term',   '5');
+  setDef('sf3_points', '0');
+  // ── Lease-Option defaults ──
+  setDef('lto_credit_pct', '25');
+  setDef('lto_period',     '2');
+  setDef('lto_appr',       '3');
+  // ── Morby defaults ──
+  setDef('mb_sc_rate',      '0');
+  setDef('mb_sc_amort',     '10');
+  setDef('mb_sc_balloon',   '10');
+  setDef('mb_bank_ltv',     '75');
+  setDef('mb_bank_rate',    '7.5');
+  setDef('mb_bank_amort',   '30');
+  setDef('mb_bank_points',  '1');
 
   // 4. Reset LOI close date to 30 days out
   const d=new Date(); d.setDate(d.getDate()+30);
@@ -5644,6 +5695,39 @@ function setupDualInputs() {
   ));
 }
 
+// ── Bidirectional Price Sync Setup ─────────────────────────────────────────
+// Calc price fields → pur_price (intake). Registered BEFORE R() bubble listeners
+// so pur_price is updated first, letting R() propagate the new value everywhere.
+// Non-intrusive: only fires when user actually types in a calc price field.
+function setupPriceSync() {
+  const CALC_PRICE_IDS = [
+    'c_price', 'fha_price', 'hm_price', 'dscr_price',
+    'st_price', 'sf_price', 'lto_strike', 'mb_price'
+  ];
+  CALC_PRICE_IDS.forEach(function(id) {
+    const e = el(id);
+    if (!e) return;
+    e.addEventListener('input', function() {
+      const purEl = el('pur_price');
+      if (purEl && this.value !== '') {
+        // Only update if user is actually on a calc tab (not intake)
+        // — always safe because syncIntakeToAllCalcs will push it back
+        if (purEl.value !== this.value) {
+          purEl.value = this.value;
+          // Flash a hint on intake label so user knows price is synced
+          const hint = el('price_sync_hint');
+          if (hint) {
+            hint.textContent = '↕ synced';
+            hint.style.opacity = '1';
+            clearTimeout(hint._fadeT);
+            hint._fadeT = setTimeout(()=>{ hint.style.opacity='0'; }, 1800);
+          }
+        }
+      }
+    });
+  });
+}
+
 window.addEventListener('DOMContentLoaded',()=>{
   if(typeof pdfjsLib!=='undefined')
     pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -5675,6 +5759,9 @@ window.addEventListener('DOMContentLoaded',()=>{
 
   // Dual % / $ inputs — attach BEFORE R() listeners so sync runs first
   setupDualInputs();
+
+  // Bidirectional price sync — attach BEFORE R() so pur_price is up-to-date
+  setupPriceSync();
 
   document.querySelectorAll('input,select').forEach(inp=>{
     inp.addEventListener('input',R);inp.addEventListener('change',R);
@@ -6556,6 +6643,91 @@ function deleteProject(name) {
   renderProjList();
 }
 
+// ── Project Download / Import ─────────────────────────────────────────────
+function downloadProject(name) {
+  const projects = _getAllProjects();
+  const proj = projects[name];
+  if(!proj) return;
+  // Build export envelope — strip internal folderId so recipient starts at root
+  const exportObj = {
+    format: 'jp_underwriting_suite_v1',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    project: { name: proj.name, savedAt: proj.savedAt, data: proj.data }
+  };
+  const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  // Sanitize filename: replace / \ : * ? " < > | with - and trim
+  const safe = name.replace(/[\/\\:*?"<>|]/g, '-').trim() || 'project';
+  a.href = url;
+  a.download = safe + '.jpdeals';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  showProjToast('⬇ Downloaded: ' + name + '.jpdeals');
+}
+
+function importProjectFile() {
+  const inp = el('importProjInput');
+  if(inp) { inp.value = ''; inp.click(); }
+}
+
+function importProjectFileHandler(event) {
+  const file = event.target.files && event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    let obj;
+    try { obj = JSON.parse(e.target.result); }
+    catch(err) { alert('Could not read file — make sure it is a valid .jpdeals file.'); return; }
+
+    // Accept both envelope format and raw project format (for compatibility)
+    let proj;
+    if(obj.format === 'jp_underwriting_suite_v1' && obj.project) {
+      proj = obj.project;
+    } else if(obj.name && obj.data) {
+      proj = obj; // raw project object
+    } else {
+      alert('This file does not appear to be a valid JP Underwriting Suite project.'); return;
+    }
+
+    if(!proj.name || typeof proj.data !== 'object') {
+      alert('Project file is missing required fields.'); return;
+    }
+
+    const projects = _getAllProjects();
+    // If name already exists, ask to overwrite or rename
+    let importName = proj.name;
+    if(projects[importName]) {
+      const choice = prompt(
+        'A project named "' + importName + '" already exists.\nEnter a new name to save as, or leave unchanged to overwrite:',
+        importName
+      );
+      if(choice === null) return; // user cancelled
+      importName = (choice || importName).trim() || importName;
+    }
+
+    // Place in current folder
+    const curFolder = typeof _getCurrentFolderId === 'function' ? _getCurrentFolderId() : null;
+    projects[importName] = {
+      name: importName,
+      savedAt: proj.savedAt || new Date().toISOString(),
+      data: proj.data,
+      folderId: curFolder
+    };
+    try {
+      _setAllProjects(projects);
+    } catch(err) {
+      alert('Could not save imported project: storage may be full.'); return;
+    }
+    renderProjList();
+    showProjToast('📥 Imported: ' + importName);
+  };
+  reader.readAsText(file);
+}
+
 // ── Folder helpers ────────────────────────────────────────────────────────────
 function _getMeta(){const p=_getAllProjects();return p.__meta__||{folders:[]};}
 function _setMeta(meta){const p=_getAllProjects();p.__meta__=meta;_setAllProjects(p);}
@@ -6657,6 +6829,7 @@ function _renderListView(container,folders,projs){
       +'<div class="proj-li-actions">'
       +'<button class="proj-act-btn proj-act-primary" data-tt="Open project" title="Open project" onclick="event.stopPropagation();loadProject(\''+nm+'\')" >Open</button>'
       +'<button class="proj-act-btn" data-tt="Duplicate" title="Duplicate" onclick="event.stopPropagation();duplicateProject(\''+nm+'\')" >Copy</button>'
+      +'<button class="proj-act-btn" data-tt="Download as .jpdeals file" title="Download as .jpdeals file" onclick="event.stopPropagation();downloadProject(\''+nm+'\')" >⬇ Save</button>'
       +'<button class="proj-act-btn" data-tt="Move to folder" title="Move to folder" onclick="event.stopPropagation();_showMoveDialog(\'project\',\''+nm+'\',null)" >Move</button>'
       +'<button class="proj-act-btn proj-act-danger" data-tt="Delete project" title="Delete project" onclick="event.stopPropagation();deleteProject(\''+nm+'\')" >Delete</button>'
       +'</div>';
@@ -6695,6 +6868,7 @@ function _renderIconView(container,folders,projs){
       +'<div class="proj-grid-actions">'
       +'<button class="proj-act-btn proj-act-primary" data-tt="Open project" title="Open project" onclick="event.stopPropagation();loadProject(\''+nm+'\')" >Open</button>'
       +'<button class="proj-act-btn" data-tt="Copy" title="Copy" onclick="event.stopPropagation();duplicateProject(\''+nm+'\')" >Copy</button>'
+      +'<button class="proj-act-btn" data-tt="Download as .jpdeals file" title="Download as .jpdeals file" onclick="event.stopPropagation();downloadProject(\''+nm+'\')" >⬇</button>'
       +'<button class="proj-act-btn proj-act-danger" data-tt="Delete" title="Delete" onclick="event.stopPropagation();deleteProject(\''+nm+'\')" >Del</button>'
       +'</div>';
     d.ondblclick=(e)=>{e.stopPropagation();loadProject(pj.name);};
