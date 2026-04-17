@@ -9405,9 +9405,23 @@ function _allPerms(v){var p={};PERM_DEFS.forEach(function(d){p[d.key]=v;});retur
 
 var _selWsId=null,_selTmId=null,_dTab='roles';
 
+function _tmSeed(){
+  var data=_tmGet();if(data.workspaces&&data.workspaces.length)return;
+  var wsId=_tmId('ws'),tmId=_tmId('tm');
+  var roles=[
+    {id:_tmId('role'),name:'Admin',  color:'#6366f1',perms:_allPerms(true)},
+    {id:_tmId('role'),name:'Analyst',color:'#10b981',perms:{save_project:true,delete_project:false,manage_members:false,manage_roles:false,view_exec:true,view_pitch:true,export_data:true,share_link:true}},
+    {id:_tmId('role'),name:'Viewer', color:'#64748b',perms:{save_project:false,delete_project:false,manage_members:false,manage_roles:false,view_exec:true,view_pitch:true,export_data:false,share_link:false}},
+  ];
+  data.workspaces=[{id:wsId,name:'My Workspace',createdAt:new Date().toISOString(),
+    teams:[{id:tmId,name:'My Team',roles:roles,members:[]}]}];
+  _tmSet(data);
+  _selWsId=wsId;_selTmId=tmId;
+}
 function openTeams(){
   var m=document.getElementById('tmModal');if(!m)return;
   m.style.display='flex';_selWsId=null;_selTmId=null;_dTab='roles';
+  _tmSeed();
   _rWs();_rTeams();_rDetail();
   var data=_tmGet();
   var ob=document.getElementById('tmOwnerSwitchBtn');var lbl=document.getElementById('tmActiveLabel');
