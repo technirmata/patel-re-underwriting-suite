@@ -597,7 +597,42 @@ strong { color: #e2e8f0; }
 .tm-btn-cancel{background:var(--surface2,#252837);color:var(--muted,#64748b);border:1px solid var(--border,#2a2d3e) !important}
 .tm-btn-cancel:hover{color:var(--text,#e2e8f0)}
 .tm-no-sel{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted,#64748b);font-size:13px}
+.tm-item-info{flex:1;min-width:0;overflow:hidden}
+.tm-item-sub{font-size:10px;color:var(--muted,#64748b);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm-item-actions{display:flex;gap:3px;flex-shrink:0;opacity:0;transition:opacity .15s}
+.tm-item:hover .tm-item-actions{opacity:1}
+.tm-icon-btn{background:none;border:none;cursor:pointer;font-size:13px;padding:2px 5px;border-radius:5px;color:var(--muted,#64748b)}
+.tm-icon-btn:hover{background:var(--surface1,#1a1d27);color:var(--text,#e2e8f0)}
+.tm-icon-btn.danger:hover{color:#ef4444}
+.tm-role-badge{font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;border:1px solid;display:inline-block;margin-left:4px}
+.tm-member-email{font-size:11px;color:var(--muted,#64748b);margin-top:1px}
+.tm-empty-icon{font-size:28px;margin-bottom:8px}
+.tm-detail-tabs{display:flex;gap:4px;padding:10px 14px 0;border-bottom:1px solid var(--border,#2a2d3e);flex-shrink:0}
+.tm-dtab{padding:6px 12px;font-size:12px;font-weight:600;border-radius:7px 7px 0 0;cursor:pointer;color:var(--muted,#64748b);border:1px solid transparent;border-bottom:none;position:relative;top:1px}
+.tm-dtab.active{background:var(--surface1,#1a1d27);color:var(--accent,#6366f1);border-color:var(--border,#2a2d3e)}
+.tm-detail-body{flex:1;overflow-y:auto;padding:14px}
 [data-perm].perm-hide{display:none!important}
+
+/* ── Teams Popup Dialog ──────────────────── */
+#tmPopup{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.tm-pop-box{background:#1a1d27;border:1px solid #2a2d3e;border-radius:14px;padding:22px 24px;width:360px;max-width:94vw;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:tmPopIn .15s ease}
+@keyframes tmPopIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.tm-pop-title{font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:16px}
+.tm-pop-msg{font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.6}
+.tm-pop-field{margin-bottom:12px}
+.tm-pop-field label{display:block;font-size:10px;font-weight:700;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:.07em}
+.tm-pop-field input,.tm-pop-field select{width:100%;background:#252837;border:1px solid #2a2d3e;border-radius:8px;padding:8px 10px;color:#e2e8f0;font-size:13px;box-sizing:border-box;outline:none;transition:border-color .15s}
+.tm-pop-field input:focus,.tm-pop-field select:focus{border-color:#6366f1}
+.tm-pop-field input[type=color]{width:42px;height:36px;border:none;border-radius:6px;cursor:pointer;padding:2px;background:none}
+.tm-pop-color-row{display:flex;align-items:center;gap:8px}
+.tm-pop-color-row input[type=text]{flex:1}
+.tm-pop-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.tm-pop-btn{padding:7px 18px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:opacity .15s}
+.tm-pop-btn:hover{opacity:.85}
+.tm-pop-cancel{background:#252837;border:1px solid #2a2d3e !important;color:#64748b}
+.tm-pop-ok{background:#6366f1;color:#fff}
+.tm-pop-del{background:#ef4444;color:#fff}
+/* END TM POPUP CSS */
 </style>
 </head>
 <body>
@@ -4552,7 +4587,8 @@ body{font-family:'Times New Roman',Times,serif;color:#1a1a2e;background:#fff}
 .loi-sig-line{border-top:1pt solid #1a1a2e;padding-top:4pt;margin-bottom:16pt}
 .loi-sig-label{font-size:9pt;color:#555}
 .loi-footer{font-size:9pt;color:#777;text-align:center;margin-top:22pt;border-top:1pt solid #dde3ed;padding-top:8pt;font-style:italic}
-</style></head><body>${content}</body></html>`);
+</style></head><body>${content}<div id="tmPopup" style="display:none"></div>
+</body></html>`);
   w.document.close();
   setTimeout(()=>{ w.print(); }, 400);
 }
@@ -6865,14 +6901,107 @@ function _getProjKey() {
 
 const PROJ_KEY = 'jp_suite_projects'; // legacy fallback (unused directly — use _getProjKey())
 
+
+/* ── Workspace cloud sync helpers (global, no IIFE dependency) ──────────── */
+var _TM_KEY_WS = 'jp_teams_v1';
+
+function _tmGetActiveShareCode() {
+  try {
+    var d = JSON.parse(localStorage.getItem(_TM_KEY_WS)) || {};
+    if (!d.activeWorkspaceId) return null;
+    var ws = (d.workspaces||[]).find(function(w){ return w.id === d.activeWorkspaceId; });
+    return (ws && ws.shareCode) ? ws.shareCode : null;
+  } catch(e) { return null; }
+}
+
+async function _sbSaveWsProjects(shareCode, projObj) {
+  if (!_sbOk()) return;
+  try {
+    var { error } = await _sbClient().from('jp_shared_workspaces').upsert(
+      { share_code: shareCode, projects_json: JSON.stringify(projObj), updated_at: new Date().toISOString() },
+      { onConflict: 'share_code' }
+    );
+    if (error) console.warn('[WS sync] save error:', error.message);
+  } catch(e) { console.warn('[WS sync] save error:', e); }
+}
+
+async function _sbLoadWsRow(shareCode) {
+  if (!_sbOk()) return null;
+  try {
+    var { data, error } = await _sbClient().from('jp_shared_workspaces')
+      .select('workspace_json,projects_json').eq('share_code', shareCode).maybeSingle();
+    if (error) { console.warn('[WS sync] load error:', error.message); return null; }
+    return data || null;
+  } catch(e) { console.warn('[WS sync] load error:', e); return null; }
+}
+
+// ── Real-time subscription ────────────────────────────────────────────────
+var _wsRealtimeSub = null;
+
+function _wsSubscribe(shareCode) {
+  if (!_sbOk() || !shareCode) return;
+  if (_wsRealtimeSub) { try { _wsRealtimeSub.unsubscribe(); } catch(e){} }
+  _wsRealtimeSub = _sbClient()
+    .channel('ws_sync_'+shareCode)
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'jp_shared_workspaces',
+      filter: 'share_code=eq.'+shareCode
+    }, function(payload) {
+      // Remote change detected — pull into localStorage and refresh UI
+      try {
+        var row = payload.new;
+        if (row && row.projects_json) {
+          localStorage.setItem('jp_ws_projects_'+shareCode, row.projects_json);
+          if (typeof renderProjList === 'function') renderProjList();
+          if (typeof showProjToast === 'function') showProjToast('🔄 Projects synced from team');
+        }
+        if (row && row.workspace_json) {
+          var wsMeta = JSON.parse(row.workspace_json);
+          var d = JSON.parse(localStorage.getItem(_TM_KEY_WS)||'{}');
+          var ws = (d.workspaces||[]).find(function(w){ return w.shareCode === shareCode; });
+          if (ws && wsMeta.teams) { ws.teams = wsMeta.teams; localStorage.setItem(_TM_KEY_WS, JSON.stringify(d)); }
+        }
+      } catch(e) { console.warn('[WS realtime] parse error:', e); }
+    })
+    .subscribe();
+}
+
+function _wsUnsubscribe() {
+  if (_wsRealtimeSub) { try { _wsRealtimeSub.unsubscribe(); } catch(e){} _wsRealtimeSub = null; }
+}
+
+// Auto-subscribe on load if active workspace has a shareCode
+setTimeout(function() {
+  var sc = _tmGetActiveShareCode();
+  if (sc) {
+    _wsSubscribe(sc);
+    // Silent pull on page load
+    _sbLoadWsRow(sc).then(function(row) {
+      if (!row) return;
+      if (row.projects_json) {
+        localStorage.setItem('jp_ws_projects_'+sc, row.projects_json);
+        if (typeof renderProjList === 'function') renderProjList();
+      }
+    });
+  }
+}, 1800);
+
 function _getAllProjects() {
-  try { return JSON.parse(localStorage.getItem(_getProjKey())) || {}; }
+  const sc = _tmGetActiveShareCode();
+  const key = sc ? ('jp_ws_projects_'+sc) : _getProjKey();
+  try { return JSON.parse(localStorage.getItem(key)) || {}; }
   catch(e) { return {}; }
 }
 
 function _setAllProjects(obj) {
-  try { localStorage.setItem(_getProjKey(), JSON.stringify(obj)); }
+  const sc = _tmGetActiveShareCode();
+  const key = sc ? ('jp_ws_projects_'+sc) : _getProjKey();
+  try { localStorage.setItem(key, JSON.stringify(obj)); }
   catch(e) { throw new Error('Storage quota exceeded'); }
+  if(sc && _sbOk()) {
+    _sbSaveWsProjects(sc, obj).catch(()=>{});
+    return;
+  }
   // Async sync to Supabase if configured
   if(_sbOk()) {
     const s = _getSession();
@@ -9435,11 +9564,18 @@ function _rWs(){
   var list=document.getElementById('tmWsList');if(!list)return;var data=_tmGet();list.innerHTML='';
   if(!data.workspaces.length){list.innerHTML='<div class="tm-empty"><div class="tm-empty-icon">\uD83C\uDFE2</div>No workspaces.<br>Click + to create one.</div>';return;}
   data.workspaces.forEach(function(ws){
+    var data0=_tmGet();
+    var isActiveWs=(data0.activeWorkspaceId===ws.id);
     var d=document.createElement('div');d.className='tm-item'+(ws.id===_selWsId?' active':'');
+    if(isActiveWs)d.style.cssText='border-left:3px solid var(--accent,#6366f1);padding-left:7px';
     d.innerHTML='<div class="tm-item-icon" style="background:rgba(99,102,241,.15)">\uD83C\uDFE2</div>'
-      +'<div class="tm-item-info"><div class="tm-item-name">'+_e(ws.name)+'</div>'
-      +'<div class="tm-item-sub">'+ws.teams.length+' team'+(ws.teams.length!==1?'s':'')+'</div></div>'
+      +'<div class="tm-item-info"><div class="tm-item-name">'+_e(ws.name)
+        +(isActiveWs?'<span style="font-size:9px;background:rgba(99,102,241,.2);color:#a5b4fc;padding:1px 5px;border-radius:10px;margin-left:5px">ACTIVE</span>':'')
+        +(ws.shareCode?'<span style="font-size:9px;background:rgba(16,185,129,.15);color:#34d399;padding:1px 5px;border-radius:10px;margin-left:3px">\u2601\uFE0F SYNCED</span>':'')+'</div>'
+      +'<div class="tm-item-sub">'+ws.teams.length+' team'+(ws.teams.length!==1?'s':'')+(ws.shareCode?' \u00B7 '+ws.shareCode:'')+'</div></div>'
       +'<div class="tm-item-actions">'
+      +(isActiveWs?'<button class="tm-icon-btn" style="color:#10b981" onclick="event.stopPropagation();_tmPullWs(\'' +ws.id+'\')" title="Pull latest">\u21BB</button>':'')
+      +'<button class="tm-icon-btn" onclick="event.stopPropagation();_tmSetActiveWs(\'' +ws.id+'\')" data-id="'+ws.id+'" title="'+(isActiveWs?'Deactivate':'Set as active')+'">'+(isActiveWs?'\u23F9':'\u25B6')+'</button>'
       +'<button class="tm-icon-btn" onclick="event.stopPropagation();_tmRnWs(this)" data-id="'+ws.id+'" title="Rename">\u270F\uFE0F</button>'
       +'<button class="tm-icon-btn danger" onclick="event.stopPropagation();_tmDelWs(this)" data-id="'+ws.id+'" title="Delete">\uD83D\uDDD1</button>'
       +'</div>';
@@ -9448,22 +9584,25 @@ function _rWs(){
   });
 }
 function _tmAddWs(){
-  var n=(prompt('Workspace name:')||'').trim();if(!n)return;
-  var data=_tmGet();var ws={id:_tmId('ws'),name:n,createdAt:new Date().toISOString(),teams:[]};
-  data.workspaces.push(ws);_tmSet(data);_selWsId=ws.id;_rWs();_rTeams();_rDetail();
+  _tmPop({title:'New Workspace',fields:[{id:'name',label:'Workspace Name',type:'text',placeholder:'e.g. Acquisitions Q3'}],
+    onOk:function(v){var n=(v.name||'').trim();if(!n)return;
+      var data=_tmGet();var ws={id:_tmId('ws'),name:n,createdAt:new Date().toISOString(),teams:[]};
+      data.workspaces.push(ws);_tmSet(data);_selWsId=ws.id;_rWs();_rTeams();_rDetail();
+    }});
 }
 function _tmRnWs(btn){
   var id=btn.getAttribute('data-id');
   var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===id;});if(!ws)return;
-  var n=(prompt('Rename workspace:',ws.name)||'').trim();if(!n)return;
-  ws.name=n;_tmSet(data);_rWs();
+  _tmPop({title:'Rename Workspace',fields:[{id:'name',label:'Workspace Name',type:'text',val:ws.name}],
+    onOk:function(v){var n=(v.name||'').trim();if(!n)return;ws.name=n;_tmSet(data);_rWs();}});
 }
 function _tmDelWs(btn){
   var id=btn.getAttribute('data-id');
   var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===id;});if(!ws)return;
-  if(!confirm('Delete workspace "'+ws.name+'" and all its teams?'))return;
-  data.workspaces=data.workspaces.filter(function(w){return w.id!==id;});
-  if(_selWsId===id){_selWsId=null;_selTmId=null;}_tmSet(data);_rWs();_rTeams();_rDetail();
+  _tmConfirm('Delete workspace <strong>'+_e(ws.name)+'</strong> and all its teams? This cannot be undone.','Delete',function(){
+    data.workspaces=data.workspaces.filter(function(w){return w.id!==id;});
+    if(_selWsId===id){_selWsId=null;_selTmId=null;}_tmSet(data);_rWs();_rTeams();_rDetail();
+  });
 }
 window._tmAddWs=_tmAddWs;window._tmRnWs=_tmRnWs;window._tmDelWs=_tmDelWs;
 
@@ -9487,28 +9626,32 @@ function _rTeams(){
   });
 }
 function _tmAddTeam(){
-  if(!_selWsId)return;var n=(prompt('Team name:')||'').trim();if(!n)return;
+  if(!_selWsId){if(typeof showProjToast==='function')showProjToast('Select a workspace first',true);return;}
   var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
-  var tm={id:_tmId('tm'),name:n,roles:[],members:[]};
-  tm.roles.push({id:_tmId('role'),name:'Admin',color:'#6366f1',perms:_allPerms(true)});
-  tm.roles.push({id:_tmId('role'),name:'Analyst',color:'#10b981',perms:{save_project:true,delete_project:false,manage_members:false,manage_roles:false,view_exec:true,view_pitch:true,export_data:true,share_link:true}});
-  tm.roles.push({id:_tmId('role'),name:'Viewer',color:'#64748b',perms:{save_project:false,delete_project:false,manage_members:false,manage_roles:false,view_exec:true,view_pitch:true,export_data:false,share_link:false}});
-  ws.teams.push(tm);_tmSet(data);_selTmId=tm.id;_rWs();_rTeams();_rDetail();
+  _tmPop({title:'New Team',fields:[{id:'name',label:'Team Name',type:'text',placeholder:'e.g. Underwriting Team'}],
+    onOk:function(v){var n=(v.name||'').trim();if(!n)return;
+      var tm={id:_tmId('tm'),name:n,roles:[],members:[]};
+      tm.roles.push({id:_tmId('role'),name:'Admin',color:'#6366f1',perms:_allPerms(true)});
+      tm.roles.push({id:_tmId('role'),name:'Analyst',color:'#10b981',perms:{save_project:true,delete_project:false,manage_members:false,manage_roles:false,view_exec:true,view_pitch:true,export_data:true,share_link:true}});
+      tm.roles.push({id:_tmId('role'),name:'Viewer',color:'#64748b',perms:{save_project:false,delete_project:false,manage_members:false,manage_roles:false,view_exec:true,view_pitch:true,export_data:false,share_link:false}});
+      ws.teams.push(tm);_tmSet(data);_selTmId=tm.id;_rWs();_rTeams();_rDetail();
+    }});
 }
 function _tmRnTm(btn){
   var id=btn.getAttribute('data-id');
   var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
   var tm=ws.teams.find(function(t){return t.id===id;});if(!tm)return;
-  var n=(prompt('Rename team:',tm.name)||'').trim();if(!n)return;
-  tm.name=n;_tmSet(data);_rTeams();
+  _tmPop({title:'Rename Team',fields:[{id:'name',label:'Team Name',type:'text',val:tm.name}],
+    onOk:function(v){var n=(v.name||'').trim();if(!n)return;tm.name=n;_tmSet(data);_tmSyncMeta();_rTeams();}});
 }
 function _tmDelTm(btn){
   var id=btn.getAttribute('data-id');
   var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
   var tm=ws.teams.find(function(t){return t.id===id;});if(!tm)return;
-  if(!confirm('Delete team "'+tm.name+'"?'))return;
-  ws.teams=ws.teams.filter(function(t){return t.id!==id;});
-  if(_selTmId===id)_selTmId=null;_tmSet(data);_rTeams();_rDetail();
+  _tmConfirm('Delete team <strong>'+_e(tm.name)+'</strong> and all its roles &amp; members?','Delete Team',function(){
+    ws.teams=ws.teams.filter(function(t){return t.id!==id;});
+    if(_selTmId===id)_selTmId=null;_tmSet(data);_tmSyncMeta();_rTeams();_rDetail();
+  });
 }
 window._tmAddTeam=_tmAddTeam;window._tmRnTm=_tmRnTm;window._tmDelTm=_tmDelTm;
 
@@ -9559,38 +9702,44 @@ function _rRolesBody(body,tm){
   });
 }
 function _tmAddRole(){
-  var n=(prompt('Role name:')||'').trim();if(!n)return;
   var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
   var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
-  if(!tm.roles)tm.roles=[];
-  tm.roles.push({id:_tmId('role'),name:n,color:_nc(),perms:_allPerms(false)});
-  _tmSet(data);_rDetail();
+  _tmPop({title:'New Role',fields:[
+    {id:'name',label:'Role Name',type:'text',placeholder:'e.g. Associate'},
+    {id:'color',label:'Color',type:'color',val:_nc()}
+  ],onOk:function(v){
+    var n=(v.name||'').trim();if(!n)return;
+    if(!tm.roles)tm.roles=[];
+    tm.roles.push({id:_tmId('role'),name:n,color:v.color||_nc(),perms:_allPerms(false)});
+    _tmSet(data);_tmSyncMeta();_rDetail();
+  }});
 }
 function _tmRnRole(btn){
   var id=btn.getAttribute('data-id');
   var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
   var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
   var r=(tm.roles||[]).find(function(r){return r.id===id;});if(!r)return;
-  var n=(prompt('Rename role:',r.name)||'').trim();if(!n)return;
-  r.name=n;_tmSet(data);_rDetail();
+  _tmPop({title:'Rename Role',fields:[{id:'name',label:'Role Name',type:'text',val:r.name}],
+    onOk:function(v){var n=(v.name||'').trim();if(!n)return;r.name=n;_tmSet(data);_tmSyncMeta();_rDetail();}});
 }
 function _tmRoleColor(btn){
   var id=btn.getAttribute('data-id');
   var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
   var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
   var r=(tm.roles||[]).find(function(r){return r.id===id;});if(!r)return;
-  var c=prompt('Color hex (e.g. #6366f1):',r.color);if(!c)return;
-  r.color=c.trim();_tmSet(data);_rDetail();
+  _tmPop({title:'Role Color',fields:[{id:'color',label:'Pick a color',type:'color',val:r.color||'#6366f1'}],
+    onOk:function(v){r.color=v.color||r.color;_tmSet(data);_tmSyncMeta();_rDetail();}});
 }
 function _tmDelRole(btn){
   var id=btn.getAttribute('data-id');
   var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
   var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
   var r=(tm.roles||[]).find(function(r){return r.id===id;});if(!r)return;
-  if(!confirm('Delete role "'+r.name+'"? Members will lose this role.'))return;
-  tm.roles=tm.roles.filter(function(x){return x.id!==id;});
-  (tm.members||[]).forEach(function(m){if(m.roleId===id)m.roleId=null;});
-  _tmSet(data);_rDetail();
+  _tmConfirm('Delete role <strong>'+_e(r.name)+'</strong>? Members with this role will become unassigned.','Delete Role',function(){
+    tm.roles=tm.roles.filter(function(x){return x.id!==id;});
+    (tm.members||[]).forEach(function(m){if(m.roleId===id)m.roleId=null;});
+    _tmSet(data);_tmSyncMeta();_rDetail();
+  });
 }
 function _tmSavePerm(roleId,pk,val){
   var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
@@ -9633,17 +9782,17 @@ function _tmAddMember(){
   var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
   var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
   var roles=tm.roles||[];
-  var n=(prompt('Member name:')||'').trim();if(!n)return;
-  var email=(prompt('Email (optional):')||'').trim();
-  var roleId=null;
-  if(roles.length){
-    var opts=roles.map(function(r,i){return i+': '+r.name;}).join('\n');
-    var idx=parseInt(prompt('Assign role:\n'+opts+'\n\nEnter number:'));
-    if(!isNaN(idx)&&roles[idx])roleId=roles[idx].id;
-  }
-  if(!tm.members)tm.members=[];
-  tm.members.push({id:_tmId('mem'),name:n,email:email,roleId:roleId});
-  _tmSet(data);_rDetail();_tmChip();
+  var roleOpts=[{v:'',l:'(No role)'}].concat(roles.map(function(r){return {v:r.id,l:r.name};}));
+  _tmPop({title:'Add Member',fields:[
+    {id:'name',label:'Full Name',type:'text',placeholder:'Jane Smith'},
+    {id:'email',label:'Email (optional)',type:'email',placeholder:'jane@company.com'},
+    {id:'role',label:'Role',type:'select',val:'',opts:roleOpts}
+  ],onOk:function(v){
+    var n=(v.name||'').trim();if(!n)return;
+    if(!tm.members)tm.members=[];
+    tm.members.push({id:_tmId('mem'),name:n,email:(v.email||'').trim(),roleId:v.role||null});
+    _tmSet(data);_tmSyncMeta();_rDetail();_tmChip();
+  }});
 }
 function _tmEditMem(btn){
   var id=btn.getAttribute('data-id');
@@ -9651,27 +9800,27 @@ function _tmEditMem(btn){
   var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
   var mem=(tm.members||[]).find(function(m){return m.id===id;});if(!mem)return;
   var roles=tm.roles||[];
-  var n=(prompt('Name:',mem.name)||'').trim();if(!n)return;
-  var email=(prompt('Email:',mem.email||'')||'').trim();
-  var roleId=mem.roleId;
-  if(roles.length){
-    var opts=roles.map(function(r,i){return i+': '+r.name;}).join('\n');
-    var ci=roles.findIndex(function(r){return r.id===mem.roleId;});
-    var idx=parseInt(prompt('Role (current: '+(ci>=0?roles[ci].name:'none')+'):\n'+opts+'\n\nEnter number:'));
-    if(!isNaN(idx)&&roles[idx])roleId=roles[idx].id;
-  }
-  mem.name=n;mem.email=email;mem.roleId=roleId;
-  _tmSet(data);_rDetail();_tmChip();_tmApplyPerms();
+  var roleOpts=[{v:'',l:'(No role)'}].concat(roles.map(function(r){return {v:r.id,l:r.name};}));
+  _tmPop({title:'Edit Member',fields:[
+    {id:'name',label:'Full Name',type:'text',val:mem.name},
+    {id:'email',label:'Email',type:'email',val:mem.email||''},
+    {id:'role',label:'Role',type:'select',val:mem.roleId||'',opts:roleOpts}
+  ],onOk:function(v){
+    var n=(v.name||'').trim();if(!n)return;
+    mem.name=n;mem.email=(v.email||'').trim();mem.roleId=v.role||null;
+    _tmSet(data);_tmSyncMeta();_rDetail();_tmChip();_tmApplyPerms();
+  }});
 }
 function _tmDelMem(btn){
   var id=btn.getAttribute('data-id');
   var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
   var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
   var mem=(tm.members||[]).find(function(m){return m.id===id;});if(!mem)return;
-  if(!confirm('Remove '+mem.name+' from this team?'))return;
-  tm.members=tm.members.filter(function(m){return m.id!==id;});
-  if(data.activeUserId===id)data.activeUserId=null;
-  _tmSet(data);_rDetail();_tmChip();_tmApplyPerms();
+  _tmConfirm('Remove <strong>'+_e(mem.name)+'</strong> from this team?','Remove',function(){
+    tm.members=tm.members.filter(function(m){return m.id!==id;});
+    if(data.activeUserId===id){data.activeUserId=null;_tmChip();_tmApplyPerms();}
+    _tmSet(data);_tmSyncMeta();_rDetail();
+  });
 }
 window._tmAddMember=_tmAddMember;window._tmEditMem=_tmEditMem;window._tmDelMem=_tmDelMem;
 
@@ -9725,6 +9874,232 @@ window._tmSwUser=_tmSwUser;window._tmSwitchToOwner=_tmSwitchToOwner;
 
 function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+
+/* ── Workspace cloud sync — UI actions (inside teams IIFE) ─────────────── */
+
+// Publish: push workspace + projects to Supabase, generate shareCode
+async function _tmPublishWs() {
+  var data = _tmGet();
+  if (!_selWsId) { alert('Select a workspace first.'); return; }
+  var ws = data.workspaces.find(function(w){ return w.id === _selWsId; });
+  if (!ws) return;
+  if (!_sbOk()) { alert('Supabase not configured. Check SUPABASE_URL and SUPABASE_ANON.'); return; }
+  if (!ws.shareCode) ws.shareCode = _tmGenCode();
+  // Activate this workspace for sync
+  data.activeWorkspaceId = ws.id;
+  _tmSet(data);
+  // Gather projects from personal store + any existing ws store
+  var projKey = 'jp_ws_projects_' + ws.shareCode;
+  var projects;
+  try {
+    projects = JSON.parse(localStorage.getItem(projKey)) ||
+               JSON.parse(localStorage.getItem(_getProjKey())) || {};
+  } catch(e) { projects = {}; }
+  localStorage.setItem(projKey, JSON.stringify(projects));
+  try {
+    var { error } = await _sbClient().from('jp_shared_workspaces').upsert({
+      share_code: ws.shareCode,
+      workspace_json: JSON.stringify({ name: ws.name, teams: ws.teams }),
+      projects_json: JSON.stringify(projects),
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'share_code' });
+    if (error) throw new Error(error.message);
+    _rWs();
+    _wsSubscribe(ws.shareCode);
+    if (typeof showProjToast === 'function') showProjToast('☁ Published! Code: ' + ws.shareCode);
+   
+    var _sp=document.getElementById('tmPopup');
+    if(!_sp){_sp=document.createElement('div');_sp.id='tmPopup';document.body.appendChild(_sp);}
+    var _sc2=ws.shareCode;
+    _sp.setAttribute('data-sc', _sc2);
+    _sp.innerHTML='<div class="tm-pop-box" style="text-align:center">'
+      +'<div class="tm-pop-title">&#x2601; Workspace Published!</div>'
+      +'<div class="tm-pop-msg">Share this code with teammates — they enter it to sync the same projects.</div>'
+      +'<div style="font-size:26px;font-weight:800;letter-spacing:.15em;color:#a5b4fc;background:#1e1b4b;border-radius:10px;padding:14px;margin:12px 0;font-family:monospace">'+_sc2+'</div>'
+      +'<div class="tm-pop-btns" style="justify-content:center">'
+      +'<button class="tm-pop-btn tm-pop-cancel" onclick="_tmPopClose()">Close</button>'
+      +'<button class="tm-pop-btn tm-pop-ok" id="tmCopyCodeBtn">&#x1F4CB; Copy Code</button>'
+      +'</div></div>';
+    _sp.style.display='flex';
+    setTimeout(function(){var b=document.getElementById('tmCopyCodeBtn');if(b)b.onclick=function(){try{navigator.clipboard.writeText(_sc2);}catch(e){}; _tmPopClose();if(typeof showProjToast==='function')showProjToast('Code copied!');};},30);
+  } catch(e) {
+    alert('Publish failed: ' + e.message + '\n\nDid you run SUPABASE_SETUP.sql in your Supabase dashboard?');
+  }
+}
+window._tmPublishWs = _tmPublishWs;
+
+// Join: enter a shareCode, pull workspace + projects
+async function _tmJoinWsCore(code) {
+  if (!_sbOk()) { return; }
+  if (typeof showProjToast === 'function') showProjToast('Looking up workspace…');
+  var row = await _sbLoadWsRow(code);
+  if (!row || !row.workspace_json) { alert('Workspace not found for code: ' + code); return; }
+  var wsMeta = JSON.parse(row.workspace_json);
+  var data = _tmGet();
+  var existing = (data.workspaces || []).find(function(w){ return w.shareCode === code; });
+  if (existing) {
+    // Already joined — just activate + pull
+    data.activeWorkspaceId = existing.id;
+    _tmSet(data);
+    if (row.projects_json) localStorage.setItem('jp_ws_projects_' + code, row.projects_json);
+    _selWsId = existing.id;
+    _rWs(); _rTeams(); _rDetail();
+    _wsSubscribe(code);
+    if (typeof renderProjList === 'function') renderProjList();
+    if (typeof showProjToast === 'function') showProjToast('Re-joined: ' + existing.name + ' — projects synced');
+    return;
+  }
+  var newWs = { id: _tmId('ws'), name: wsMeta.name || ('Shared ' + code),
+    shareCode: code, createdAt: new Date().toISOString(), teams: wsMeta.teams || [] };
+  if (!data.workspaces) data.workspaces = [];
+  data.workspaces.push(newWs);
+  data.activeWorkspaceId = newWs.id;
+  _tmSet(data);
+  if (row.projects_json) localStorage.setItem('jp_ws_projects_' + code, row.projects_json);
+  _selWsId = newWs.id;
+  _rWs(); _rTeams(); _rDetail();
+  _wsSubscribe(code);
+  if (typeof renderProjList === 'function') renderProjList();
+  if (typeof showProjToast === 'function') showProjToast('Joined: ' + newWs.name + ' — projects synced');
+}
+window._tmJoinWsCore = _tmJoinWsCore;
+function _tmJoinWs() {
+  if (!_sbOk()) { alert('Supabase not configured.\n\nAdd SUPABASE_URL and SUPABASE_ANON to the app config.'); return; }
+  _tmPop({title:'Join Workspace',fields:[{id:'code',label:'Workspace Share Code',type:'text',placeholder:'e.g. AB3X7F2K'}],
+    btnOk:'Join',onOk:function(v){
+      var c=(v.code||''). trim().toUpperCase();if(!c)return;
+      _tmJoinWsCore(c);
+    }});
+}
+window._tmJoinWs = _tmJoinWs;
+
+// Pull latest manually
+async function _tmPullWs(wsId) {
+  var data = _tmGet();
+  var ws = (data.workspaces || []).find(function(w){ return w.id === (wsId || _selWsId); });
+  if (!ws || !ws.shareCode) { if (typeof showProjToast==='function') showProjToast('Workspace not synced.', true); return; }
+  var row = await _sbLoadWsRow(ws.shareCode);
+  if (!row) { if (typeof showProjToast==='function') showProjToast('Could not reach server.', true); return; }
+  if (row.projects_json) localStorage.setItem('jp_ws_projects_' + ws.shareCode, row.projects_json);
+  if (row.workspace_json) {
+    var m = JSON.parse(row.workspace_json);
+    if (m.teams) { ws.teams = m.teams; _tmSet(data); }
+  }
+  if (typeof renderProjList === 'function') renderProjList();
+  if (typeof showProjToast === 'function') showProjToast('↻ Pulled latest from cloud');
+}
+window._tmPullWs = _tmPullWs;
+
+// Toggle active workspace
+function _tmSetActiveWs(wsId) {
+  var data = _tmGet();
+  var was = data.activeWorkspaceId;
+  data.activeWorkspaceId = (was === wsId) ? null : wsId;
+  _tmSet(data);
+  if (data.activeWorkspaceId) {
+    var ws = (data.workspaces || []).find(function(w){ return w.id === data.activeWorkspaceId; });
+    if (ws && ws.shareCode) _wsSubscribe(ws.shareCode);
+    if (typeof showProjToast==='function') showProjToast('Active: ' + (ws ? ws.name : wsId) + (ws&&ws.shareCode?' (synced)':''));
+  } else {
+    _wsUnsubscribe();
+    if (typeof showProjToast==='function') showProjToast('Back to personal projects');
+  }
+  _rWs();
+  if (typeof renderProjList === 'function') renderProjList();
+}
+window._tmSetActiveWs = _tmSetActiveWs;
+
+function _tmGenCode() {
+  return Math.random().toString(36).slice(2,6).toUpperCase() +
+         Math.random().toString(36).slice(2,6).toUpperCase();
+}
+
+// Also push workspace_json whenever teams/roles/members change in a synced workspace
+function _tmSyncMeta() {
+  var data = _tmGet();
+  if (!data.activeWorkspaceId || !_sbOk()) return;
+  var ws = (data.workspaces||[]).find(function(w){ return w.id===data.activeWorkspaceId; });
+  if (!ws || !ws.shareCode) return;
+  _sbClient().from('jp_shared_workspaces').upsert({
+    share_code: ws.shareCode,
+    workspace_json: JSON.stringify({name: ws.name, teams: ws.teams}),
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'share_code' }).then(function(r){
+    if (r.error) console.warn('[WS meta sync]', r.error.message);
+  });
+}
+
+
+
+/* ── Popup dialog helpers ─────────────────────────────────────────────────── */
+function _tmPop(cfg) {
+  var pop = document.getElementById('tmPopup');
+  if (!pop) { pop = document.createElement('div'); pop.id = 'tmPopup'; document.body.appendChild(pop); }
+  var fHtml = (cfg.fields || []).map(function(f) {
+    var inp = '';
+    if (f.type === 'select') {
+      inp = '<select id="tpf_'+f.id+'">'
+        + (f.opts||[]).map(function(o){return '<option value="'+_e(String(o.v))+'"'+(String(o.v)===String(f.val)?' selected':'')+'>'+_e(o.l)+'</option>';}).join('')
+        + '</select>';
+    } else if (f.type === 'color') {
+      var cv = f.val || '#6366f1';
+      inp = '<div class="tm-pop-color-row">'
+        + '<input type="color" id="tpf_'+f.id+'_sw" value="'+cv+'" oninput="document.getElementById(\'tpf_'+f.id+'\').value=this.value">'
+        + '<input type="text" id="tpf_'+f.id+'" value="'+cv+'" placeholder="#6366f1" oninput="var s=document.getElementById(\'tpf_'+f.id+'_sw\');if(/^#[0-9a-fA-F]{6}$/.test(this.value))s.value=this.value">'
+        + '</div>';
+    } else {
+      inp = '<input type="'+(f.type||'text')+'" id="tpf_'+f.id+'" value="'+_e(f.val||'')+'" placeholder="'+_e(f.placeholder||'')+'">';
+    }
+    return '<div class="tm-pop-field"><label>'+_e(f.label)+'</label>'+inp+'</div>';
+  }).join('');
+  pop.innerHTML = '<div class="tm-pop-box">'
+    + '<div class="tm-pop-title">'+cfg.title+'</div>'
+    + (cfg.msg ? '<div class="tm-pop-msg">'+cfg.msg+'</div>' : '')
+    + fHtml
+    + '<div class="tm-pop-btns">'
+    + '<button class="tm-pop-btn tm-pop-cancel" onclick="_tmPopClose()">Cancel</button>'
+    + '<button class="tm-pop-btn '+(cfg.danger?'tm-pop-del':'tm-pop-ok')+'" onclick="_tmPopOk()">'+(cfg.btnOk||'Save')+'</button>'
+    + '</div></div>';
+  pop.style.display = 'flex';
+  window._tmPopCb = cfg.onOk;
+  window._tmPopFields = cfg.fields || [];
+  setTimeout(function(){
+    var first = pop.querySelector('input:not([type=color]),select');
+    if (first) { first.focus(); try{first.select();}catch(e){} }
+  }, 60);
+  pop.onkeydown = function(e){
+    if (e.key==='Escape') _tmPopClose();
+    else if (e.key==='Enter' && e.target && e.target.tagName!=='SELECT' && e.target.type!=='color') _tmPopOk();
+  };
+}
+window._tmPop = _tmPop;
+function _tmPopClose(){var pop=document.getElementById('tmPopup');if(pop)pop.style.display='none';}
+window._tmPopClose = _tmPopClose;
+function _tmPopOk(){
+  var vals={};
+  (window._tmPopFields||[]).forEach(function(f){
+    var el=document.getElementById('tpf_'+f.id);if(el)vals[f.id]=el.value;
+  });
+  _tmPopClose();
+  if(typeof window._tmPopCb==='function')window._tmPopCb(vals);
+}
+window._tmPopOk = _tmPopOk;
+function _tmConfirm(msg,btnLabel,onYes){
+  var pop=document.getElementById('tmPopup');
+  if(!pop){pop=document.createElement('div');pop.id='tmPopup';document.body.appendChild(pop);}
+  pop.innerHTML='<div class="tm-pop-box">'
+    +'<div class="tm-pop-title">Confirm</div>'
+    +'<div class="tm-pop-msg">'+msg+'</div>'
+    +'<div class="tm-pop-btns">'
+    +'<button class="tm-pop-btn tm-pop-cancel" onclick="_tmPopClose()">Cancel</button>'
+    +'<button class="tm-pop-btn tm-pop-del" onclick="_tmPopClose();window._tmConfCb&&window._tmConfCb()">'+(btnLabel||'Delete')+'</button>'
+    +'</div></div>';
+  pop.style.display='flex';
+  window._tmConfCb=onYes;
+  pop.onkeydown=function(e){if(e.key==='Escape')_tmPopClose();};
+}
+window._tmConfirm = _tmConfirm;
+
 setTimeout(function(){_tmChip();_tmApplyPerms();},300);
 
 })();
@@ -9748,7 +10123,13 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
     <div class="tm-body">
       <!-- Pane 1: Workspaces -->
       <div class="tm-pane">
-        <div class="tm-pane-hdr">Workspaces <button onclick="_tmAddWs()">+ New</button></div>
+        <div class="tm-pane-hdr">Workspaces
+          <div style="display:flex;gap:4px">
+            <button onclick="_tmAddWs()" title="New workspace">+ New</button>
+            <button onclick="_tmPublishWs()" title="Publish to cloud / get share code" style="background:var(--surface2);color:#34d399;border:1px solid rgba(52,211,153,.3)">&#x2601;</button>
+            <button onclick="_tmJoinWs()" title="Join workspace by code" style="background:var(--surface2);color:#a5b4fc;border:1px solid rgba(165,180,252,.3)">&#x1F517;</button>
+          </div>
+        </div>
         <div class="tm-pane-list" id="tmWsList"></div>
       </div>
       <!-- Pane 2: Teams -->
