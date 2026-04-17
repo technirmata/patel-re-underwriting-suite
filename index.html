@@ -9725,7 +9725,11 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
   <div class="tm-modal">
     <div class="tm-header">
       <h2>🏢 Workspaces &amp; Teams</h2>
-      <button class="tm-close-btn" onclick="closeTeams()">✕</button>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="tmActiveLabel" style="font-size:11px;color:var(--muted)">Active: Owner</span>
+        <button id="tmOwnerSwitchBtn" onclick="_tmSwitchToOwner()" style="display:none;font-size:11px;padding:3px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);cursor:pointer">↩ Back to Owner</button>
+        <button class="tm-close-btn" onclick="closeTeams()">✕</button>
+      </div>
     </div>
     <div class="tm-body">
       <!-- Pane 1: Workspaces -->
@@ -9738,15 +9742,9 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
         <div class="tm-pane-hdr"><span id="tmTeamsPaneTitle">Teams</span> <button onclick="_tmAddTeam()">+ New</button></div>
         <div class="tm-pane-list" id="tmTeamList"></div>
       </div>
-      <!-- Pane 3: Detail (Roles + Members tabs) -->
+      <!-- Pane 3: Detail (Roles + Members tabs — rendered by _rDetail()) -->
       <div class="tm-detail">
-        <div class="tm-tabs" id="tmDetailTabs" style="display:none">
-          <div class="tm-tab active" id="tmTabRoles" onclick="_tmDetailTab('roles')">Roles</div>
-          <div class="tm-tab" id="tmTabMembers" onclick="_tmDetailTab('members')">Members</div>
-        </div>
-        <div class="tm-detail-inner" id="tmDetailInner">
-          <div class="tm-no-sel">← Select a team to manage roles &amp; members</div>
-        </div>
+        <div id="tmDetailPane" class="tm-detail-inner"></div>
       </div>
     </div>
   </div>
