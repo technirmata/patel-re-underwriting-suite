@@ -538,6 +538,66 @@ strong { color: #e2e8f0; }
 .proj-item,.proj-item-info,.proj-item-name,.proj-item-meta,.proj-item-actions{display:none}
 .proj-folder-section,.proj-folder-hdr,.proj-folder-chevron,.proj-folder-name,.proj-folder-actions,.proj-folder-count,.proj-folder-items,.proj-unfiled-label{display:none}
 .proj-move-wrap,.proj-move-menu{display:none}
+
+/* ── Workspace / Team / Role / Member Manager ───────────────────────────── */
+.tm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;display:flex;align-items:center;justify-content:center}
+.tm-modal{background:var(--surface1,#1a1d27);border:1px solid var(--border,#2a2d3e);border-radius:16px;width:860px;max-width:96vw;height:600px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+.tm-header{padding:16px 20px;border-bottom:1px solid var(--border,#2a2d3e);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.tm-header h2{margin:0;font-size:15px;font-weight:700;color:var(--text,#e2e8f0)}
+.tm-close-btn{background:none;border:none;color:var(--muted,#64748b);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px}
+.tm-close-btn:hover{background:var(--surface2,#252837);color:var(--text,#e2e8f0)}
+.tm-body{display:flex;flex:1;overflow:hidden}
+.tm-pane{width:220px;border-right:1px solid var(--border,#2a2d3e);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.tm-pane-hdr{padding:10px 14px 6px;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--muted,#64748b);text-transform:uppercase;display:flex;align-items:center;justify-content:space-between}
+.tm-pane-hdr button{background:var(--accent,#6366f1);border:none;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;cursor:pointer;font-weight:600}
+.tm-pane-hdr button:hover{opacity:.85}
+.tm-pane-list{flex:1;overflow-y:auto;padding:4px}
+.tm-item{padding:8px 10px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text,#e2e8f0);transition:background .15s}
+.tm-item:hover{background:var(--surface2,#252837)}
+.tm-item.active{background:var(--accent,#6366f1);color:#fff}
+.tm-item-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.tm-item-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm-detail{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.tm-detail-inner{flex:1;overflow-y:auto;padding:16px}
+.tm-tabs{display:flex;gap:4px;padding:10px 16px 0;border-bottom:1px solid var(--border,#2a2d3e);flex-shrink:0}
+.tm-tab{padding:7px 14px;font-size:12px;font-weight:600;border-radius:8px 8px 0 0;cursor:pointer;color:var(--muted,#64748b);border:1px solid transparent;border-bottom:none;background:none;position:relative;top:1px}
+.tm-tab.active{background:var(--surface1,#1a1d27);color:var(--accent,#6366f1);border-color:var(--border,#2a2d3e)}
+.tm-role-card{background:var(--surface2,#252837);border:1px solid var(--border,#2a2d3e);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.tm-role-card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.tm-role-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.tm-role-name{font-size:13px;font-weight:700;color:var(--text,#e2e8f0);flex:1}
+.tm-role-actions{display:flex;gap:6px}
+.tm-role-actions button{background:none;border:1px solid var(--border,#2a2d3e);color:var(--muted,#64748b);font-size:11px;padding:3px 8px;border-radius:6px;cursor:pointer}
+.tm-role-actions button:hover{border-color:var(--accent,#6366f1);color:var(--accent,#6366f1)}
+.tm-perm-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tm-perm-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text,#e2e8f0);padding:5px 8px;background:var(--surface1,#1a1d27);border-radius:6px}
+.tm-perm-row input[type=checkbox]{accent-color:var(--accent,#6366f1);width:14px;height:14px;cursor:pointer}
+.tm-member-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--surface2,#252837);margin-bottom:6px}
+.tm-member-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.tm-member-info{flex:1;min-width:0}
+.tm-member-name{font-size:13px;font-weight:600;color:var(--text,#e2e8f0)}
+.tm-member-role{font-size:11px;color:var(--muted,#64748b)}
+.tm-member-active{font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--accent,#6366f1);color:#fff}
+.tm-member-actions{display:flex;gap:5px;flex-shrink:0}
+.tm-member-actions button{background:none;border:1px solid var(--border,#2a2d3e);color:var(--muted,#64748b);font-size:11px;padding:3px 8px;border-radius:6px;cursor:pointer}
+.tm-member-actions button:hover{border-color:var(--accent,#6366f1);color:var(--accent,#6366f1)}
+.tm-member-actions button.tm-switch-btn{border-color:#10b981;color:#10b981}
+.tm-member-actions button.tm-switch-btn:hover{background:#10b981;color:#fff}
+.tm-user-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface2,#252837);border:1px solid var(--border,#2a2d3e);border-radius:20px;padding:4px 12px 4px 6px;cursor:pointer;color:var(--text,#e2e8f0);font-size:12px;font-weight:600;transition:border-color .2s}
+.tm-user-chip:hover{border-color:var(--accent,#6366f1)}
+.tm-chip-avatar{width:22px;height:22px;border-radius:50%;background:var(--accent,#6366f1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.tm-empty{text-align:center;padding:40px 20px;color:var(--muted,#64748b);font-size:13px}
+.tm-form-row{margin-bottom:12px}
+.tm-form-row label{display:block;font-size:11px;font-weight:600;color:var(--muted,#64748b);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.tm-form-row input,.tm-form-row select{width:100%;background:var(--surface2,#252837);border:1px solid var(--border,#2a2d3e);border-radius:8px;padding:8px 10px;color:var(--text,#e2e8f0);font-size:13px;box-sizing:border-box}
+.tm-btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.tm-btn-row button{padding:7px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none}
+.tm-btn-primary{background:var(--accent,#6366f1);color:#fff}
+.tm-btn-primary:hover{opacity:.85}
+.tm-btn-cancel{background:var(--surface2,#252837);color:var(--muted,#64748b);border:1px solid var(--border,#2a2d3e) !important}
+.tm-btn-cancel:hover{color:var(--text,#e2e8f0)}
+.tm-no-sel{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted,#64748b);font-size:13px}
+[data-perm].perm-hide{display:none!important}
 </style>
 </head>
 <body>
@@ -631,9 +691,10 @@ strong { color: #e2e8f0; }
       <button onclick="authLogout()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;margin-left:2px;padding:2px 4px;border-radius:4px" title="Sign out">⏻</button>
     </div>
     <button class="gear-btn" onclick="openSettings()" title="AI Settings">⚙️</button>
+    <button class="tm-user-chip" id="tmUserChip" onclick="openTeams()" title="Manage workspaces, teams &amp; roles"><span class="tm-chip-avatar" id="tmChipAv">★</span><span id="tmChipLbl">Owner</span></button>
     <button class="btn btn-outline btn-sm" onclick="clearAll()">🗑 Clear</button>
-    <button class="btn btn-outline btn-sm" onclick="ST(9);refreshPitchDeckPreview()">🎯 Pitch Deck</button>
-    <button class="btn btn-outline btn-sm" onclick="ST(7);updateExec()">📄 Exec Report</button>
+    <button class="btn btn-outline btn-sm" onclick="ST(9);refreshPitchDeckPreview()" data-perm="view_pitch">🎯 Pitch Deck</button>
+    <button class="btn btn-outline btn-sm" onclick="ST(7);updateExec()" data-perm="view_exec">📄 Exec Report</button>
     <button class="btn btn-outline btn-sm" onclick="openProjects()" style="border-color:rgba(99,102,241,.5);color:#a5b4fc">💼 Projects</button>
     <button class="btn btn-primary btn-sm" onclick="ST(6);syncIntakeToLOI();buildLOI()">📝 Build LOI</button>
   </div>
@@ -656,7 +717,7 @@ strong { color: #e2e8f0; }
         <div class="proj-save-label">Save Current Deal</div>
         <div class="proj-save-row">
           <input type="text" id="projNameInput" placeholder="e.g. 123 Main St – Duplex Offer" maxlength="80" onkeydown="if(event.key==='Enter')saveProject()">
-          <button class="btn btn-primary btn-sm" onclick="saveProject()" style="white-space:nowrap">💾 Save</button>
+          <button class="btn btn-primary btn-sm" onclick="saveProject()" data-perm="save_project" style="white-space:nowrap">💾 Save</button>
         </div>
       </div>
             <select id="projFolderSelect" style="display:none"></select>
@@ -670,7 +731,7 @@ strong { color: #e2e8f0; }
         <button class="proj-tb-btn" onclick="createFolder()">📁 New Folder</button>
         <button class="proj-tb-btn" onclick="_selAll()">&#x2611; Select All</button>
         <button class="proj-tb-btn" onclick="importProjectFile()" title="Import a .jpdeals file shared by someone">📥 Import</button>
-        <button class="proj-tb-btn" onclick="showShareHistory()" title="View your shared link history">🔗 Links</button>
+        <button class="proj-tb-btn" onclick="showShareHistory()" data-perm="share_link" title="View your shared link history">🔗 Links</button>
         <input type="file" id="importProjInput" accept=".jpdeals,.json" style="display:none" onchange="importProjectFileHandler(event)">
       </div>
       <div class="proj-list" id="projList"></div>
@@ -685,7 +746,7 @@ strong { color: #e2e8f0; }
       <!-- Import / Export -->
       <div class="proj-divider">Import &amp; Export</div>
       <div class="proj-io-row">
-        <button class="btn btn-outline btn-sm" onclick="exportAllProjects()" style="font-size:11px">📤 Export All (JSON)</button>
+        <button class="btn btn-outline btn-sm" onclick="exportAllProjects()" data-perm="export_data" style="font-size:11px">📤 Export All (JSON)</button>
         <label class="btn btn-outline btn-sm" style="font-size:11px;cursor:pointer">
           📥 Import JSON
           <input type="file" accept=".json" style="display:none" onchange="importProjects(event)">
@@ -9315,8 +9376,381 @@ async function generatePitchDeck() {
   // Mark as user-edited when they change it manually
   const projY = el('proj_years');
   if (projY) projY.addEventListener('input', () => { projY._userEdited = true; });
+
+
+
+/* ── Workspace / Team / Role / Member Manager ───────────────────────────── */
+(function(){
+
+var TM_KEY='jp_teams_v1';
+function _tmGet(){try{return JSON.parse(localStorage.getItem(TM_KEY))||{workspaces:[],activeUserId:null};}catch(e){return{workspaces:[],activeUserId:null};}}
+function _tmSet(d){localStorage.setItem(TM_KEY,JSON.stringify(d));}
+function _tmId(p){return(p||'id')+'_'+Math.random().toString(36).slice(2,10);}
+
+var ROLE_COLORS=['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#8b5cf6','#ec4899','#06b6d4'];
+var _rci=0;function _nc(){return ROLE_COLORS[(_rci++)%ROLE_COLORS.length];}
+
+var PERM_DEFS=[
+  {key:'save_project',  label:'Save / create projects'},
+  {key:'delete_project',label:'Delete projects'},
+  {key:'manage_members',label:'Manage team members'},
+  {key:'manage_roles',  label:'Manage roles & workspace'},
+  {key:'view_exec',     label:'View Executive Report'},
+  {key:'view_pitch',    label:'View Pitch Deck'},
+  {key:'export_data',   label:'Export / download data'},
+  {key:'share_link',    label:'Generate share links'},
+];
+
+function _allPerms(v){var p={};PERM_DEFS.forEach(function(d){p[d.key]=v;});return p;}
+
+var _selWsId=null,_selTmId=null,_dTab='roles';
+
+function openTeams(){
+  var m=document.getElementById('tmModal');if(!m)return;
+  m.style.display='flex';_selWsId=null;_selTmId=null;_dTab='roles';
+  _rWs();_rTeams();_rDetail();
+  var data=_tmGet();
+  var ob=document.getElementById('tmOwnerSwitchBtn');var lbl=document.getElementById('tmActiveLabel');
+  if(ob)ob.style.display=data.activeUserId?'block':'none';
+  if(lbl){var ctx=_tmCtx();lbl.textContent=ctx?('Active: '+ctx.user.name+(ctx.role?' ('+ctx.role.name+')':'')):'Active: Owner';}
+}
+function closeTeams(){var m=document.getElementById('tmModal');if(m)m.style.display='none';}
+window.openTeams=openTeams;window.closeTeams=closeTeams;
+
+function _rWs(){
+  var list=document.getElementById('tmWsList');if(!list)return;var data=_tmGet();list.innerHTML='';
+  if(!data.workspaces.length){list.innerHTML='<div class="tm-empty"><div class="tm-empty-icon">\uD83C\uDFE2</div>No workspaces.<br>Click + to create one.</div>';return;}
+  data.workspaces.forEach(function(ws){
+    var d=document.createElement('div');d.className='tm-item'+(ws.id===_selWsId?' active':'');
+    d.innerHTML='<div class="tm-item-icon" style="background:rgba(99,102,241,.15)">\uD83C\uDFE2</div>'
+      +'<div class="tm-item-info"><div class="tm-item-name">'+_e(ws.name)+'</div>'
+      +'<div class="tm-item-sub">'+ws.teams.length+' team'+(ws.teams.length!==1?'s':'')+'</div></div>'
+      +'<div class="tm-item-actions">'
+      +'<button class="tm-icon-btn" onclick="event.stopPropagation();_tmRnWs(this)" data-id="'+ws.id+'" title="Rename">\u270F\uFE0F</button>'
+      +'<button class="tm-icon-btn danger" onclick="event.stopPropagation();_tmDelWs(this)" data-id="'+ws.id+'" title="Delete">\uD83D\uDDD1</button>'
+      +'</div>';
+    d.onclick=function(){_selWsId=ws.id;_selTmId=null;_rWs();_rTeams();_rDetail();};
+    list.appendChild(d);
+  });
+}
+function _tmAddWs(){
+  var n=(prompt('Workspace name:')||'').trim();if(!n)return;
+  var data=_tmGet();var ws={id:_tmId('ws'),name:n,createdAt:new Date().toISOString(),teams:[]};
+  data.workspaces.push(ws);_tmSet(data);_selWsId=ws.id;_rWs();_rTeams();_rDetail();
+}
+function _tmRnWs(btn){
+  var id=btn.getAttribute('data-id');
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===id;});if(!ws)return;
+  var n=(prompt('Rename workspace:',ws.name)||'').trim();if(!n)return;
+  ws.name=n;_tmSet(data);_rWs();
+}
+function _tmDelWs(btn){
+  var id=btn.getAttribute('data-id');
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===id;});if(!ws)return;
+  if(!confirm('Delete workspace "'+ws.name+'" and all its teams?'))return;
+  data.workspaces=data.workspaces.filter(function(w){return w.id!==id;});
+  if(_selWsId===id){_selWsId=null;_selTmId=null;}_tmSet(data);_rWs();_rTeams();_rDetail();
+}
+window._tmAddWs=_tmAddWs;window._tmRnWs=_tmRnWs;window._tmDelWs=_tmDelWs;
+
+function _rTeams(){
+  var list=document.getElementById('tmTeamList');if(!list)return;list.innerHTML='';
+  if(!_selWsId){list.innerHTML='<div class="tm-empty"><div class="tm-empty-icon">\uD83D\uDC48</div>Select a workspace</div>';return;}
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
+  if(!ws.teams.length){list.innerHTML='<div class="tm-empty"><div class="tm-empty-icon">\uD83D\uDC65</div>No teams.<br>Click + to add one.</div>';return;}
+  ws.teams.forEach(function(tm){
+    var d=document.createElement('div');d.className='tm-item'+(tm.id===_selTmId?' active':'');
+    var mc=(tm.members||[]).length,rc=(tm.roles||[]).length;
+    d.innerHTML='<div class="tm-item-icon" style="background:rgba(16,185,129,.12)">\uD83D\uDC65</div>'
+      +'<div class="tm-item-info"><div class="tm-item-name">'+_e(tm.name)+'</div>'
+      +'<div class="tm-item-sub">'+rc+' role'+(rc!==1?'s':'')+' \u00B7 '+mc+' member'+(mc!==1?'s':'')+'</div></div>'
+      +'<div class="tm-item-actions">'
+      +'<button class="tm-icon-btn" onclick="event.stopPropagation();_tmRnTm(this)" data-id="'+tm.id+'" title="Rename">\u270F\uFE0F</button>'
+      +'<button class="tm-icon-btn danger" onclick="event.stopPropagation();_tmDelTm(this)" data-id="'+tm.id+'" title="Delete">\uD83D\uDDD1</button>'
+      +'</div>';
+    d.onclick=function(){_selTmId=tm.id;_rTeams();_rDetail();};
+    list.appendChild(d);
+  });
+}
+function _tmAddTeam(){
+  if(!_selWsId)return;var n=(prompt('Team name:')||'').trim();if(!n)return;
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
+  var tm={id:_tmId('tm'),name:n,roles:[],members:[]};
+  tm.roles.push({id:_tmId('role'),name:'Admin',color:'#6366f1',perms:_allPerms(true)});
+  tm.roles.push({id:_tmId('role'),name:'Analyst',color:'#10b981',perms:{save_project:true,delete_project:false,manage_members:false,manage_roles:false,view_exec:true,view_pitch:true,export_data:true,share_link:true}});
+  tm.roles.push({id:_tmId('role'),name:'Viewer',color:'#64748b',perms:{save_project:false,delete_project:false,manage_members:false,manage_roles:false,view_exec:true,view_pitch:true,export_data:false,share_link:false}});
+  ws.teams.push(tm);_tmSet(data);_selTmId=tm.id;_rWs();_rTeams();_rDetail();
+}
+function _tmRnTm(btn){
+  var id=btn.getAttribute('data-id');
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
+  var tm=ws.teams.find(function(t){return t.id===id;});if(!tm)return;
+  var n=(prompt('Rename team:',tm.name)||'').trim();if(!n)return;
+  tm.name=n;_tmSet(data);_rTeams();
+}
+function _tmDelTm(btn){
+  var id=btn.getAttribute('data-id');
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
+  var tm=ws.teams.find(function(t){return t.id===id;});if(!tm)return;
+  if(!confirm('Delete team "'+tm.name+'"?'))return;
+  ws.teams=ws.teams.filter(function(t){return t.id!==id;});
+  if(_selTmId===id)_selTmId=null;_tmSet(data);_rTeams();_rDetail();
+}
+window._tmAddTeam=_tmAddTeam;window._tmRnTm=_tmRnTm;window._tmDelTm=_tmDelTm;
+
+function _rDetail(){
+  var pane=document.getElementById('tmDetailPane');if(!pane)return;pane.innerHTML='';
+  if(!_selWsId||!_selTmId){pane.innerHTML='<div class="tm-empty" style="padding-top:80px"><div class="tm-empty-icon">\uD83D\uDC48</div>Select a team to manage roles &amp; members</div>';return;}
+  var data=_tmGet();
+  var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
+  var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
+  var tabs=document.createElement('div');tabs.className='tm-detail-tabs';
+  tabs.innerHTML='<div class="tm-dtab'+(_dTab==='roles'?' active':'')+'" onclick="_tmTab(this)" data-tab="roles">\uD83C\uDFAD Roles ('+(tm.roles||[]).length+')</div>'
+    +'<div class="tm-dtab'+(_dTab==='members'?' active':'')+'" onclick="_tmTab(this)" data-tab="members">\uD83D\uDC64 Members ('+(tm.members||[]).length+')</div>';
+  pane.appendChild(tabs);
+  var body=document.createElement('div');body.className='tm-detail-body';
+  if(_dTab==='roles')_rRolesBody(body,tm);else _rMembersBody(body,tm);
+  pane.appendChild(body);
+}
+function _tmTab(el){_dTab=el.getAttribute('data-tab');_rDetail();}
+window._tmTab=_tmTab;
+
+function _rRolesBody(body,tm){
+  var roles=tm.roles||[];
+  var addRow=document.createElement('div');addRow.style.cssText='display:flex;justify-content:flex-end;margin-bottom:10px';
+  addRow.innerHTML='<button style="padding:5px 12px;font-size:12px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-weight:600" onclick="_tmAddRole()">+ Add Role</button>';
+  body.appendChild(addRow);
+  if(!roles.length){var e=document.createElement('div');e.className='tm-empty';e.innerHTML='<div class="tm-empty-icon">\uD83C\uDFAD</div>No roles yet.';body.appendChild(e);return;}
+  roles.forEach(function(role){
+    var card=document.createElement('div');card.className='tm-role-card';
+    var hdr=document.createElement('div');hdr.className='tm-role-card-hdr';
+    hdr.innerHTML='<div style="width:12px;height:12px;border-radius:50%;background:'+role.color+';flex-shrink:0"></div>'
+      +'<span style="font-size:14px;font-weight:700;color:var(--text);flex:1">'+_e(role.name)+'</span>'
+      +'<button class="tm-icon-btn" onclick="_tmRnRole(this)" data-id="'+role.id+'" title="Rename">\u270F\uFE0F</button>'
+      +'<button class="tm-icon-btn" onclick="_tmRoleColor(this)" data-id="'+role.id+'" title="Color" style="font-size:11px">\uD83C\uDFA8</button>'
+      +'<button class="tm-icon-btn danger" onclick="_tmDelRole(this)" data-id="'+role.id+'" title="Delete">\uD83D\uDDD1</button>';
+    card.appendChild(hdr);
+    var perms=role.perms||{};
+    var grid=document.createElement('div');grid.className='tm-perm-grid';
+    PERM_DEFS.forEach(function(def){
+      var row=document.createElement('div');row.className='tm-perm-row';
+      var chk=document.createElement('input');chk.type='checkbox';chk.checked=!!perms[def.key];
+      var cid='pc_'+role.id+'_'+def.key;chk.id=cid;
+      chk.setAttribute('data-role',role.id);chk.setAttribute('data-pkey',def.key);
+      chk.onchange=function(){_tmSavePerm(this.getAttribute('data-role'),this.getAttribute('data-pkey'),this.checked);};
+      var lbl=document.createElement('label');lbl.setAttribute('for',cid);lbl.textContent=def.label;
+      row.appendChild(chk);row.appendChild(lbl);grid.appendChild(row);
+    });
+    card.appendChild(grid);body.appendChild(card);
+  });
+}
+function _tmAddRole(){
+  var n=(prompt('Role name:')||'').trim();if(!n)return;
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
+  var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
+  if(!tm.roles)tm.roles=[];
+  tm.roles.push({id:_tmId('role'),name:n,color:_nc(),perms:_allPerms(false)});
+  _tmSet(data);_rDetail();
+}
+function _tmRnRole(btn){
+  var id=btn.getAttribute('data-id');
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
+  var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
+  var r=(tm.roles||[]).find(function(r){return r.id===id;});if(!r)return;
+  var n=(prompt('Rename role:',r.name)||'').trim();if(!n)return;
+  r.name=n;_tmSet(data);_rDetail();
+}
+function _tmRoleColor(btn){
+  var id=btn.getAttribute('data-id');
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
+  var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
+  var r=(tm.roles||[]).find(function(r){return r.id===id;});if(!r)return;
+  var c=prompt('Color hex (e.g. #6366f1):',r.color);if(!c)return;
+  r.color=c.trim();_tmSet(data);_rDetail();
+}
+function _tmDelRole(btn){
+  var id=btn.getAttribute('data-id');
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
+  var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
+  var r=(tm.roles||[]).find(function(r){return r.id===id;});if(!r)return;
+  if(!confirm('Delete role "'+r.name+'"? Members will lose this role.'))return;
+  tm.roles=tm.roles.filter(function(x){return x.id!==id;});
+  (tm.members||[]).forEach(function(m){if(m.roleId===id)m.roleId=null;});
+  _tmSet(data);_rDetail();
+}
+function _tmSavePerm(roleId,pk,val){
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
+  var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
+  var r=(tm.roles||[]).find(function(r){return r.id===roleId;});if(!r)return;
+  if(!r.perms)r.perms={};r.perms[pk]=val;_tmSet(data);_tmApplyPerms();
+}
+window._tmAddRole=_tmAddRole;window._tmRnRole=_tmRnRole;window._tmRoleColor=_tmRoleColor;
+window._tmDelRole=_tmDelRole;window._tmSavePerm=_tmSavePerm;
+
+function _rMembersBody(body,tm){
+  var members=tm.members||[];var roles=tm.roles||[];
+  var addRow=document.createElement('div');addRow.style.cssText='display:flex;justify-content:flex-end;margin-bottom:10px';
+  addRow.innerHTML='<button style="padding:5px 12px;font-size:12px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-weight:600" onclick="_tmAddMember()">+ Add Member</button>';
+  body.appendChild(addRow);
+  if(!members.length){var e=document.createElement('div');e.className='tm-empty';e.innerHTML='<div class="tm-empty-icon">\uD83D\uDC64</div>No members yet.';body.appendChild(e);return;}
+  var data=_tmGet();
+  members.forEach(function(mem){
+    var role=roles.find(function(r){return r.id===mem.roleId;});
+    var initials=(mem.name||'?').slice(0,1).toUpperCase();
+    var color=role?role.color:'#64748b';
+    var isActive=data.activeUserId===mem.id;
+    var row=document.createElement('div');row.className='tm-member-row';
+    if(isActive)row.style.cssText='background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.3)';
+    var roleHtml=role?'<span class="tm-role-badge" style="background:'+color+'22;color:'+color+';border-color:'+color+'44">'+_e(role.name)+'</span>'
+      :'<span style="font-size:10px;color:var(--muted)">No role</span>';
+    row.innerHTML='<div class="tm-member-avatar" style="background:'+color+'22;color:'+color+'">'+initials+'</div>'
+      +'<div class="tm-member-info"><div class="tm-member-name">'+_e(mem.name)+(isActive?' <span style="font-size:9px;background:rgba(99,102,241,.2);color:#a5b4fc;padding:1px 5px;border-radius:10px;margin-left:4px">ACTIVE</span>':'')+'</div>'
+      +'<div class="tm-member-email">'+_e(mem.email||'')+'</div></div>'
+      +roleHtml
+      +'<div class="tm-member-actions">'
+      +'<button class="tm-icon-btn" onclick="_tmSwUser(this)" data-id="'+mem.id+'" title="'+(isActive?'Deactivate':'Switch to user')+'">'+( isActive?'\u23F9':'\u26A1')+'</button>'
+      +'<button class="tm-icon-btn" onclick="_tmEditMem(this)" data-id="'+mem.id+'" title="Edit">\u270F\uFE0F</button>'
+      +'<button class="tm-icon-btn danger" onclick="_tmDelMem(this)" data-id="'+mem.id+'" title="Remove">\uD83D\uDDD1</button>'
+      +'</div>';
+    body.appendChild(row);
+  });
+}
+function _tmAddMember(){
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
+  var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
+  var roles=tm.roles||[];
+  var n=(prompt('Member name:')||'').trim();if(!n)return;
+  var email=(prompt('Email (optional):')||'').trim();
+  var roleId=null;
+  if(roles.length){
+    var opts=roles.map(function(r,i){return i+': '+r.name;}).join('\n');
+    var idx=parseInt(prompt('Assign role:\n'+opts+'\n\nEnter number:'));
+    if(!isNaN(idx)&&roles[idx])roleId=roles[idx].id;
+  }
+  if(!tm.members)tm.members=[];
+  tm.members.push({id:_tmId('mem'),name:n,email:email,roleId:roleId});
+  _tmSet(data);_rDetail();_tmChip();
+}
+function _tmEditMem(btn){
+  var id=btn.getAttribute('data-id');
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
+  var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
+  var mem=(tm.members||[]).find(function(m){return m.id===id;});if(!mem)return;
+  var roles=tm.roles||[];
+  var n=(prompt('Name:',mem.name)||'').trim();if(!n)return;
+  var email=(prompt('Email:',mem.email||'')||'').trim();
+  var roleId=mem.roleId;
+  if(roles.length){
+    var opts=roles.map(function(r,i){return i+': '+r.name;}).join('\n');
+    var ci=roles.findIndex(function(r){return r.id===mem.roleId;});
+    var idx=parseInt(prompt('Role (current: '+(ci>=0?roles[ci].name:'none')+'):\n'+opts+'\n\nEnter number:'));
+    if(!isNaN(idx)&&roles[idx])roleId=roles[idx].id;
+  }
+  mem.name=n;mem.email=email;mem.roleId=roleId;
+  _tmSet(data);_rDetail();_tmChip();_tmApplyPerms();
+}
+function _tmDelMem(btn){
+  var id=btn.getAttribute('data-id');
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});if(!ws)return;
+  var tm=ws.teams.find(function(t){return t.id===_selTmId;});if(!tm)return;
+  var mem=(tm.members||[]).find(function(m){return m.id===id;});if(!mem)return;
+  if(!confirm('Remove '+mem.name+' from this team?'))return;
+  tm.members=tm.members.filter(function(m){return m.id!==id;});
+  if(data.activeUserId===id)data.activeUserId=null;
+  _tmSet(data);_rDetail();_tmChip();_tmApplyPerms();
+}
+window._tmAddMember=_tmAddMember;window._tmEditMem=_tmEditMem;window._tmDelMem=_tmDelMem;
+
+function _tmCtx(){
+  var data=_tmGet();if(!data.activeUserId)return null;
+  for(var wi=0;wi<data.workspaces.length;wi++){
+    var ws=data.workspaces[wi];
+    for(var ti=0;ti<ws.teams.length;ti++){
+      var tm=ws.teams[ti];
+      var mem=(tm.members||[]).find(function(m){return m.id===data.activeUserId;});
+      if(mem){var role=(tm.roles||[]).find(function(r){return r.id===mem.roleId;});return{user:mem,role:role||null,team:tm,workspace:ws};}
+    }
+  }
+  return null;
+}
+function _tmSwUser(btn){
+  var id=btn.getAttribute('data-id');
+  var data=_tmGet();data.activeUserId=(data.activeUserId===id)?null:id;_tmSet(data);
+  _rDetail();_tmChip();_tmApplyPerms();
+  var ob=document.getElementById('tmOwnerSwitchBtn');var lbl=document.getElementById('tmActiveLabel');
+  var ctx=_tmCtx();
+  if(ob)ob.style.display=data.activeUserId?'block':'none';
+  if(lbl)lbl.textContent=ctx?('Active: '+ctx.user.name+(ctx.role?' ('+ctx.role.name+')':'')):'Active: Owner';
+  if(typeof showProjToast==='function')showProjToast(ctx?'Switched to '+ctx.user.name+(ctx.role?' ('+ctx.role.name+')':''):'Back to Owner mode');
+}
+function _tmSwitchToOwner(){
+  var data=_tmGet();data.activeUserId=null;_tmSet(data);_tmChip();_tmApplyPerms();
+  var ob=document.getElementById('tmOwnerSwitchBtn');var lbl=document.getElementById('tmActiveLabel');
+  if(ob)ob.style.display='none';if(lbl)lbl.textContent='Active: Owner';
+  if(typeof showProjToast==='function')showProjToast('Switched to Owner mode');
+}
+function _tmChip(){
+  var chip=document.getElementById('tmUserChip');if(!chip)return;
+  var ctx=_tmCtx();
+  if(!ctx){chip.innerHTML='<span class="tm-chip-avatar">&#x2605;</span><span>Owner</span>';return;}
+  var init=(ctx.user.name||'?').slice(0,1).toUpperCase();var col=ctx.role?ctx.role.color:'#6366f1';
+  chip.innerHTML='<span class="tm-chip-avatar" style="background:'+col+'33;color:'+col+'">'+init+'</span>'
+    +'<span>'+_e(ctx.user.name)+'</span>'
+    +(ctx.role?'<span class="tm-role-badge" style="background:'+col+'22;color:'+col+';border-color:'+col+'44;margin-left:2px">'+_e(ctx.role.name)+'</span>':'');
+}
+function _tmApplyPerms(){
+  var ctx=_tmCtx();var perms=ctx&&ctx.role?ctx.role.perms:null;
+  PERM_DEFS.forEach(function(def){
+    var allowed=!perms||perms[def.key]!==false;
+    document.querySelectorAll('[data-perm="'+def.key+'"]').forEach(function(el){
+      allowed?el.classList.remove('perm-hide'):el.classList.add('perm-hide');
+    });
+  });
+}
+window._tmSwUser=_tmSwUser;window._tmSwitchToOwner=_tmSwitchToOwner;
+
+function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+setTimeout(function(){_tmChip();_tmApplyPerms();},300);
+
+})();
+
+
 })();
 </script>
+
+
+<!-- ── Teams / Workspace / Role / Member Modal ── -->
+<div class="tm-overlay" id="tmModal" style="display:none" onclick="if(event.target===this)closeTeams()">
+  <div class="tm-modal">
+    <div class="tm-header">
+      <h2>🏢 Workspaces &amp; Teams</h2>
+      <button class="tm-close-btn" onclick="closeTeams()">✕</button>
+    </div>
+    <div class="tm-body">
+      <!-- Pane 1: Workspaces -->
+      <div class="tm-pane">
+        <div class="tm-pane-hdr">Workspaces <button onclick="_tmAddWs()">+ New</button></div>
+        <div class="tm-pane-list" id="tmWsList"></div>
+      </div>
+      <!-- Pane 2: Teams -->
+      <div class="tm-pane">
+        <div class="tm-pane-hdr"><span id="tmTeamsPaneTitle">Teams</span> <button onclick="_tmAddTeam()">+ New</button></div>
+        <div class="tm-pane-list" id="tmTeamList"></div>
+      </div>
+      <!-- Pane 3: Detail (Roles + Members tabs) -->
+      <div class="tm-detail">
+        <div class="tm-tabs" id="tmDetailTabs" style="display:none">
+          <div class="tm-tab active" id="tmTabRoles" onclick="_tmDetailTab('roles')">Roles</div>
+          <div class="tm-tab" id="tmTabMembers" onclick="_tmDetailTab('members')">Members</div>
+        </div>
+        <div class="tm-detail-inner" id="tmDetailInner">
+          <div class="tm-no-sel">← Select a team to manage roles &amp; members</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
