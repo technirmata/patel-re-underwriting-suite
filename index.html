@@ -5367,7 +5367,7 @@ async function handleFile(event) {
 // AI INTAKE ANALYZER — Claude-powered field extraction
 // ══════════════════════════════════════════════════════════════════════════════
 
-// ── AI Fill All Fields — wrapper around existing parseListingWithAI ──────────
+// ── AI Fill All Fields — full document intelligence ─────────────────────────
 
 function _aiStatus(msg, type) {
   const s = el('omStatus');
@@ -5384,25 +5384,210 @@ function _aiProgress(pct) {
   if (bar)  bar.style.width = pct + '%';
 }
 
-function aiAnalyze() {
+// Robustly extract JSON from AI response even if wrapped in markdown
+function _extractJSON(raw) {
+  if (!raw) throw new Error('Empty response');
+  // Strip markdown code blocks
+  let s = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+  // Try direct parse first
+  try { return JSON.parse(s); } catch(_) {}
+  // Find first { ... } block
+  const start = s.indexOf('{');
+  const end   = s.lastIndexOf('}');
+  if (start !== -1 && end > start) {
+    try { return JSON.parse(s.slice(start, end + 1)); } catch(_) {}
+  }
+  throw new Error('No valid JSON found in response');
+}
+
+async function aiAnalyze() {
   const text = ((el('omPaste') || {}).value || '').trim();
   if (text.length < 30) {
     _aiStatus('⚠️ No document text found. Upload a file or paste text above, then click AI Fill.', 'error');
     return;
   }
-  // Use the existing multi-provider AI key system
-  const apiKey = _getAIKey(_aiProvider);
+  const provider = _aiProvider || 'anthropic';
+  const apiKey   = _getAIKey(provider);
   if (!apiKey) {
-    _aiStatus('⚙️ No AI key set — click ⚙️ to open Settings and add an API key.', 'error');
+    _aiStatus('⚙️ No AI key set — click ⚙️ Settings to add an API key.', 'error');
     if (typeof openSettings === 'function') openSettings();
     return;
   }
-  _aiStatus('🤖 Sending document to AI for analysis…', 'loading');
-  _aiProgress(30);
-  // parseListingWithAI handles the API call, field filling, and status updates
-  parseListingWithAI(text, '');
-  // Hide our status bar after a delay so scrapeStatus takes over
-  setTimeout(function() { _aiStatus('', ''); _aiProgress(0); }, 3000);
+
+  const btn = el('aiAnalyzeBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="font-size:16px">⏳</span> Analyzing…'; }
+  _aiStatus('🤖 Sending document to AI…', 'loading');
+  _aiProgress(20);
+
+  // Detect current property type to give the AI a hint
+  const currentType = (typeof gvs === 'function' ? gvs('prop_type') : '') || 'unknown';
+  const typeHints = {
+    rvpark:'RV Park/Campground — spec_n=pads, spec_rate=pad rent/mo, spec_occ=occupancy%',
+    mhp:'Mobile Home Park — spec_n=lots, spec_rate=lot rent/mo, spec_occ=occupancy%',
+    storage:'Self-Storage — spec_n=units, spec_rate=avg rate/mo, spec_occ=occupancy%',
+    str:'Short-Term Rental — spec_n=nights/mo available, spec_rate=avg nightly rate, spec_occ=avg occupancy%',
+    commercial:'Commercial/NNN — spec_n=leasable sqft, spec_rate=$/sqft/YEAR, spec_occ=occupancy%',
+    multifamily:'Multifamily — spec_n=units, spec_rate=avg rent/unit/mo, spec_occ=occupancy%',
+    sfr:'SFR — spec_n=1, spec_rate=monthly rent, spec_occ=100',
+  };
+  const typeHint = typeHints[currentType] || 'Detect property type from text.';
+
+  const PROMPT = `You are a commercial and residential real estate underwriting analyst.
+Analyze the following document and extract every piece of deal data you can find.
+
+Property type context: ${typeHint}
+
+MATH RULES:
+- gross_rent_mo = spec_n × spec_rate × (spec_occ/100)  [for MHP/RV/Storage/MF]
+- For Commercial/NNN: gross_rent_mo = spec_n(sqft) × spec_rate($/sqft/yr) / 12 × (spec_occ/100)
+- For SFR: gross_rent_mo = spec_rate (monthly rent)
+- ALL monetary values: raw numbers, no $ or commas (450000 not $450,000)
+- ALL percentages: raw number without % (5 for 5%, not 0.05)
+- Return 0 for any field you cannot find — never null or undefined
+- Only include fields where you found actual data
+
+Return ONLY a single valid JSON object, no markdown, no explanation:
+{
+  "prop_address":"street address","prop_city":"city","prop_state":"2-letter state","prop_zip":"zip",
+  "prop_type":"sfr|duplex|triplex|quadplex|mfr|rvpark|storage|mhp|mixed|land|commercial",
+  "prop_units":0,"prop_sqft":0,"prop_year":0,"prop_beds":"3/2",
+  "pur_price":0,"pur_arv":0,"pur_down_pct":0,"pur_close_pct":0,
+  "pur_rehab":0,"pur_hold":0,"pur_rate":0,
+  "spec_n":0,"spec_rate":0,"spec_occ":95,
+  "fin_gross":0,"fin_other":0,"fin_vac":5,
+  "fin_taxes":0,"fin_ins":0,"fin_mgmt_pct":0,"fin_maint_pct":0,
+  "fin_capex_pct":0,"fin_util":0,"fin_hoa":0,"fin_noi":0,
+  "ncp_cap":0,"mkt_tier":"","mkt_class":"","mkt_rent_growth":0,
+  "exist_bal":0,"exist_rate":0,"exist_pmt":0,"exist_term":0,
+  "seller_name":"","seller_phone":"","fin_notes":"",
+  "math_notes":"explain your key calculations"
+}
+
+Document text:
+${text.substring(0, 8000)}`;
+
+  try {
+    _aiProgress(40);
+    const raw = await callAI(PROMPT, apiKey, provider);
+    _aiProgress(80);
+
+    const d = _extractJSON(raw);
+    _aiProgress(90);
+
+    // Fill all fields
+    const setIf = (id, val) => {
+      if (val === undefined || val === null || val === '' || val === 0) return;
+      const e = el(id);
+      if (!e) return;
+      e.value = val;
+    };
+
+    // Property type first (drives income calc UI)
+    if (d.prop_type) {
+      const s = el('prop_type');
+      if (s) { s.value = d.prop_type; if (typeof updatePropertyType === 'function') updatePropertyType(); }
+    }
+
+    // Property info
+    setIf('prop_address', d.prop_address);
+    setIf('prop_city',    d.prop_city);
+    setIf('prop_state',   d.prop_state);
+    setIf('prop_zip',     d.prop_zip);
+    setIf('prop_units',   d.prop_units);
+    setIf('prop_sqft',    d.prop_sqft);
+    setIf('prop_year',    d.prop_year);
+    setIf('prop_beds',    d.prop_beds);
+
+    // Purchase
+    setIf('pur_price',     d.pur_price);
+    setIf('pur_arv',       d.pur_arv);
+    setIf('pur_down_pct',  d.pur_down_pct);
+    setIf('pur_close_pct', d.pur_close_pct);
+    setIf('pur_rehab',     d.pur_rehab);
+    setIf('pur_hold',      d.pur_hold);
+    setIf('pur_rate',      d.pur_rate);
+
+    // Income spec calculator
+    setIf('spec_n',    d.spec_n);
+    setIf('spec_rate', d.spec_rate);
+    setIf('spec_occ',  d.spec_occ);
+    // Trigger income calc if spec fields were filled
+    if ((d.spec_n || 0) > 0 && (d.spec_rate || 0) > 0 && typeof computeSpecIncome === 'function') {
+      computeSpecIncome();
+    } else {
+      setIf('fin_gross', d.fin_gross);
+    }
+
+    // Expenses
+    setIf('fin_other',     d.fin_other);
+    setIf('fin_vac',       d.fin_vac);
+    setIf('fin_taxes',     d.fin_taxes);
+    setIf('fin_ins',       d.fin_ins);
+    setIf('fin_mgmt_pct',  d.fin_mgmt_pct);
+    setIf('fin_maint_pct', d.fin_maint_pct);
+    setIf('fin_capex_pct', d.fin_capex_pct);
+    setIf('fin_util',      d.fin_util);
+    setIf('fin_hoa',       d.fin_hoa);
+
+    // NOI / cap rate
+    if (d.fin_noi) {
+      const n = el('fin_noi');
+      if (n && n.dataset.manual !== 'true') n.value = Math.round(d.fin_noi);
+    }
+    setIf('ncp_cap', d.ncp_cap);
+
+    // Market
+    setIf('mkt_tier',        d.mkt_tier);
+    setIf('mkt_class',       d.mkt_class);
+    setIf('mkt_rent_growth', d.mkt_rent_growth);
+
+    // Existing debt
+    setIf('exist_bal',  d.exist_bal);
+    setIf('exist_rate', d.exist_rate);
+    setIf('exist_pmt',  d.exist_pmt);
+    setIf('exist_term', d.exist_term);
+
+    // Seller / notes
+    setIf('seller_name',  d.seller_name);
+    setIf('seller_phone', d.seller_phone);
+    setIf('fin_notes',    d.fin_notes);
+
+    // LOI fields (don't clobber manual edits)
+    const cityState = [d.prop_city, d.prop_state].filter(Boolean).join(', ');
+    const addrStr   = [d.prop_address, cityState].filter(Boolean).join(' — ');
+    const portfolio = el('loi_portfolio');
+    const loiCity   = el('loi_city');
+    const loiUnits  = el('loi_units');
+    const loiDate   = el('loi_date');
+    if (portfolio && !portfolio.value && addrStr)  portfolio.value = addrStr;
+    if (loiCity   && !loiCity.value   && cityState) loiCity.value  = cityState;
+    if (loiUnits  && !loiUnits.value  && d.prop_units) loiUnits.value = d.prop_units;
+    if (loiDate   && !loiDate.value)  loiDate.value = new Date().toISOString().split('T')[0];
+    if (d.pur_price > 0) { const o1 = el('opt1_price'); if (o1 && !o1.value) { o1.value = d.pur_price; if (typeof loiCalcOpt === 'function') loiCalcOpt(1); } }
+
+    if (typeof updateMapLinks === 'function') updateMapLinks();
+    if (typeof R === 'function') R();
+
+    // Count filled fields for summary
+    const filled = Object.keys(d).filter(k => d[k] !== 0 && d[k] !== '' && d[k] !== null && k !== 'math_notes').length;
+    const note   = d.math_notes ? '\n' + d.math_notes : '';
+    _aiStatus('✅ ' + filled + ' fields filled!' + note, 'success');
+    _aiProgress(0);
+
+    const summary = el('aiFillSummary');
+    if (summary) {
+      summary.style.display = 'block';
+      summary.textContent   = '✅ AI filled ' + filled + ' fields. Review and adjust as needed.';
+    }
+  } catch(e) {
+    console.error('AI analyze failed:', e);
+    // Fallback to regex pattern matching
+    if (typeof parseOM === 'function') parseOM(text);
+    _aiStatus('⚠️ AI error: ' + (e.message || 'Unknown') + ' — used pattern matching instead.', 'error');
+    _aiProgress(0);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span style="font-size:16px">⚡</span> AI Fill All Fields'; }
+  }
 }
 
 // ─── END AI ANALYZER ─────────────────────────────────────────────────────────
@@ -6411,7 +6596,7 @@ async function callAI(prompt, apiKey, provider) {
     anthropic: {
       url: 'https://api.anthropic.com/v1/messages',
       headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: { model: 'claude-haiku-4-5-20251001', max_tokens:1200, system:'Return only valid JSON, no markdown.', messages:[{role:'user',content:prompt}] },
+      body: { model: 'claude-opus-4-7', max_tokens:1200, system:'Return only valid JSON, no markdown.', messages:[{role:'user',content:prompt}] },
       parse: d => d.content[0].text
     }
   };
