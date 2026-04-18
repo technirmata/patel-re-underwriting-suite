@@ -633,6 +633,30 @@ strong { color: #e2e8f0; }
 .tm-pop-ok{background:#6366f1;color:#fff}
 .tm-pop-del{background:#ef4444;color:#fff}
 /* END TM POPUP CSS */
+
+/* ── AI Intake Analyzer ───────────────────────────────────────── */
+.ai-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;border-radius:9px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;width:100%;justify-content:center;transition:opacity .2s,transform .1s;box-shadow:0 2px 12px rgba(99,102,241,.35)}
+.ai-btn:hover{opacity:.9;transform:translateY(-1px)}
+.ai-btn:active{transform:translateY(0)}
+.ai-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.ai-key-panel{background:var(--surface2,#252837);border:1px solid var(--border,#2a2d3e);border-radius:10px;padding:12px 14px;margin-top:10px;font-size:12px}
+.ai-key-panel label{display:block;font-size:10px;font-weight:700;color:var(--muted,#64748b);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.ai-key-row{display:flex;gap:6px;align-items:center}
+.ai-key-row input{flex:1;background:var(--surface1,#1a1d27);border:1px solid var(--border,#2a2d3e);border-radius:7px;padding:7px 10px;color:var(--text,#e2e8f0);font-size:12px;font-family:monospace}
+.ai-key-row input:focus{outline:none;border-color:#6366f1}
+.ai-save-btn{padding:7px 12px;background:#6366f1;border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.ai-save-btn:hover{opacity:.85}
+.ai-model-row{display:flex;gap:6px;align-items:center;margin-top:8px}
+.ai-model-row label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.ai-model-row select{flex:1;background:var(--surface1);border:1px solid var(--border);border-radius:7px;padding:6px 8px;color:var(--text);font-size:12px}
+.ai-status-bar{margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;display:none;line-height:1.5}
+.ai-status-bar.loading{display:block;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);color:#a5b4fc}
+.ai-status-bar.success{display:block;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:#34d399}
+.ai-status-bar.error{display:block;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#fca5a5}
+.ai-filled-tag{display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(99,102,241,.2);color:#a5b4fc;margin-left:5px;vertical-align:middle}
+.ai-progress{width:100%;height:3px;background:rgba(99,102,241,.15);border-radius:2px;overflow:hidden;margin-top:8px}
+.ai-progress-bar{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:2px;transition:width .4s ease;width:0%}
+/* END AI CSS */
 </style>
 </head>
 <body>
@@ -835,14 +859,17 @@ strong { color: #e2e8f0; }
 
 <!-- Document Upload -->
 <div class="card">
-  <div class="card-title">📂 Document & Listing Import</div>
+  <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+    <span>📂 Document &amp; Listing Import</span>
+    <button onclick="openSettings()" title="AI API Settings" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);padding:2px 5px;border-radius:5px" id="aiGearBtn">⚙️</button>
+  </div>
 
   <!-- URL Scraper -->
-  <div class="field" style="margin-bottom:10px">
+  <div class="field" style="margin-bottom:10px;margin-top:10px">
     <label>Listing URL <span style="color:var(--muted);font-size:10px;font-weight:400;text-transform:none">— Crexi, Zillow, LoopNet, CoStar, Redfin, MLS…</span></label>
     <div style="display:flex;gap:7px;align-items:center">
       <input type="url" id="listing_url" placeholder="https://www.crexi.com/properties/..." style="flex:1">
-      <button class="btn btn-sm" onclick="scrapeListing()" id="scrapeBtn" style="white-space:nowrap">🌐 Fetch Listing</button>
+      <button class="btn btn-sm" onclick="scrapeListing()" id="scrapeBtn" style="white-space:nowrap">🌐 Fetch</button>
     </div>
     <div id="scrapeStatus" style="margin-top:5px;font-size:11px;min-height:16px"></div>
   </div>
@@ -853,15 +880,26 @@ strong { color: #e2e8f0; }
     <div class="drop-zone-text">Drop file here or <strong style="color:var(--accent)">click to browse</strong></div>
     <div style="font-size:11px;color:var(--muted);margin-top:4px">PDF · Word (.docx) · Excel (.xlsx) · CSV · TXT</div>
   </div>
-  <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.xlsx,.xls,.txt,.csv" style="display:none">
+  <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.xlsx,.xls,.txt,.csv" style="display:none" onchange="handleFile(event)">
 
   <!-- Paste fallback -->
   <div class="field" style="margin-top:10px">
     <label>Or Paste OM / Listing Text</label>
     <textarea id="omPaste" rows="3" placeholder="Paste offering memorandum or listing text here…"></textarea>
   </div>
-  <button class="btn btn-outline btn-sm" onclick="parseOM(el('omPaste').value)">🔍 Extract Fields from Text</button>
-  <div id="omStatus" style="margin-top:8px;font-size:12px"></div>
+
+  <!-- Action buttons -->
+  <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+    <button class="ai-btn" onclick="aiAnalyze()" id="aiAnalyzeBtn">
+      <span style="font-size:16px">⚡</span> AI Fill All Fields
+    </button>
+    <button class="btn btn-outline btn-sm" onclick="parseOM(el('omPaste').value)" style="width:100%">🔍 Regex Extract (no AI key needed)</button>
+  </div>
+
+  <!-- Status -->
+  <div id="omStatus" class="ai-status-bar"></div>
+  <div id="aiProgressWrap" style="display:none"><div class="ai-progress"><div class="ai-progress-bar" id="aiProgressBar"></div></div></div>
+  <div id="aiFillSummary" style="display:none;margin-top:10px;font-size:11px;color:var(--muted)"></div>
 </div>
 
 <!-- Property Info -->
@@ -5285,16 +5323,16 @@ async function handleFile(event) {
         const c  = await pg.getTextContent();
         txt += c.items.map(s=>s.str).join(' ') + '\n';
       }
-      el('omPaste').value = txt; parseOM(txt);
-      setStatus('✅ PDF parsed — '+pdf.numPages+' pages', 'var(--green)');
+      el('omPaste').value = txt;
+      if(typeof _getAIKey==="function"&&_getAIKey(_aiProvider)){aiAnalyze();}else{parseOM(txt);setStatus('✅ PDF parsed — '+pdf.numPages+' pages — click ⚡ AI Fill for smart extraction', 'var(--green)');}
 
     // ── Word .docx ────────────────────────────────────────────────────────────
     } else if(ext==='docx'||ext==='doc'){
       if(typeof mammoth==='undefined') throw new Error('mammoth.js not loaded');
       const ab = await file.arrayBuffer();
       const res = await mammoth.extractRawText({arrayBuffer:ab});
-      el('omPaste').value = res.value; parseOM(res.value);
-      setStatus('✅ Word doc parsed', 'var(--green)');
+      el('omPaste').value = res.value;
+      if(typeof _getAIKey==="function"&&_getAIKey(_aiProvider)){aiAnalyze();}else{parseOM(res.value);setStatus('✅ Word doc parsed — click ⚡ AI Fill for smart extraction', 'var(--green)');}
 
     // ── Excel .xlsx / .xls ────────────────────────────────────────────────────
     } else if(ext==='xlsx'||ext==='xls'){
@@ -5306,15 +5344,15 @@ async function handleFile(event) {
         txt += '--- Sheet: '+name+' ---\n';
         txt += XLSX.utils.sheet_to_csv(wb.Sheets[name]) + '\n';
       });
-      el('omPaste').value = txt; parseOM(txt);
-      setStatus('✅ Excel parsed — '+wb.SheetNames.length+' sheet(s)', 'var(--green)');
+      el('omPaste').value = txt;
+      if(typeof _getAIKey==="function"&&_getAIKey(_aiProvider)){aiAnalyze();}else{parseOM(txt);setStatus('✅ Excel parsed — '+wb.SheetNames.length+' sheet(s) — click ⚡ AI Fill for smart extraction', 'var(--green)');}
 
     // ── Plain text / CSV ──────────────────────────────────────────────────────
     } else {
       const reader = new FileReader();
       reader.onload = e => {
-        el('omPaste').value = e.target.result; parseOM(e.target.result);
-        setStatus('✅ File loaded', 'var(--green)');
+        el('omPaste').value = e.target.result;
+        if(typeof _getAIKey==="function"&&_getAIKey(_aiProvider)){aiAnalyze();}else{parseOM(e.target.result);setStatus('✅ File loaded — click ⚡ AI Fill for smart extraction', 'var(--green)');}
       };
       reader.readAsText(file);
     }
@@ -5322,6 +5360,52 @@ async function handleFile(event) {
     setStatus('❌ ' + e.message, 'var(--red)');
   }
 }
+
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AI INTAKE ANALYZER — Claude-powered field extraction
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── AI Fill All Fields — wrapper around existing parseListingWithAI ──────────
+
+function _aiStatus(msg, type) {
+  const s = el('omStatus');
+  if (!s) return;
+  s.textContent = msg;
+  s.className = 'ai-status-bar ' + (type || '');
+  s.style.display = msg ? 'block' : 'none';
+}
+
+function _aiProgress(pct) {
+  const wrap = el('aiProgressWrap');
+  const bar  = el('aiProgressBar');
+  if (wrap) wrap.style.display = (pct > 0 && pct < 100) ? 'block' : 'none';
+  if (bar)  bar.style.width = pct + '%';
+}
+
+function aiAnalyze() {
+  const text = ((el('omPaste') || {}).value || '').trim();
+  if (text.length < 30) {
+    _aiStatus('⚠️ No document text found. Upload a file or paste text above, then click AI Fill.', 'error');
+    return;
+  }
+  // Use the existing multi-provider AI key system
+  const apiKey = _getAIKey(_aiProvider);
+  if (!apiKey) {
+    _aiStatus('⚙️ No AI key set — click ⚙️ to open Settings and add an API key.', 'error');
+    if (typeof openSettings === 'function') openSettings();
+    return;
+  }
+  _aiStatus('🤖 Sending document to AI for analysis…', 'loading');
+  _aiProgress(30);
+  // parseListingWithAI handles the API call, field filling, and status updates
+  parseListingWithAI(text, '');
+  // Hide our status bar after a delay so scrapeStatus takes over
+  setTimeout(function() { _aiStatus('', ''); _aiProgress(0); }, 3000);
+}
+
+// ─── END AI ANALYZER ─────────────────────────────────────────────────────────
 
 function handleDrop(e){
   e.preventDefault();el('dropZone').classList.remove('dragover');
@@ -5553,7 +5637,7 @@ function autoFillFromListing(d) {
 
 // ── clearAll — full suite reset ───────────────────────────────────────────────
 function clearAll(){
-  if(!confirm('Reset the entire suite? All inputs, calculations, and results will be cleared.')) return;
+  _tmConfirm('Reset the entire suite? All inputs, calculations, and results will be cleared.','🔄 Reset Suite',function(){
 
   // 1. Clear active financing structure
   ACTIVE_FIN = null;
@@ -5692,6 +5776,7 @@ function clearAll(){
 
   // 12. Recompute from clean state
   R();
+  }); // end _tmConfirm
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -6841,13 +6926,14 @@ function authGuest() {
 }
 
 async function authLogout() {
-  if(!confirm('Sign out? Your projects stay saved.')) return;
-  if(_sbOk()) await _sbClient().auth.signOut().catch(()=>{});
-  _clearSession();
-  document.getElementById('authOverlay').style.display = 'flex';
-  _authUpdateTopbar();
-  ['auth_login_user','auth_login_pass'].forEach(id=>{ const e=el(id); if(e) e.value=''; });
-  authSwitchTab('login');
+  _tmConfirm('Sign out? Your projects stay saved locally.','Sign Out', async function(){
+    if(_sbOk()) await _sbClient().auth.signOut().catch(()=>{});
+    _clearSession();
+    document.getElementById('authOverlay').style.display = 'flex';
+    _authUpdateTopbar();
+    ['auth_login_user','auth_login_pass'].forEach(id=>{ const e=el(id); if(e) e.value=''; });
+    authSwitchTab('login');
+  });
 }
 
 function _authDismiss() {
@@ -7137,11 +7223,12 @@ function loadProject(name) {
 }
 
 function deleteProject(name) {
-  if(!confirm(`Delete project "${name}"? This cannot be undone.`)) return;
-  const projects = _getAllProjects();
-  delete projects[name];
-  _setAllProjects(projects);
-  renderProjList();
+  _tmConfirm('Delete project "'+name+'"? This cannot be undone.','🗑 Delete Project',function(){
+    const projects = _getAllProjects();
+    delete projects[name];
+    _setAllProjects(projects);
+    renderProjList();
+  });
 }
 
 // ── Project Download / Import ─────────────────────────────────────────────
@@ -7199,32 +7286,34 @@ function importProjectFileHandler(event) {
     }
 
     const projects = _getAllProjects();
-    // If name already exists, ask to overwrite or rename
     let importName = proj.name;
-    if(projects[importName]) {
-      const choice = prompt(
-        'A project named "' + importName + '" already exists.\nEnter a new name to save as, or leave unchanged to overwrite:',
-        importName
-      );
-      if(choice === null) return; // user cancelled
-      importName = (choice || importName).trim() || importName;
+
+    function _finishImport(name) {
+      const curFolder = typeof _getCurrentFolderId === 'function' ? _getCurrentFolderId() : null;
+      projects[name] = {
+        name: name,
+        savedAt: proj.savedAt || new Date().toISOString(),
+        data: proj.data,
+        folderId: curFolder
+      };
+      try {
+        _setAllProjects(projects);
+      } catch(err) {
+        alert('Could not save imported project: storage may be full.'); return;
+      }
+      renderProjList();
+      showProjToast('📥 Imported: ' + name);
     }
 
-    // Place in current folder
-    const curFolder = typeof _getCurrentFolderId === 'function' ? _getCurrentFolderId() : null;
-    projects[importName] = {
-      name: importName,
-      savedAt: proj.savedAt || new Date().toISOString(),
-      data: proj.data,
-      folderId: curFolder
-    };
-    try {
-      _setAllProjects(projects);
-    } catch(err) {
-      alert('Could not save imported project: storage may be full.'); return;
+    if(projects[importName]) {
+      _tmPop({
+        title:'📋 Project Already Exists',
+        fields:[{id:'iname',label:'Project "'+importName+'" already exists — enter a new name to copy, or keep the same name to overwrite.',type:'text',val:importName}],
+        onOk:function(v){ _finishImport((v.iname||importName).trim()||importName); }
+      });
+    } else {
+      _finishImport(importName);
     }
-    renderProjList();
-    showProjToast('📥 Imported: ' + importName);
   };
   reader.readAsText(file);
 }
@@ -7385,26 +7474,31 @@ function _renderIconView(container,folders,projs){
 function _enterFolder(id){_setCurrentFolderId(id);renderProjList();}
 function setViewMode(mode){localStorage.setItem('jp_proj_view',mode);renderProjList();}
 function createFolder(){
-  const name=(prompt('Folder name:')||'').trim();if(!name)return;
-  const meta=_getMeta();meta.folders.push({id:_newId(),name,parentId:_getCurrentFolderId()});
-  _setMeta(meta);renderProjList();
+  _tmPop({title:'📁 New Folder',fields:[{id:'fname',label:'Folder Name',type:'text',placeholder:'e.g. Q1 2026 Deals'}],onOk:function(v){
+    const name=(v.fname||'').trim();if(!name)return;
+    const meta=_getMeta();meta.folders.push({id:_newId(),name,parentId:_getCurrentFolderId()});
+    _setMeta(meta);renderProjList();
+  }});
 }
 function _renameFolderUI(id){
   const f=_getFolderList().find(x=>x.id===id);if(!f)return;
-  const n=(prompt('Rename folder:',f.name)||'').trim();if(!n)return;
-  const meta=_getMeta();const fi=meta.folders.find(x=>x.id===id);if(fi)fi.name=n;
-  _setMeta(meta);renderProjList();
+  _tmPop({title:'✏️ Rename Folder',fields:[{id:'fname',label:'Folder Name',type:'text',val:f.name}],onOk:function(v){
+    const n=(v.fname||'').trim();if(!n)return;
+    const meta=_getMeta();const fi=meta.folders.find(x=>x.id===id);if(fi)fi.name=n;
+    _setMeta(meta);renderProjList();
+  }});
 }
 function _deleteFolderUI(id){
   const f=_getFolderList().find(x=>x.id===id);if(!f)return;
   const descIds=_getAllDescendantIds(id);const allIds=[id,...descIds];
-  if(!confirm('Delete "'+f.name+'" and all its contents? Cannot be undone.'))return;
-  const p=_getAllProjects();
-  Object.entries(p).filter(([k])=>!k.startsWith('__')).forEach(([k,v])=>{if(allIds.includes(v.folderId))p[k].folderId=null;});
-  const meta=_getMeta();meta.folders=meta.folders.filter(x=>!allIds.includes(x.id));
-  p.__meta__=meta;_setAllProjects(p);
-  if(allIds.includes(_getCurrentFolderId()))_setCurrentFolderId(null);
-  renderProjList();
+  _tmConfirm('Delete "'+f.name+'" and all its contents? This cannot be undone.','🗑 Delete Folder',function(){
+    const p=_getAllProjects();
+    Object.entries(p).filter(([k])=>!k.startsWith('__')).forEach(([k,v])=>{if(allIds.includes(v.folderId))p[k].folderId=null;});
+    const meta=_getMeta();meta.folders=meta.folders.filter(x=>!allIds.includes(x.id));
+    p.__meta__=meta;_setAllProjects(p);
+    if(allIds.includes(_getCurrentFolderId()))_setCurrentFolderId(null);
+    renderProjList();
+  });
 }
 function _showMoveDialog(type,projName,folderId){
   const folders=_getFolderList();
@@ -7512,7 +7606,7 @@ function _selLoadSelected(){
 function _selBulkDelete(){
   if(!_selected.size)return;
   const n=_selected.size;
-  if(!confirm('Delete '+n+' selected item(s)? Folders will be deleted with their contents. Cannot be undone.'))return;
+  _tmConfirm('Delete '+n+' selected item(s)? Folders will be deleted with their contents. Cannot be undone.','🗑 Delete '+n+' Item'+(n>1?'s':''),function(){
   const projects=_getAllProjects();const meta=_getMeta();
   const delFolderIds=new Set();
   _selected.forEach(k=>{const{type,id}=_selParse(k);if(type==='folder'){delFolderIds.add(id);_getAllDescendantIds(id).forEach(d=>delFolderIds.add(d));}});
@@ -7527,6 +7621,7 @@ function _selBulkDelete(){
   if(delFolderIds.has(_getCurrentFolderId()))_setCurrentFolderId(null);
   _selected.clear();_selAnchor=null;
   renderProjList();
+  }); // end _tmConfirm
 }
 function _selBulkMoveDialog(){
   if(!_selected.size)return;
