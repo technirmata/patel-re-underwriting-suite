@@ -653,6 +653,18 @@ strong { color: #e2e8f0; }
 .ai-status-bar.loading{display:block;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);color:#a5b4fc}
 .ai-status-bar.success{display:block;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:#34d399}
 .ai-status-bar.error{display:block;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#fca5a5}
+.ai-result-panel{background:linear-gradient(135deg,rgba(139,92,246,.08) 0%,rgba(99,102,241,.05) 100%);border:1px solid rgba(139,92,246,.25);border-radius:12px;padding:14px 16px;margin-top:12px;display:none;animation:tmPopIn .2s ease}
+.ai-result-panel.visible{display:block}
+.ai-result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ai-result-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#a78bfa}
+.ai-result-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:0 2px;line-height:1}
+.ai-result-summary{font-size:12px;color:var(--text);line-height:1.55;margin-bottom:10px}
+.ai-result-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.ai-metric-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 10px;text-align:center}
+.ai-metric-label{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:3px}
+.ai-metric-value{font-size:14px;font-weight:700;color:var(--accent)}
+.ai-result-math{font-size:11px;color:var(--muted);font-style:italic;padding:8px 10px;background:rgba(0,0,0,.15);border-radius:6px;margin-bottom:8px;line-height:1.5}
+.ai-result-flags{font-size:11px;color:#f87171;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:8px 10px;line-height:1.5;margin-bottom:8px}
 .ai-filled-tag{display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(99,102,241,.2);color:#a5b4fc;margin-left:5px;vertical-align:middle}
 .ai-progress{width:100%;height:3px;background:rgba(99,102,241,.15);border-radius:2px;overflow:hidden;margin-top:8px}
 .ai-progress-bar{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:2px;transition:width .4s ease;width:0%}
@@ -5306,6 +5318,40 @@ function parseOM(text) {
 async function handleFile(event) {
   const file = event.target?.files ? event.target.files[0] : event;
   if(!file) return;
+
+  // Image files — AI Vision analysis
+  if (file.type.startsWith('image/') || /\.(jpg|jpeg|png|webp|heic|gif)$/i.test(file.name)) {
+    const imgReader = new FileReader();
+    imgReader.onload = function(e) {
+      const b64  = e.target.result.split(',')[1];
+      const mime = file.type || 'image/jpeg';
+      el('omPaste').value = '[Image: ' + file.name + ' — AI Vision analyzing…]';
+      if (typeof _getAIKey === 'function' && _getAIKey(_aiProvider)) {
+        aiAnalyzeImage(b64, mime, file.name);
+      } else {
+        setStatus('⚙️ Add an Anthropic or OpenAI key in Settings to analyze images with Vision AI.');
+      }
+    };
+    imgReader.readAsDataURL(file);
+    return;
+  }
+
+  // Image files — AI Vision analysis
+  if (file.type.startsWith('image/') || /\.(jpg|jpeg|png|webp|heic|gif)$/i.test(file.name)) {
+    const imgReader = new FileReader();
+    imgReader.onload = function(e) {
+      const b64  = e.target.result.split(',')[1];
+      const mime = file.type || 'image/jpeg';
+      el('omPaste').value = '[Image: ' + file.name + ' — AI Vision analyzing…]';
+      if (typeof _getAIKey === 'function' && _getAIKey(_aiProvider)) {
+        aiAnalyzeImage(b64, mime, file.name);
+      } else {
+        setStatus('⚙️ Add an Anthropic or OpenAI key in Settings to analyze images with Vision AI.');
+      }
+    };
+    imgReader.readAsDataURL(file);
+    return;
+  }
   const setStatus = (msg, color='var(--yellow)') => {
     const s = el('omStatus'); if(s){ s.textContent=msg; s.style.color=color; }
   };
@@ -5367,7 +5413,189 @@ async function handleFile(event) {
 // AI INTAKE ANALYZER — Claude-powered field extraction
 // ══════════════════════════════════════════════════════════════════════════════
 
-// ── AI Fill All Fields — full document intelligence ─────────────────────────
+// ── AI Vision — analyze image files (photos, scanned docs, flyers) ───────────
+async function aiAnalyzeImage(b64data, mimeType, filename) {
+  var provider = _aiProvider || 'anthropic';
+  var apiKey   = _getAIKey(provider);
+  if (!apiKey) { _aiStatus('⚙️ Add an API key in Settings to analyze images.', 'error'); return; }
+  if (provider !== 'anthropic' && provider !== 'openai') {
+    _aiStatus('⚠️ Image analysis needs Anthropic or OpenAI. Switch in ⚙️ Settings.', 'error'); return;
+  }
+  var btn = el('aiAnalyzeBtn');
+  if (btn) { btn.disabled=true; btn.innerHTML='<span style="font-size:16px">👁</span> Reading image…'; }
+  _aiStatus('👁 AI Vision reading image…', 'loading');
+  _aiProgress(15);
+
+  var VPROMPT = 'You are a senior real estate underwriter analyzing a document image.\n' +
+    'Deep-analyze everything visible: listing flyers, OM pages, rent rolls, financials, property photos with text, aerials, contracts.\n\n' +
+    'STEPS:\n1. Document/image type\n2. Property: address, city, state, zip, type, units, sqft, year built, beds/baths\n' +
+    '3. ALL financials: price, rents, expenses, NOI, cap rate, occupancy — cross-validate all math\n' +
+    '4. Deal terms: seller info, financing, hold period, ARV, rehab\n5. Red flags: inflated projections, inconsistencies\n\n' +
+    'Return ONLY valid JSON (no markdown):\n' +
+    '{"prop_address":"","prop_city":"","prop_state":"","prop_zip":"","prop_type":"sfr|duplex|triplex|quadplex|mfr|rvpark|storage|mhp|mixed|land|commercial",' +
+    '"prop_units":0,"prop_sqft":0,"prop_year":0,"prop_beds":"","pur_price":0,"pur_arv":0,"pur_down_pct":0,"pur_close_pct":0,' +
+    '"pur_rehab":0,"pur_hold":0,"pur_rate":0,"spec_n":0,"spec_rate":0,"spec_occ":0,"fin_gross":0,"fin_other":0,"fin_vac":0,' +
+    '"fin_taxes":0,"fin_ins":0,"fin_mgmt_pct":0,"fin_maint_pct":0,"fin_capex_pct":0,"fin_util":0,"fin_hoa":0,"fin_noi":0,' +
+    '"ncp_cap":0,"mkt_tier":"","mkt_class":"","mkt_rent_growth":0,"exist_bal":0,"exist_rate":0,"exist_pmt":0,"exist_term":0,' +
+    '"seller_name":"","seller_phone":"","fin_notes":"","ai_summary":"","ai_flags":"","math_notes":""}\n' +
+    'Rules: monetary=raw numbers no $ or commas. Percentages=raw (5 not 0.05). Use 0 for missing.';
+
+  try {
+    var raw = '';
+    if (provider === 'anthropic') {
+      var resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {'x-api-key':apiKey,'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body: JSON.stringify({model:'claude-opus-4-7',max_tokens:2000,system:'Return only valid JSON, no markdown.',messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mimeType,data:b64data}},{type:'text',text:VPROMPT}]}]})
+      });
+      if (!resp.ok) throw new Error('API ' + resp.status + ': ' + (await resp.text()).slice(0,200));
+      raw = (await resp.json()).content[0].text;
+    } else {
+      var resp2 = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'},
+        body: JSON.stringify({model:'gpt-4o',max_tokens:2000,response_format:{type:'json_object'},messages:[{role:'user',content:[{type:'image_url',image_url:{url:'data:'+mimeType+';base64,'+b64data}},{type:'text',text:VPROMPT}]}]})
+      });
+      if (!resp2.ok) throw new Error('API ' + resp2.status + ': ' + (await resp2.text()).slice(0,200));
+      raw = (await resp2.json()).choices[0].message.content;
+    }
+    _aiProgress(80);
+    var d = _extractJSON(raw);
+    _aiProgress(90);
+
+    var setIf = function(id,val){ if(val===undefined||val===null||val===''||val===0)return; var e=el(id);if(e)e.value=val; };
+    if(d.prop_type){var s=el('prop_type');if(s){s.value=d.prop_type;if(typeof updatePropertyType==='function')updatePropertyType();}}
+    setIf('prop_address',d.prop_address);setIf('prop_city',d.prop_city);setIf('prop_state',d.prop_state);setIf('prop_zip',d.prop_zip);
+    setIf('prop_units',d.prop_units);setIf('prop_sqft',d.prop_sqft);setIf('prop_year',d.prop_year);setIf('prop_beds',d.prop_beds);
+    setIf('pur_price',d.pur_price);setIf('pur_arv',d.pur_arv);setIf('pur_down_pct',d.pur_down_pct);setIf('pur_close_pct',d.pur_close_pct);
+    setIf('pur_rehab',d.pur_rehab);setIf('pur_hold',d.pur_hold);setIf('pur_rate',d.pur_rate);
+    setIf('spec_n',d.spec_n);setIf('spec_rate',d.spec_rate);setIf('spec_occ',d.spec_occ);
+    if((d.spec_n||0)>0&&(d.spec_rate||0)>0&&typeof computeSpecIncome==='function')computeSpecIncome();else setIf('fin_gross',d.fin_gross);
+    setIf('fin_other',d.fin_other);setIf('fin_vac',d.fin_vac);setIf('fin_taxes',d.fin_taxes);setIf('fin_ins',d.fin_ins);
+    setIf('fin_mgmt_pct',d.fin_mgmt_pct);setIf('fin_maint_pct',d.fin_maint_pct);setIf('fin_capex_pct',d.fin_capex_pct);
+    setIf('fin_util',d.fin_util);setIf('fin_hoa',d.fin_hoa);
+    if(d.fin_noi){var n=el('fin_noi');if(n&&n.dataset.manual!=='true')n.value=Math.round(d.fin_noi);}
+    setIf('ncp_cap',d.ncp_cap);setIf('mkt_tier',d.mkt_tier);setIf('mkt_class',d.mkt_class);setIf('mkt_rent_growth',d.mkt_rent_growth);
+    setIf('exist_bal',d.exist_bal);setIf('exist_rate',d.exist_rate);setIf('exist_pmt',d.exist_pmt);setIf('exist_term',d.exist_term);
+    setIf('seller_name',d.seller_name);setIf('seller_phone',d.seller_phone);
+    var noteParts=[];
+    if(d.ai_summary)noteParts.push('📋 '+d.ai_summary);
+    if(d.ai_flags)noteParts.push('⚠️ FLAGS: '+d.ai_flags);
+    if(d.math_notes)noteParts.push('🔢 '+d.math_notes);
+    if(noteParts.length)setIf('fin_notes',noteParts.join('\n\n'));
+    if(typeof updateMapLinks==='function')updateMapLinks();
+    if(typeof R==='function')R();
+
+    var panel=el('aiResultPanel'),rSum=el('aiResultSummary'),rMet=el('aiResultMetrics'),rMath=el('aiResultMath'),rFlags=el('aiResultFlags');
+    if(panel){
+      if(rSum)rSum.innerHTML=(d.ai_summary||'')+' <em style="color:var(--muted);font-size:10px">[image: '+filename+']</em>';
+      if(rMet){
+        var fmt=function(n,p,s){if(!n||n===0)return'—';var v=Math.round(n);if(v>=1000000)return(p||'')+(v/1000000).toFixed(2)+'M'+(s||'');if(v>=1000)return(p||'')+(v/1000).toFixed(0)+'K'+(s||'');return(p||'')+v+(s||'');};
+        var metrics=[{label:'Price',value:fmt(d.pur_price,'$','')},{label:'Gross/mo',value:fmt(d.fin_gross,'$','')},{label:'NOI/yr',value:fmt(d.fin_noi,'$','')},{label:'Cap Rate',value:d.ncp_cap?d.ncp_cap.toFixed(2)+'%':'—'},{label:'Units',value:d.prop_units||d.spec_n||'—'},{label:'Type',value:(d.prop_type||'').toUpperCase()||'—'}];
+        rMet.innerHTML=metrics.map(function(m){return'<div class="ai-metric-box"><div class="ai-metric-label">'+m.label+'</div><div class="ai-metric-value">'+m.value+'</div></div>';}).join('');
+      }
+      if(rMath){rMath.style.display=d.math_notes?'block':'none';rMath.textContent=d.math_notes||'';}
+      if(rFlags){rFlags.style.display=d.ai_flags?'block':'none';rFlags.textContent=d.ai_flags||'';}
+      panel.classList.add('visible');
+      setTimeout(function(){panel.scrollIntoView({behavior:'smooth',block:'nearest'});},100);
+    }
+    _aiProgress(0);
+    var filled=Object.keys(d).filter(function(k){return!['math_notes','ai_summary','ai_flags'].includes(k)&&d[k]!==0&&d[k]!==''&&d[k]!==null;}).length;
+    _aiStatus('✅ Image analyzed — '+filled+' fields filled!','success');
+  } catch(e2) {
+    console.error('Vision failed:',e2);
+    _aiStatus('⚠️ Image analysis failed: '+(e2.message||'Unknown'),'error');
+    _aiProgress(0);
+  } finally {
+    if(btn){btn.disabled=false;btn.innerHTML='<span style="font-size:16px">⚡</span> AI Fill All Fields';}
+  }
+}
+
+
+// ── AI Vision — analyze image files ──────────────────────────────────────────
+async function aiAnalyzeImage(b64data, mimeType, filename) {
+  var provider = _aiProvider || 'anthropic';
+  var apiKey   = _getAIKey(provider);
+  if (!apiKey) { _aiStatus('⚙️ Add an API key in Settings to analyze images.', 'error'); return; }
+  if (provider !== 'anthropic' && provider !== 'openai') {
+    _aiStatus('⚠️ Image analysis needs Anthropic or OpenAI. Switch in ⚙️ Settings.', 'error'); return;
+  }
+  var btn = el('aiAnalyzeBtn');
+  if (btn) { btn.disabled=true; btn.innerHTML='<span style="font-size:16px">👁</span> Reading image…'; }
+  _aiStatus('👁 AI Vision reading image…', 'loading');
+  _aiProgress(15);
+  var VPROMPT = 'You are a senior real estate underwriter. Deep-analyze this image. Extract all deal data. Cross-validate all math. Return ONLY valid JSON: {"prop_address":"","prop_city":"","prop_state":"","prop_zip":"","prop_type":"sfr|duplex|triplex|quadplex|mfr|rvpark|storage|mhp|mixed|land|commercial","prop_units":0,"prop_sqft":0,"prop_year":0,"prop_beds":"","pur_price":0,"pur_arv":0,"pur_down_pct":0,"pur_close_pct":0,"pur_rehab":0,"pur_hold":0,"pur_rate":0,"spec_n":0,"spec_rate":0,"spec_occ":0,"fin_gross":0,"fin_other":0,"fin_vac":0,"fin_taxes":0,"fin_ins":0,"fin_mgmt_pct":0,"fin_maint_pct":0,"fin_capex_pct":0,"fin_util":0,"fin_hoa":0,"fin_noi":0,"ncp_cap":0,"mkt_tier":"","mkt_class":"","mkt_rent_growth":0,"exist_bal":0,"exist_rate":0,"exist_pmt":0,"exist_term":0,"seller_name":"","seller_phone":"","fin_notes":"","ai_summary":"2-3 sentence deal summary","ai_flags":"red flags or inconsistencies found","math_notes":"key calculations verified"} Monetary=raw numbers no $ or commas. Percentages=raw (5 not 0.05). Use 0 for missing fields.';
+  try {
+    var raw = '';
+    if (provider === 'anthropic') {
+      var resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{'x-api-key':apiKey,'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-opus-4-7',max_tokens:2000,system:'Return only valid JSON, no markdown.',messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mimeType,data:b64data}},{type:'text',text:VPROMPT}]}]})
+      });
+      if (!resp.ok) throw new Error('API '+resp.status+': '+(await resp.text()).slice(0,200));
+      raw = (await resp.json()).content[0].text;
+    } else {
+      var resp2 = await fetch('https://api.openai.com/v1/chat/completions', {
+        method:'POST',
+        headers:{'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'},
+        body:JSON.stringify({model:'gpt-4o',max_tokens:2000,response_format:{type:'json_object'},messages:[{role:'user',content:[{type:'image_url',image_url:{url:'data:'+mimeType+';base64,'+b64data}},{type:'text',text:VPROMPT}]}]})
+      });
+      if (!resp2.ok) throw new Error('API '+resp2.status+': '+(await resp2.text()).slice(0,200));
+      raw = (await resp2.json()).choices[0].message.content;
+    }
+    _aiProgress(80);
+    var d = _extractJSON(raw);
+    _aiProgress(90);
+    var setIf = function(id,val){ if(val===undefined||val===null||val===''||val===0)return; var e=el(id);if(e)e.value=val; };
+    if(d.prop_type){var s=el('prop_type');if(s){s.value=d.prop_type;if(typeof updatePropertyType==='function')updatePropertyType();}}
+    setIf('prop_address',d.prop_address);setIf('prop_city',d.prop_city);setIf('prop_state',d.prop_state);setIf('prop_zip',d.prop_zip);
+    setIf('prop_units',d.prop_units);setIf('prop_sqft',d.prop_sqft);setIf('prop_year',d.prop_year);setIf('prop_beds',d.prop_beds);
+    setIf('pur_price',d.pur_price);setIf('pur_arv',d.pur_arv);setIf('pur_down_pct',d.pur_down_pct);setIf('pur_close_pct',d.pur_close_pct);
+    setIf('pur_rehab',d.pur_rehab);setIf('pur_hold',d.pur_hold);setIf('pur_rate',d.pur_rate);
+    setIf('spec_n',d.spec_n);setIf('spec_rate',d.spec_rate);setIf('spec_occ',d.spec_occ);
+    if((d.spec_n||0)>0&&(d.spec_rate||0)>0&&typeof computeSpecIncome==='function')computeSpecIncome();else setIf('fin_gross',d.fin_gross);
+    setIf('fin_other',d.fin_other);setIf('fin_vac',d.fin_vac);setIf('fin_taxes',d.fin_taxes);setIf('fin_ins',d.fin_ins);
+    setIf('fin_mgmt_pct',d.fin_mgmt_pct);setIf('fin_maint_pct',d.fin_maint_pct);setIf('fin_capex_pct',d.fin_capex_pct);
+    setIf('fin_util',d.fin_util);setIf('fin_hoa',d.fin_hoa);
+    if(d.fin_noi){var n=el('fin_noi');if(n&&n.dataset.manual!=='true')n.value=Math.round(d.fin_noi);}
+    setIf('ncp_cap',d.ncp_cap);setIf('mkt_tier',d.mkt_tier);setIf('mkt_class',d.mkt_class);setIf('mkt_rent_growth',d.mkt_rent_growth);
+    setIf('exist_bal',d.exist_bal);setIf('exist_rate',d.exist_rate);setIf('exist_pmt',d.exist_pmt);setIf('exist_term',d.exist_term);
+    setIf('seller_name',d.seller_name);setIf('seller_phone',d.seller_phone);
+    var noteParts=[];
+    if(d.ai_summary)noteParts.push('📋 '+d.ai_summary);
+    if(d.ai_flags)noteParts.push('⚠️ FLAGS: '+d.ai_flags);
+    if(d.math_notes)noteParts.push('🔢 '+d.math_notes);
+    if(noteParts.length)setIf('fin_notes',noteParts.join('\n\n'));
+    if(typeof updateMapLinks==='function')updateMapLinks();
+    if(typeof R==='function')R();
+    var panel=el('aiResultPanel'),rSum=el('aiResultSummary'),rMet=el('aiResultMetrics'),rMath=el('aiResultMath'),rFlags=el('aiResultFlags');
+    if(panel){
+      if(rSum)rSum.innerHTML=(d.ai_summary||'')+' <em style="color:var(--muted);font-size:10px">[image: '+filename+']</em>';
+      if(rMet){
+        var fmt2=function(n,p,s){if(!n||n===0)return'—';var v=Math.round(n);if(v>=1000000)return(p||'')+(v/1000000).toFixed(2)+'M'+(s||'');if(v>=1000)return(p||'')+(v/1000).toFixed(0)+'K'+(s||'');return(p||'')+v+(s||'');};
+        var metrics=[{label:'Price',value:fmt2(d.pur_price,'$','')},{label:'Gross/mo',value:fmt2(d.fin_gross,'$','')},{label:'NOI/yr',value:fmt2(d.fin_noi,'$','')},{label:'Cap Rate',value:d.ncp_cap?d.ncp_cap.toFixed(2)+'%':'—'},{label:'Units',value:d.prop_units||d.spec_n||'—'},{label:'Type',value:(d.prop_type||'').toUpperCase()||'—'}];
+        rMet.innerHTML=metrics.map(function(m){return'<div class="ai-metric-box"><div class="ai-metric-label">'+m.label+'</div><div class="ai-metric-value">'+m.value+'</div></div>';}).join('');
+      }
+      if(rMath){rMath.style.display=d.math_notes?'block':'none';rMath.textContent=d.math_notes||'';}
+      if(rFlags){rFlags.style.display=d.ai_flags?'block':'none';rFlags.textContent=d.ai_flags||'';}
+      panel.classList.add('visible');
+      setTimeout(function(){panel.scrollIntoView({behavior:'smooth',block:'nearest'});},100);
+    }
+    _aiProgress(0);
+    var filled2=Object.keys(d).filter(function(k){return!['math_notes','ai_summary','ai_flags'].includes(k)&&d[k]!==0&&d[k]!==''&&d[k]!==null;}).length;
+    _aiStatus('✅ Image analyzed — '+filled2+' fields filled!','success');
+  } catch(err2) {
+    console.error('Vision failed:',err2);
+    _aiStatus('⚠️ Image analysis failed: '+(err2.message||'Unknown'),'error');
+    _aiProgress(0);
+  } finally {
+    if(btn){btn.disabled=false;btn.innerHTML='<span style="font-size:16px">⚡</span> AI Fill All Fields';}
+  }
+}
+
+
+// ── AI Fill All Fields — two-pass deep analysis ──────────────────────────────
 
 function _aiStatus(msg, type) {
   const s = el('omStatus');
@@ -5384,210 +5612,317 @@ function _aiProgress(pct) {
   if (bar)  bar.style.width = pct + '%';
 }
 
-// Robustly extract JSON from AI response even if wrapped in markdown
+// Robustly extract JSON — handles markdown, xml tags, surrounding text
 function _extractJSON(raw) {
-  if (!raw) throw new Error('Empty response');
-  // Strip markdown code blocks
-  let s = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
-  // Try direct parse first
+  if (!raw) throw new Error('Empty AI response');
+
+  // Try <json> tag first (two-pass format)
+  const jsonTag = raw.match(/<json>([\s\S]*?)<\/json>/i);
+  if (jsonTag) {
+    const s = jsonTag[1].trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/i,'').trim();
+    return JSON.parse(s);
+  }
+
+  // Strip any markdown fencing
+  let s = raw.replace(/^```(?:json)?\s*/im, '').replace(/\s*```\s*$/im, '').trim();
+
+  // Try direct parse
   try { return JSON.parse(s); } catch(_) {}
-  // Find first { ... } block
+
+  // Find outermost { ... } block
   const start = s.indexOf('{');
   const end   = s.lastIndexOf('}');
   if (start !== -1 && end > start) {
     try { return JSON.parse(s.slice(start, end + 1)); } catch(_) {}
   }
-  throw new Error('No valid JSON found in response');
+
+  throw new Error('Could not extract valid JSON from AI response');
 }
 
 async function aiAnalyze() {
   const text = ((el('omPaste') || {}).value || '').trim();
   if (text.length < 30) {
-    _aiStatus('⚠️ No document text found. Upload a file or paste text above, then click AI Fill.', 'error');
+    _aiStatus('⚠️ No document text found — upload a file or paste text above first.', 'error');
     return;
   }
+
   const provider = _aiProvider || 'anthropic';
   const apiKey   = _getAIKey(provider);
   if (!apiKey) {
-    _aiStatus('⚙️ No AI key set — click ⚙️ Settings to add an API key.', 'error');
+    _aiStatus('⚙️ No AI key set — click ⚙️ Settings to add a key.', 'error');
     if (typeof openSettings === 'function') openSettings();
     return;
   }
 
   const btn = el('aiAnalyzeBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="font-size:16px">⏳</span> Analyzing…'; }
-  _aiStatus('🤖 Sending document to AI…', 'loading');
-  _aiProgress(20);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="font-size:16px">🔍</span> Analyzing…'; }
 
-  // Detect current property type to give the AI a hint
-  const currentType = (typeof gvs === 'function' ? gvs('prop_type') : '') || 'unknown';
-  const typeHints = {
-    rvpark:'RV Park/Campground — spec_n=pads, spec_rate=pad rent/mo, spec_occ=occupancy%',
-    mhp:'Mobile Home Park — spec_n=lots, spec_rate=lot rent/mo, spec_occ=occupancy%',
-    storage:'Self-Storage — spec_n=units, spec_rate=avg rate/mo, spec_occ=occupancy%',
-    str:'Short-Term Rental — spec_n=nights/mo available, spec_rate=avg nightly rate, spec_occ=avg occupancy%',
-    commercial:'Commercial/NNN — spec_n=leasable sqft, spec_rate=$/sqft/YEAR, spec_occ=occupancy%',
-    multifamily:'Multifamily — spec_n=units, spec_rate=avg rent/unit/mo, spec_occ=occupancy%',
-    sfr:'SFR — spec_n=1, spec_rate=monthly rent, spec_occ=100',
-  };
-  const typeHint = typeHints[currentType] || 'Detect property type from text.';
+  const currentType = (typeof gvs === 'function' ? gvs('prop_type') : '') || '';
 
-  const PROMPT = `You are a commercial and residential real estate underwriting analyst.
-Analyze the following document and extract every piece of deal data you can find.
+  // ── PASS 1: Deep document analysis ────────────────────────────────────────
+  _aiStatus('🔍 Pass 1 of 2 — reading and analyzing document…', 'loading');
+  _aiProgress(10);
 
-Property type context: ${typeHint}
+  const ANALYSIS_PROMPT = `You are a senior real estate underwriter and analyst with 20+ years of experience in commercial and residential deal analysis.
 
-MATH RULES:
-- gross_rent_mo = spec_n × spec_rate × (spec_occ/100)  [for MHP/RV/Storage/MF]
-- For Commercial/NNN: gross_rent_mo = spec_n(sqft) × spec_rate($/sqft/yr) / 12 × (spec_occ/100)
-- For SFR: gross_rent_mo = spec_rate (monthly rent)
-- ALL monetary values: raw numbers, no $ or commas (450000 not $450,000)
-- ALL percentages: raw number without % (5 for 5%, not 0.05)
-- Return 0 for any field you cannot find — never null or undefined
-- Only include fields where you found actual data
+Your job is to DEEPLY analyze the following document before any data extraction. Think like an experienced underwriter reviewing a deal package.
 
-Return ONLY a single valid JSON object, no markdown, no explanation:
+${currentType ? `Current property type selection: ${currentType}` : 'Determine the property type from the document.'}
+
+DEEP ANALYSIS STEPS — work through each carefully:
+
+1. DOCUMENT TYPE & DEAL STRUCTURE
+   - What kind of document is this? (OM, listing, appraisal, rent roll, financial statement, LOI, contract, broker package, etc.)
+   - What is the deal structure? (acquisition, refinance, seller financing, portfolio, etc.)
+   - Who is the seller / broker / listing source?
+
+2. PROPERTY IDENTIFICATION
+   - Full property address, city, state, zip
+   - Property type classification (SFR, duplex, triplex, quadplex, multifamily, RV park, mobile home park, self-storage, short-term rental, commercial/NNN, office, retail, mixed-use, land)
+   - Physical details: units/pads/spaces, sqft, year built, bed/bath
+
+3. FINANCIAL DEEP DIVE — find, cross-validate, and compute:
+   - Purchase price / asking price
+   - After Repair Value (ARV) if mentioned
+   - Gross income: spec_n × spec_rate × (occ/100) — verify this math against any stated gross
+   - All operating expenses (taxes, insurance, management fee %, maintenance, CapEx, utilities, HOA, vacancy rate)
+   - NOI = Gross Income − Vacancy − All Expenses
+   - Cap rate = NOI / Price × 100
+   - Cross-check: if OM states NOI or cap rate, verify against your own calculation. Note any discrepancies.
+   - Existing debt: loan balance, interest rate, monthly payment, remaining term
+   - Rehab/renovation budget if mentioned
+   - Down payment %, closing costs %, target hold period, target loan rate
+
+4. MARKET & UNDERWRITING CONTEXT
+   - Market tier (primary/secondary/tertiary)
+   - Asset class (A/B/C/D)
+   - Rent growth assumptions
+   - Any red flags, inflated projections, missing data, or suspicious numbers
+
+5. DATA QUALITY ASSESSMENT
+   - Which numbers are stated explicitly vs. inferred/computed?
+   - What's missing that should be here?
+   - Are the seller's projections realistic?
+
+After your analysis, output the structured data using this exact format:
+
+<analysis>
+[Your thorough step-by-step analysis above — be specific with numbers]
+</analysis>
+
+<json>
 {
-  "prop_address":"street address","prop_city":"city","prop_state":"2-letter state","prop_zip":"zip",
+  "prop_address":"","prop_city":"","prop_state":"","prop_zip":"",
   "prop_type":"sfr|duplex|triplex|quadplex|mfr|rvpark|storage|mhp|mixed|land|commercial",
-  "prop_units":0,"prop_sqft":0,"prop_year":0,"prop_beds":"3/2",
+  "prop_units":0,"prop_sqft":0,"prop_year":0,"prop_beds":"",
   "pur_price":0,"pur_arv":0,"pur_down_pct":0,"pur_close_pct":0,
   "pur_rehab":0,"pur_hold":0,"pur_rate":0,
-  "spec_n":0,"spec_rate":0,"spec_occ":95,
-  "fin_gross":0,"fin_other":0,"fin_vac":5,
+  "spec_n":0,"spec_rate":0,"spec_occ":0,
+  "fin_gross":0,"fin_other":0,"fin_vac":0,
   "fin_taxes":0,"fin_ins":0,"fin_mgmt_pct":0,"fin_maint_pct":0,
   "fin_capex_pct":0,"fin_util":0,"fin_hoa":0,"fin_noi":0,
   "ncp_cap":0,"mkt_tier":"","mkt_class":"","mkt_rent_growth":0,
   "exist_bal":0,"exist_rate":0,"exist_pmt":0,"exist_term":0,
   "seller_name":"","seller_phone":"","fin_notes":"",
-  "math_notes":"explain your key calculations"
+  "ai_summary":"2-3 sentence deal summary for the underwriter",
+  "ai_flags":"any red flags or data quality issues found",
+  "math_notes":"key computations: e.g. 50 pads × $400/mo × 95% occ = $19,000/mo gross"
 }
+</json>
 
-Document text:
-${text.substring(0, 8000)}`;
+RULES FOR JSON VALUES:
+- All monetary values: raw numbers, no $ or commas (450000 not $450,000)
+- All percentages: raw number without % symbol (5 for 5% vacancy, not 0.05)
+- Use 0 (not null/undefined) for fields where data is unavailable
+- Use your computed/cross-validated numbers, NOT blindly copy potentially wrong seller numbers
+- Only fill fields where you have actual evidence from the document
+
+DOCUMENT:
+${text.substring(0, 15000)}`;
+
+  let analysis = '';
+  let d = null;
 
   try {
-    _aiProgress(40);
-    const raw = await callAI(PROMPT, apiKey, provider);
-    _aiProgress(80);
+    _aiProgress(20);
+    const raw = await callAI(ANALYSIS_PROMPT, apiKey, provider);
+    _aiProgress(70);
 
-    const d = _extractJSON(raw);
-    _aiProgress(90);
+    // Extract analysis text for display
+    const analysisMatch = raw.match(/<analysis>([\s\S]*?)<\/analysis>/i);
+    analysis = analysisMatch ? analysisMatch[1].trim() : '';
 
-    // Fill all fields
-    const setIf = (id, val) => {
-      if (val === undefined || val === null || val === '' || val === 0) return;
-      const e = el(id);
-      if (!e) return;
-      e.value = val;
-    };
+    // Extract and parse JSON
+    d = _extractJSON(raw);
+    _aiProgress(85);
 
-    // Property type first (drives income calc UI)
-    if (d.prop_type) {
-      const s = el('prop_type');
-      if (s) { s.value = d.prop_type; if (typeof updatePropertyType === 'function') updatePropertyType(); }
-    }
-
-    // Property info
-    setIf('prop_address', d.prop_address);
-    setIf('prop_city',    d.prop_city);
-    setIf('prop_state',   d.prop_state);
-    setIf('prop_zip',     d.prop_zip);
-    setIf('prop_units',   d.prop_units);
-    setIf('prop_sqft',    d.prop_sqft);
-    setIf('prop_year',    d.prop_year);
-    setIf('prop_beds',    d.prop_beds);
-
-    // Purchase
-    setIf('pur_price',     d.pur_price);
-    setIf('pur_arv',       d.pur_arv);
-    setIf('pur_down_pct',  d.pur_down_pct);
-    setIf('pur_close_pct', d.pur_close_pct);
-    setIf('pur_rehab',     d.pur_rehab);
-    setIf('pur_hold',      d.pur_hold);
-    setIf('pur_rate',      d.pur_rate);
-
-    // Income spec calculator
-    setIf('spec_n',    d.spec_n);
-    setIf('spec_rate', d.spec_rate);
-    setIf('spec_occ',  d.spec_occ);
-    // Trigger income calc if spec fields were filled
-    if ((d.spec_n || 0) > 0 && (d.spec_rate || 0) > 0 && typeof computeSpecIncome === 'function') {
-      computeSpecIncome();
-    } else {
-      setIf('fin_gross', d.fin_gross);
-    }
-
-    // Expenses
-    setIf('fin_other',     d.fin_other);
-    setIf('fin_vac',       d.fin_vac);
-    setIf('fin_taxes',     d.fin_taxes);
-    setIf('fin_ins',       d.fin_ins);
-    setIf('fin_mgmt_pct',  d.fin_mgmt_pct);
-    setIf('fin_maint_pct', d.fin_maint_pct);
-    setIf('fin_capex_pct', d.fin_capex_pct);
-    setIf('fin_util',      d.fin_util);
-    setIf('fin_hoa',       d.fin_hoa);
-
-    // NOI / cap rate
-    if (d.fin_noi) {
-      const n = el('fin_noi');
-      if (n && n.dataset.manual !== 'true') n.value = Math.round(d.fin_noi);
-    }
-    setIf('ncp_cap', d.ncp_cap);
-
-    // Market
-    setIf('mkt_tier',        d.mkt_tier);
-    setIf('mkt_class',       d.mkt_class);
-    setIf('mkt_rent_growth', d.mkt_rent_growth);
-
-    // Existing debt
-    setIf('exist_bal',  d.exist_bal);
-    setIf('exist_rate', d.exist_rate);
-    setIf('exist_pmt',  d.exist_pmt);
-    setIf('exist_term', d.exist_term);
-
-    // Seller / notes
-    setIf('seller_name',  d.seller_name);
-    setIf('seller_phone', d.seller_phone);
-    setIf('fin_notes',    d.fin_notes);
-
-    // LOI fields (don't clobber manual edits)
-    const cityState = [d.prop_city, d.prop_state].filter(Boolean).join(', ');
-    const addrStr   = [d.prop_address, cityState].filter(Boolean).join(' — ');
-    const portfolio = el('loi_portfolio');
-    const loiCity   = el('loi_city');
-    const loiUnits  = el('loi_units');
-    const loiDate   = el('loi_date');
-    if (portfolio && !portfolio.value && addrStr)  portfolio.value = addrStr;
-    if (loiCity   && !loiCity.value   && cityState) loiCity.value  = cityState;
-    if (loiUnits  && !loiUnits.value  && d.prop_units) loiUnits.value = d.prop_units;
-    if (loiDate   && !loiDate.value)  loiDate.value = new Date().toISOString().split('T')[0];
-    if (d.pur_price > 0) { const o1 = el('opt1_price'); if (o1 && !o1.value) { o1.value = d.pur_price; if (typeof loiCalcOpt === 'function') loiCalcOpt(1); } }
-
-    if (typeof updateMapLinks === 'function') updateMapLinks();
-    if (typeof R === 'function') R();
-
-    // Count filled fields for summary
-    const filled = Object.keys(d).filter(k => d[k] !== 0 && d[k] !== '' && d[k] !== null && k !== 'math_notes').length;
-    const note   = d.math_notes ? '\n' + d.math_notes : '';
-    _aiStatus('✅ ' + filled + ' fields filled!' + note, 'success');
-    _aiProgress(0);
-
-    const summary = el('aiFillSummary');
-    if (summary) {
-      summary.style.display = 'block';
-      summary.textContent   = '✅ AI filled ' + filled + ' fields. Review and adjust as needed.';
-    }
   } catch(e) {
-    console.error('AI analyze failed:', e);
-    // Fallback to regex pattern matching
-    if (typeof parseOM === 'function') parseOM(text);
-    _aiStatus('⚠️ AI error: ' + (e.message || 'Unknown') + ' — used pattern matching instead.', 'error');
+    console.error('AI analysis failed:', e);
+    _aiStatus('⚠️ AI error: ' + (e.message||'Unknown') + ' — falling back to pattern matching.', 'error');
     _aiProgress(0);
-  } finally {
-    if (btn) { btn.disabled = false; btn.innerHTML = '<span style="font-size:16px">⚡</span> AI Fill All Fields'; }
+    if (typeof parseOM === 'function') parseOM(text);
+    if (btn) { btn.disabled=false; btn.innerHTML='<span style="font-size:16px">⚡</span> AI Fill All Fields'; }
+    return;
   }
+
+  // ── FILL ALL FIELDS ────────────────────────────────────────────────────────
+  _aiStatus('✅ Analysis complete — filling fields…', 'loading');
+
+  const setIf = (id, val) => {
+    if (val === undefined || val === null || val === '' || val === 0) return;
+    const e = el(id);
+    if (e) e.value = val;
+  };
+
+  // Property type first (drives income calc UI)
+  if (d.prop_type) {
+    const s = el('prop_type');
+    if (s) { s.value = d.prop_type; if (typeof updatePropertyType === 'function') updatePropertyType(); }
+  }
+
+  // Property info
+  setIf('prop_address', d.prop_address);
+  setIf('prop_city',    d.prop_city);
+  setIf('prop_state',   d.prop_state);
+  setIf('prop_zip',     d.prop_zip);
+  setIf('prop_units',   d.prop_units);
+  setIf('prop_sqft',    d.prop_sqft);
+  setIf('prop_year',    d.prop_year);
+  setIf('prop_beds',    d.prop_beds);
+
+  // Purchase
+  setIf('pur_price',     d.pur_price);
+  setIf('pur_arv',       d.pur_arv);
+  setIf('pur_down_pct',  d.pur_down_pct);
+  setIf('pur_close_pct', d.pur_close_pct);
+  setIf('pur_rehab',     d.pur_rehab);
+  setIf('pur_hold',      d.pur_hold);
+  setIf('pur_rate',      d.pur_rate);
+
+  // Income spec calculator
+  setIf('spec_n',    d.spec_n);
+  setIf('spec_rate', d.spec_rate);
+  setIf('spec_occ',  d.spec_occ);
+  if ((d.spec_n||0) > 0 && (d.spec_rate||0) > 0 && typeof computeSpecIncome === 'function') {
+    computeSpecIncome();
+  } else {
+    setIf('fin_gross', d.fin_gross);
+  }
+
+  // Expenses
+  setIf('fin_other',     d.fin_other);
+  setIf('fin_vac',       d.fin_vac);
+  setIf('fin_taxes',     d.fin_taxes);
+  setIf('fin_ins',       d.fin_ins);
+  setIf('fin_mgmt_pct',  d.fin_mgmt_pct);
+  setIf('fin_maint_pct', d.fin_maint_pct);
+  setIf('fin_capex_pct', d.fin_capex_pct);
+  setIf('fin_util',      d.fin_util);
+  setIf('fin_hoa',       d.fin_hoa);
+
+  // NOI / cap
+  if (d.fin_noi) {
+    const n = el('fin_noi');
+    if (n && n.dataset.manual !== 'true') n.value = Math.round(d.fin_noi);
+  }
+  setIf('ncp_cap', d.ncp_cap);
+
+  // Market
+  setIf('mkt_tier',        d.mkt_tier);
+  setIf('mkt_class',       d.mkt_class);
+  setIf('mkt_rent_growth', d.mkt_rent_growth);
+
+  // Existing debt
+  setIf('exist_bal',  d.exist_bal);
+  setIf('exist_rate', d.exist_rate);
+  setIf('exist_pmt',  d.exist_pmt);
+  setIf('exist_term', d.exist_term);
+
+  // Seller / notes
+  setIf('seller_name',  d.seller_name);
+  setIf('seller_phone', d.seller_phone);
+
+  // Build notes with AI summary + flags + math
+  const noteParts = [];
+  if (d.ai_summary) noteParts.push('📋 ' + d.ai_summary);
+  if (d.ai_flags)   noteParts.push('⚠️ FLAGS: ' + d.ai_flags);
+  if (d.math_notes) noteParts.push('🔢 ' + d.math_notes);
+  const combinedNotes = noteParts.join('\n\n');
+  if (combinedNotes) setIf('fin_notes', combinedNotes);
+
+  // LOI fields (don't clobber manual edits)
+  const cityState = [d.prop_city, d.prop_state].filter(Boolean).join(', ');
+  const addrStr   = [d.prop_address, cityState].filter(Boolean).join(' — ');
+  const portfolio = el('loi_portfolio');
+  const loiCity   = el('loi_city');
+  const loiUnits  = el('loi_units');
+  const loiDate   = el('loi_date');
+  if (portfolio && !portfolio.value && addrStr)       portfolio.value = addrStr;
+  if (loiCity   && !loiCity.value   && cityState)     loiCity.value   = cityState;
+  if (loiUnits  && !loiUnits.value  && d.prop_units)  loiUnits.value  = d.prop_units;
+  if (loiDate   && !loiDate.value)   loiDate.value = new Date().toISOString().split('T')[0];
+  if (d.pur_price > 0) {
+    const o1 = el('opt1_price');
+    if (o1 && !o1.value) { o1.value = d.pur_price; if (typeof loiCalcOpt === 'function') loiCalcOpt(1); }
+  }
+
+  if (typeof updateMapLinks === 'function') updateMapLinks();
+  if (typeof R === 'function') R();
+
+  // ── JS-side cascade: derive fields the AI may have left blank ──────────────
+  // vacancy from occupancy
+  (function(){
+    var occVal = parseFloat((el('spec_occ')||{}).value)||0;
+    if (occVal > 0 && occVal <= 100) {
+      var vacEl = el('fin_vac');
+      if (vacEl && !parseFloat(vacEl.value)) vacEl.value = Math.round((100 - occVal) * 10) / 10;
+    }
+    // trigger income calc cascade
+    if (typeof computeSpecIncome === 'function') computeSpecIncome();
+    // cap rate from NOI + price if not filled
+    var noiV  = parseFloat((el('fin_noi')||{}).value)||0;
+    var priceV = parseFloat((el('pur_price')||{}).value)||0;
+    if (noiV > 0 && priceV > 0) {
+      var capEl = el('ncp_cap');
+      if (capEl && !parseFloat(capEl.value)) capEl.value = ((noiV / priceV) * 100).toFixed(2);
+    }
+    // GRM from price + gross annual income if not filled
+    var grmEl = el('ncp_grm');
+    if (grmEl && !parseFloat(grmEl.value)) {
+      var gai = parseFloat((el('fin_gai')||{}).value)||0;
+      if (gai > 0 && priceV > 0) grmEl.value = (priceV / gai).toFixed(2);
+    }
+    // price per unit if not filled
+    var ppuEl = el('ncp_ppu');
+    if (ppuEl && !parseFloat(ppuEl.value)) {
+      var units = parseInt((el('prop_units')||{}).value)||0;
+      if (units > 0 && priceV > 0) ppuEl.value = Math.round(priceV / units);
+    }
+  })();
+
+  _aiProgress(0);
+
+  // Count non-zero/non-empty fields filled
+  const filled = Object.keys(d).filter(k =>
+    !['math_notes','ai_summary','ai_flags'].includes(k) &&
+    d[k] !== 0 && d[k] !== '' && d[k] !== null
+  ).length;
+
+  const statusMsg = '✅ Deep analysis complete — ' + filled + ' fields filled' +
+    (d.ai_flags ? ' · ⚠️ ' + d.ai_flags.split('.')[0] : '') + '.';
+  _aiStatus(statusMsg, 'success');
+
+  const summary = el('aiFillSummary');
+  if (summary) {
+    summary.style.display = 'block';
+    const parts = [];
+    if (d.ai_summary) parts.push('<strong>Deal:</strong> ' + d.ai_summary);
+    if (d.math_notes) parts.push('<strong>Math:</strong> ' + d.math_notes);
+    if (d.ai_flags)   parts.push('<strong>⚠️ Flags:</strong> ' + d.ai_flags);
+    summary.innerHTML = parts.join('<br><br>');
+  }
+
+  if (btn) { btn.disabled=false; btn.innerHTML='<span style="font-size:16px">⚡</span> AI Fill All Fields'; }
 }
 
 // ─── END AI ANALYZER ─────────────────────────────────────────────────────────
