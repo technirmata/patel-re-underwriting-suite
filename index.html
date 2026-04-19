@@ -5445,13 +5445,23 @@ async function aiAnalyzeImage(b64data, mimeType, filename) {
     'This image may be: a rent roll, T-12/T-3, P&L, offering memorandum page, PSA, or handwritten calculations.\n\n' +
     'STEP 1 - READ EVERYTHING: Extract every number, label, table row, calculation visible in the image.\n' +
     'STEP 2 - IDENTIFY DOCUMENT TYPE and map values to the correct fields.\n' +
-    'STEP 3 - CALCULATE all derived fields using these formulas:\n' +
+    'STEP 3 - FINANCING FIELDS (pur_rate = MORTGAGE INTEREST RATE, NOT cap rate):\n' +
+    '  pur_price  = asking/contract price | pur_arv = After Repair Value (or = pur_price if no rehab)\n' +
+    '  pur_rate   = loan/mortgage interest rate % (e.g. 7.0 for 7%) — DEFAULT 7.0 if not stated\n' +
+    '  pur_down_pct = down payment % of price — look for "X% down", LTV (down=100-LTV) — DEFAULT 20\n' +
+    '  pur_down   = pur_price × (pur_down_pct/100) — ALWAYS compute this\n' +
+    '  pur_close_pct = closing costs % — DEFAULT 2 if not stated\n' +
+    '  pur_close  = pur_price × (pur_close_pct/100) — ALWAYS compute this\n' +
+    '  pur_hold   = hold period in years — look for "5-year hold", "exit in X years" — DEFAULT 5\n' +
+    '  pur_appr   = annual appreciation % — DEFAULT 3 if not stated\n' +
+    '  pur_rehab  = renovation/rehab $ stated or estimated | pur_rehab_pct = as % of ARV\n' +
+    '  exist_bal/exist_rate/exist_pmt/exist_term = existing loan details (sub-to/assumption deals)\n\n' +
+    'STEP 4 - CALCULATE all derived fields:\n' +
     '  fin_gross=spec_n×spec_rate×(spec_occ/100) | fin_noi=EGI-all_annual_expenses\n' +
     '  ncp_cap=(fin_noi/pur_price)×100 | fin_vac_mo=fin_gross×(fin_vac/100)\n' +
     '  fin_ins=pur_price×(fin_ins_pct/100) | fin_taxes=pur_price×(fin_taxes_pct/100)\n' +
-    '  pur_down=pur_price×(pur_down_pct/100) | pur_close=pur_price×(pur_close_pct/100)\n' +
-    'STEP 4 - FILL BOTH % AND $ for every dual-field pair.\n' +
-    'STEP 5 - RED FLAGS: Check all 8 standard flags. Add rf_ai_flags for anything else noticed.\n\n' +
+    'STEP 5 - FILL BOTH % AND $ for every dual-field pair.\n' +
+    'STEP 6 - RED FLAGS: Check all 8 standard flags. Add rf_ai_flags for anything else noticed.\n\n' +
     'YOUR VALUES ARE AUTHORITATIVE. ncp_price=pur_price, ncp_noi=fin_noi always.\n\n' +
     'Return ONLY a JSON object in <json>...</json> tags. No prose. Raw numbers (no $ or commas). Percentages as plain numbers (5 not 0.05).\n' +
     '{"prop_address":"","prop_city":"","prop_state":"","prop_zip":"","prop_type":"sfr|duplex|triplex|quadplex|mfr|rvpark|storage|mhp|str|mixed|land|commercial","prop_units":0,"prop_sqft":0,"prop_year":0,"prop_beds":"","pur_price":0,"pur_arv":0,"pur_down_pct":0,"pur_down":0,"pur_close_pct":0,"pur_close":0,"pur_rehab_pct":0,"pur_rehab":0,"pur_hold":0,"pur_rate":0,"pur_appr":3,"spec_n":0,"spec_rate":0,"spec_occ":0,"fin_gross":0,"fin_other":0,"fin_vac":0,"fin_vac_mo":0,"fin_mgmt_pct":0,"fin_mgmt_mo":0,"fin_ins_pct":0,"fin_ins":0,"fin_taxes_pct":0,"fin_taxes":0,"fin_maint_pct":0,"fin_maint":0,"fin_capex_pct":0,"fin_capex":0,"fin_util":0,"fin_hoa":0,"fin_noi":0,"ncp_cap":0,"ncp_price":0,"ncp_noi":0,"mkt_tier":"","mkt_class":"","mkt_rent_growth":0,"mkt_rent_growth_flat":0,"exist_bal":0,"exist_rate":0,"exist_pmt":0,"exist_term":0,"seller_name":"","seller_phone":"","rf_foundation":false,"rf_roof":false,"rf_mold":false,"rf_electrical":false,"rf_liens":false,"rf_environmental":false,"rf_vacancy":false,"rf_seller_motivated":false,"rf_ai_flags":[],"ai_summary":"","ai_flags":"","math_notes":""}';
@@ -5651,7 +5661,50 @@ Identify which document(s) are present:
   → Reconstruct the math: if "50 units × $800 = $40,000" → spec_n=50, spec_rate=800, fin_gross=40000
   → Trust the source numbers; compute what's missing
 
-━━━ STEP 2: INCOME LINE ITEMS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━ STEP 2: FINANCING & PURCHASE STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Extract or infer every financing field. When NOT stated in the document, use market convention defaults.
+
+PURCHASE PRICE & VALUE:
+  pur_price  = contract price / asking price / list price (exact dollar amount)
+  pur_arv    = After Repair Value — stated in OM/PSA/appraisal, or estimate from comps if mentioned
+               If no ARV mentioned and no rehab → pur_arv = pur_price
+
+FINANCING TERMS (pur_rate = MORTGAGE INTEREST RATE, not cap rate):
+  pur_rate   = Mortgage/loan interest rate (%) — look for "interest rate", "note rate", "APR", "financing at X%"
+               If NOT stated → use 7.0 as default (current market rate)
+  pur_down_pct = Down payment % of purchase price — look for "X% down", "down payment", LTV (down = 100 - LTV)
+               If NOT stated → use 20 (conventional 20% down) as default
+  pur_down   = pur_price × (pur_down_pct / 100)   [always compute this]
+  pur_hold   = Investment hold period in years — look for "5-year hold", "exit in X years", "hold period"
+               If NOT stated → use 5 as default
+  pur_appr   = Annual appreciation rate (%) — look for "appreciation", "rent growth", market projections
+               If NOT stated → use 3 as default
+
+CLOSING & REHAB COSTS:
+  pur_close_pct = Closing costs % — look for "closing costs", "settlement costs", "2% closing"
+               If NOT stated → use 2 as default
+  pur_close  = pur_price × (pur_close_pct / 100)
+  pur_rehab_pct = Rehab as % of ARV — look for "renovation budget", "rehab estimate", "deferred maintenance"
+  pur_rehab  = Dollar amount of renovation/rehab needed (stated directly, or estimate from flags)
+               If property is listed "as-is" with deferred maintenance: estimate 5-15% of price
+
+EXISTING DEBT (Sub-To / Assumption deals):
+  exist_bal  = Current mortgage balance — look for "subject-to", "existing loan", "assumable mortgage balance"
+  exist_rate = Existing loan interest rate (%)
+  exist_pmt  = Existing monthly P&I payment ($)
+  exist_term = Remaining term in years on existing loan
+
+FINANCING SIGNALS IN DIFFERENT DOCUMENT TYPES:
+  PSA/Contract → pur_price exact | earnest money hints at down | note any seller carry or creative terms
+  OM → may state "offered at X cap", implied LTV, financing assumptions in proforma
+  Rent Roll → usually no financing info → use defaults for all financing fields
+  T-12 / P&L → usually no financing info → use defaults for all financing fields
+  Handwritten → read any financing notes or calculations visible
+
+IMPORTANT: pur_rate is the LOAN interest rate (e.g. 7.0 for 7%). It is NEVER the cap rate.
+Always output BOTH pur_down_pct AND pur_down. Always output BOTH pur_close_pct AND pur_close.
+
+━━━ STEP 3: INCOME LINE ITEMS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Map document line items to fields:
   Gross Potential Rent / Scheduled Rent     → fin_gross (monthly) = annual ÷ 12
   Vacancy & Credit Loss                     → fin_vac (%), fin_vac_mo ($/mo)
@@ -5659,7 +5712,7 @@ Map document line items to fields:
   Other Income / Laundry / Parking          → fin_other ($/mo)
   spec_occ = 100 - fin_vac
 
-━━━ STEP 3: EXPENSE LINE ITEMS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━ STEP 4: EXPENSE LINE ITEMS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Property Management / Mgmt Fee           → fin_mgmt_pct (% of gross) and fin_mgmt_mo ($/mo)
   Insurance / Hazard Insurance             → fin_ins (annual $) and fin_ins_pct (% of price)
   Property Taxes / Real Estate Taxes       → fin_taxes (annual $) and fin_taxes_pct (% of price)
@@ -5669,7 +5722,7 @@ Map document line items to fields:
   HOA / Association Fees                   → fin_hoa ($/mo)
   Other expenses                           → note in math_notes
 
-━━━ STEP 4: CALCULATOR FORMULAS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━ STEP 5: CALCULATOR FORMULAS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 INCOME:
   fin_gross = spec_n × spec_rate × (spec_occ/100)  [monthly]
   fin_vac_mo = fin_gross × (fin_vac/100)
@@ -5700,14 +5753,14 @@ PURCHASE METRICS:
 EXISTING DEBT P&I:
   Monthly P&I = bal × (r/12) / (1 - (1 + r/12)^-term)  where r = rate/100
 
-━━━ STEP 5: CROSS-VALIDATION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━ STEP 6: CROSS-VALIDATION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   • Does stated NOI match your calculated NOI? Flag difference in math_notes.
   • Does stated cap rate = fin_noi / pur_price × 100? Flag if off by >0.5%.
   • Are expense ratios reasonable? (total expenses typically 35-55% of EGI)
   • Are occupancy claims consistent with rent roll vs stated overall vacancy?
   • Pro-forma vs in-place: if OM shows projected rents vs actual, flag the gap.
 
-━━━ STEP 6: PROPERTY TYPE CLASSIFICATION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━ STEP 7: PROPERTY TYPE CLASSIFICATION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   sfr=single family (spec_n=1) | duplex/triplex/quadplex | mfr=multifamily apartment
   rvpark = RV park (spec_n=pads, spec_rate=pad rent/mo)
   mhp = mobile home park (spec_n=lots, spec_rate=lot rent/mo)
@@ -5716,7 +5769,7 @@ EXISTING DEBT P&I:
   commercial = NNN/industrial (spec_n=leasable sqft, spec_rate=$/sqft/yr, then convert: fin_gross=spec_n×spec_rate×occ/100÷12)
   mixed = mixed-use | land = land/lot
 
-━━━ STEP 7: RED FLAGS — BE THOROUGH ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━ STEP 8: RED FLAGS — BE THOROUGH ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Standard flags (set true/false):
   rf_foundation, rf_roof, rf_mold, rf_electrical, rf_liens, rf_environmental,
   rf_vacancy (>15% vacancy or problem tenants), rf_seller_motivated
@@ -5835,16 +5888,30 @@ ${text.substring(0, 15000)}`;
 
   // ── Purchase ──────────────────────────────────────────────────────────────
   setIf('pur_price',     d.pur_price);
-  setIf('pur_arv',       d.pur_arv);
-  setIf('pur_down_pct',  d.pur_down_pct);
-  setIf('pur_down',      d.pur_down);
-  setIf('pur_close_pct', d.pur_close_pct);
-  setIf('pur_close',     d.pur_close);
+  // ARV: if AI didn't find it, default to purchase price (no rehab scenario)
+  setIf('pur_arv',       d.pur_arv || d.pur_price);
+
+  // Down payment: if AI found it use it; else use 20% default
+  var aiDownPct = d.pur_down_pct || 20;
+  setIf('pur_down_pct',  aiDownPct);
+  setIf('pur_down',      d.pur_down || (d.pur_price ? Math.round(d.pur_price * aiDownPct / 100) : 0));
+
+  // Closing costs: if AI found it use it; else use 2% default
+  var aiClosePct = d.pur_close_pct || 2;
+  setIf('pur_close_pct', aiClosePct);
+  setIf('pur_close',     d.pur_close || (d.pur_price ? Math.round(d.pur_price * aiClosePct / 100) : 0));
+
   setIf('pur_rehab_pct', d.pur_rehab_pct);
   setIf('pur_rehab',     d.pur_rehab);
-  setIf('pur_hold',      d.pur_hold);
-  setIf('pur_rate',      d.pur_rate);
-  setIf('pur_appr',      d.pur_appr);
+
+  // Hold period: default 5 years if AI didn't find it
+  setIf('pur_hold',      d.pur_hold || 5);
+
+  // Interest rate: default 7.0% if AI didn't extract it — THIS IS MORTGAGE RATE NOT CAP RATE
+  setIf('pur_rate',      d.pur_rate || 7.0);
+
+  // Appreciation: default 3% if AI didn't find it
+  setIf('pur_appr',      d.pur_appr || 3);
 
   // ── Income spec calculator ────────────────────────────────────────────────
   setIf('spec_n',    d.spec_n);
