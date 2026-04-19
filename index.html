@@ -1303,6 +1303,108 @@ strong { color: #e2e8f0; }
   <div style="margin-top:8px;font-size:10.5px;color:var(--muted)">💡 Run a financing calculator then click <strong>✅ Use This Structure</strong> to update PITI, cash flow, DSCR, and IRR with those exact numbers.</div>
 </div>
 
+<!-- ─── MAO CALCULATOR ──────────────────────────────────────────── -->
+<div class="card" style="margin-top:12px;border-color:rgba(245,158,11,.35)">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+    <div class="card-title" style="margin:0;color:#f59e0b">🎯 MAO Calculator <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:4px">— Maximum Allowable Offer</span></div>
+    <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;font-size:11px">
+      <button id="mao_btn_flip" onclick="setMaoMode('flip')" style="padding:4px 14px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:var(--accent);color:#fff">🔨 Fix &amp; Flip</button>
+      <button id="mao_btn_hold" onclick="setMaoMode('hold')" style="padding:4px 14px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:var(--surface2);color:var(--muted)">🏘 Buy &amp; Hold</button>
+    </div>
+  </div>
+
+  <!-- Fix & Flip inputs -->
+  <div id="mao_flip_section">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div class="field" style="margin:0">
+        <label style="display:flex;justify-content:space-between">ARV ($) <span style="color:var(--accent);font-size:9.5px;cursor:pointer" onclick="syncMAOFromIntake()">↑ sync</span></label>
+        <input type="number" id="mao_arv" placeholder="320000" oninput="calcMAO()">
+      </div>
+      <div class="field" style="margin:0">
+        <label style="display:flex;justify-content:space-between">Rehab / Repair ($) <span style="color:var(--accent);font-size:9.5px;cursor:pointer" onclick="syncMAOFromIntake()">↑ sync</span></label>
+        <input type="number" id="mao_rehab" placeholder="25000" oninput="calcMAO()">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+      <div class="field" style="margin:0">
+        <label>Profit Target (%)</label>
+        <input type="number" id="mao_profit_pct" value="20" step="1" min="0" max="50" oninput="calcMAO()">
+        <div style="font-size:9.5px;color:var(--muted);margin-top:2px">of ARV</div>
+      </div>
+      <div class="field" style="margin:0">
+        <label>Closing Costs (%)</label>
+        <input type="number" id="mao_close_pct" value="3" step="0.5" min="0" max="15" oninput="calcMAO()">
+        <div style="font-size:9.5px;color:var(--muted);margin-top:2px">of ARV</div>
+      </div>
+      <div class="field" style="margin:0">
+        <label>Holding Costs (%)</label>
+        <input type="number" id="mao_hold_pct" value="2" step="0.5" min="0" max="15" oninput="calcMAO()">
+        <div style="font-size:9.5px;color:var(--muted);margin-top:2px">of ARV</div>
+      </div>
+    </div>
+    <!-- 70% Rule shortcut bar -->
+    <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:6px;padding:7px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+      <span style="font-size:11px;color:var(--text2)"><strong style="color:#f59e0b">70% Rule:</strong> ARV × 70% − Rehab</span>
+      <span id="mao_70_result" style="font-size:13px;font-weight:700;color:#fbbf24">—</span>
+    </div>
+  </div>
+
+  <!-- Buy & Hold inputs -->
+  <div id="mao_hold_section" style="display:none">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div class="field" style="margin:0">
+        <label style="display:flex;justify-content:space-between">NOI / yr ($) <span style="color:var(--accent);font-size:9.5px;cursor:pointer" onclick="syncMAOFromIntake()">↑ sync</span></label>
+        <input type="number" id="mao_noi" placeholder="24000" oninput="calcMAO()">
+      </div>
+      <div class="field" style="margin:0">
+        <label>Target Cap Rate (%)</label>
+        <input type="number" id="mao_cap" value="7" step="0.25" min="1" max="30" oninput="calcMAO()">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div class="field" style="margin:0">
+        <label>Desired CoC Return (%)</label>
+        <input type="number" id="mao_coc" value="10" step="0.5" min="1" max="50" oninput="calcMAO()">
+        <div style="font-size:9.5px;color:var(--muted);margin-top:2px">cash-on-cash target</div>
+      </div>
+      <div class="field" style="margin:0">
+        <label>Down Payment (%)</label>
+        <input type="number" id="mao_dp" value="20" step="1" min="5" max="100" oninput="calcMAO()">
+        <div style="font-size:9.5px;color:var(--muted);margin-top:2px">used for CoC method</div>
+      </div>
+    </div>
+    <!-- Method detail -->
+    <div id="mao_hold_detail" style="background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);border-radius:6px;padding:7px 12px;margin-bottom:10px;font-size:11px;color:var(--text2)">
+      <strong style="color:#818cf8">Buy &amp; Hold MAO</strong> = NOI ÷ Target Cap Rate
+    </div>
+  </div>
+
+  <!-- Result row: MAO | Asking | Gap -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
+    <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:10px 8px;text-align:center">
+      <div style="font-size:9.5px;color:#f59e0b;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px">🎯 Your MAO</div>
+      <div id="mao_result_val" style="font-size:20px;font-weight:800;color:#fbbf24">—</div>
+      <div id="mao_result_sub" style="font-size:9.5px;color:var(--muted);margin-top:2px"></div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center">
+      <div style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px">💰 Asking Price</div>
+      <div id="mao_asking_val" style="font-size:20px;font-weight:800;color:var(--text)">—</div>
+      <div style="font-size:9.5px;color:var(--muted);margin-top:2px">from intake</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center">
+      <div style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px">📊 Gap / Surplus</div>
+      <div id="mao_gap_val" style="font-size:20px;font-weight:800;color:var(--text)">—</div>
+      <div id="mao_gap_sub" style="font-size:9.5px;color:var(--muted);margin-top:2px"></div>
+    </div>
+  </div>
+  <!-- Verdict + formula -->
+  <div id="mao_verdict" style="display:none;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:600;text-align:center;margin-bottom:6px"></div>
+  <div id="mao_formula" style="font-size:10px;color:var(--muted);text-align:center;min-height:14px"></div>
+  <div style="margin-top:6px;font-size:10px;color:var(--muted);text-align:center">
+    <span style="cursor:pointer;color:var(--accent)" onclick="syncMAOFromIntake()">⬆ Auto-sync from Intake fields</span>
+  </div>
+</div>
+
 </div><!-- end left col -->
 
 <!-- RIGHT COL: Screening -->
@@ -3110,6 +3212,7 @@ function R() {
   updateScreening(S);
   updateCapBenchmarks();
   updateMapLinks();
+  if(typeof calcMAO === 'function') calcMAO();
 
   // ── Live-refresh whichever panel/calculator is currently visible ──────────────
   // Recommendations panel
@@ -3505,6 +3608,148 @@ function ncp_push(pfx) {
   if (resEl) resEl.innerHTML += (pushed.length
     ? ' &nbsp;⬆ <span style="color:#86efac">Pushed '+pushed.join(', ')+' to Intake</span>'
     : ' &nbsp;<span style="color:var(--yellow)">Enter a valid Price first</span>');
+}
+
+// ── MAO Calculator ──────────────────────────────────────────────────────────
+let _maoMode = 'flip';
+
+function setMaoMode(mode) {
+  _maoMode = mode;
+  const flipSec = el('mao_flip_section'), holdSec = el('mao_hold_section');
+  const btnFlip = el('mao_btn_flip'),     btnHold = el('mao_btn_hold');
+  if (flipSec) flipSec.style.display = mode === 'flip' ? '' : 'none';
+  if (holdSec) holdSec.style.display = mode === 'hold' ? '' : 'none';
+  if (btnFlip) { btnFlip.style.background = mode==='flip' ? 'var(--accent)' : 'var(--surface2)'; btnFlip.style.color = mode==='flip' ? '#fff' : 'var(--muted)'; }
+  if (btnHold) { btnHold.style.background = mode==='hold' ? 'var(--accent)' : 'var(--surface2)'; btnHold.style.color = mode==='hold' ? '#fff' : 'var(--muted)'; }
+  syncMAOFromIntake();
+  calcMAO();
+}
+
+function syncMAOFromIntake() {
+  if (_maoMode === 'flip') {
+    const arv   = gv('pur_arv') || gv('pur_price');
+    const rehab = gv('pur_rehab');
+    if (arv > 0)   { const e = el('mao_arv');   if(e) e.value = arv; }
+    if (rehab >= 0){ const e = el('mao_rehab');  if(e) e.value = rehab; }
+  } else {
+    const noi = S && S.noi ? Math.round(S.noi) : gv('fin_noi');
+    if (noi > 0) { const e = el('mao_noi'); if(e) e.value = noi; }
+  }
+  calcMAO();
+}
+
+function calcMAO() {
+  const price = gv('pur_price');
+  let mao = 0, maoLabel = '', formulaText = '';
+
+  if (_maoMode === 'flip') {
+    const arv       = gv('mao_arv') || 0;
+    const rehab     = gv('mao_rehab') || 0;
+    const profitPct = (gv('mao_profit_pct') || 20) / 100;
+    const closePct  = (gv('mao_close_pct')  || 3)  / 100;
+    const holdPct   = (gv('mao_hold_pct')   || 2)  / 100;
+
+    const multiplier = Math.max(0, 1 - profitPct - closePct - holdPct);
+    mao = arv * multiplier - rehab;
+
+    // 70% Rule
+    const mao70 = arv * 0.70 - rehab;
+    const r70El = el('mao_70_result');
+    if (r70El) r70El.textContent = arv > 0 ? (mao70 > 0 ? fd(mao70) : '$0') : '—';
+
+    const profitAmt = arv * profitPct;
+    const closeAmt  = arv * closePct;
+    const holdAmt   = arv * holdPct;
+    maoLabel = 'Fix & Flip';
+    formulaText = arv > 0
+      ? `ARV ${fd(arv)} × ${fp(multiplier)} multiplier (100% − ${fp(profitPct)} profit ${profitAmt>0?'= '+fd(profitAmt):''} − ${fp(closePct)} close ${closeAmt>0?'= '+fd(closeAmt):''} − ${fp(holdPct)} hold ${holdAmt>0?'= '+fd(holdAmt):''}) − Rehab ${fd(rehab)}`
+      : 'Enter ARV above (or sync from Intake) to calculate MAO.';
+
+  } else {
+    const noi    = gv('mao_noi') || 0;
+    const capPct = (gv('mao_cap') || 7) / 100;
+    const cocPct = (gv('mao_coc') || 10) / 100;
+    const dpPct  = (gv('mao_dp')  || 20) / 100;
+
+    const maoByCap = capPct > 0 ? noi / capPct : 0;
+
+    // CoC method: CF = CoC × CashIn; CashIn = MAO × dpPct; CF = NOI − DS
+    // DS ≈ (MAO × (1−dpPct)) × rate (interest only simple estimate at intake rate)
+    const intRate   = (gv('pur_rate') > 0 ? gv('pur_rate') : 7) / 100;
+    // NOI − (MAO × (1−dpPct) × intRate) = cocPct × (MAO × dpPct)
+    // NOI = MAO × [(1−dpPct) × intRate + cocPct × dpPct]
+    const denom = (1 - dpPct) * intRate + cocPct * dpPct;
+    const maoByCoc = (noi > 0 && denom > 0) ? noi / denom : 0;
+
+    mao = maoByCap; // primary method
+    maoLabel = 'Buy & Hold (Cap Rate)';
+
+    const detailEl = el('mao_hold_detail');
+    if (detailEl) {
+      detailEl.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><span style="color:#818cf8;font-weight:600">By Cap Rate:</span> ${fd(noi)} ÷ ${fp(capPct)} = <strong style="color:#a5b4fc">${fd(maoByCap)}</strong></div>
+          <div><span style="color:#34d399;font-weight:600">By CoC Return:</span> ${fd(noi)} ÷ (…) = <strong style="color:#6ee7b7">${fd(maoByCoc)}</strong></div>
+        </div>
+        <div style="margin-top:4px;font-size:9.5px;color:var(--muted)">CoC method uses ${fp(intRate)} interest rate · ${fp(dpPct)} down → annual debt service approximation</div>`;
+    }
+
+    formulaText = noi > 0
+      ? `NOI ${fd(noi)} ÷ Cap ${fp(capPct)} = ${fd(maoByCap)}  |  CoC method = ${fd(maoByCoc)}`
+      : 'Enter NOI above (or sync from Intake) to calculate MAO.';
+  }
+
+  // Display results
+  const maoVal   = Math.max(mao, 0);
+  const gap      = price > 0 && maoVal > 0 ? maoVal - price : 0;
+  const hasData  = maoVal > 0;
+
+  if (el('mao_result_val'))  el('mao_result_val').textContent  = hasData ? fd(maoVal) : '—';
+  if (el('mao_result_sub'))  el('mao_result_sub').textContent  = hasData && price > 0 ? fp(maoVal/price)+' of asking' : maoLabel;
+  if (el('mao_asking_val'))  el('mao_asking_val').textContent  = price > 0 ? fd(price) : '—';
+  if (el('mao_formula'))     el('mao_formula').textContent     = formulaText;
+
+  const gapEl    = el('mao_gap_val');
+  const gapSubEl = el('mao_gap_sub');
+  if (gapEl) {
+    if (price > 0 && maoVal > 0) {
+      gapEl.textContent  = (gap >= 0 ? '+' : '') + fd(gap);
+      gapEl.style.color  = gap >= 0 ? '#86efac' : '#fca5a5';
+      if (gapSubEl) gapSubEl.textContent = gap >= 0 ? 'Under MAO ✅' : 'Over MAO ⚠️';
+    } else {
+      gapEl.textContent  = '—';
+      gapEl.style.color  = '';
+      if (gapSubEl) gapSubEl.textContent = '';
+    }
+  }
+
+  // Verdict banner — reset style each call to avoid accumulation from cssText +=
+  const verdictEl = el('mao_verdict');
+  if (verdictEl) {
+    if (price > 0 && maoVal > 0) {
+      verdictEl.style.display = '';
+      verdictEl.style.borderRadius = '6px';
+      verdictEl.style.padding = '7px 12px';
+      verdictEl.style.fontSize = '12px';
+      verdictEl.style.fontWeight = '600';
+      verdictEl.style.textAlign = 'center';
+      verdictEl.style.marginBottom = '6px';
+      if (price <= maoVal) {
+        verdictEl.style.background = 'rgba(134,239,172,.12)';
+        verdictEl.style.border = '1px solid rgba(134,239,172,.3)';
+        verdictEl.style.color = '#86efac';
+        verdictEl.textContent = '✅ Asking price is at or below your MAO — deal pencils at target returns!';
+      } else {
+        const over = price - maoVal;
+        verdictEl.style.background = 'rgba(252,165,165,.1)';
+        verdictEl.style.border = '1px solid rgba(252,165,165,.25)';
+        verdictEl.style.color = '#fca5a5';
+        verdictEl.textContent = `⚠️ Asking is ${fd(over)} over MAO — negotiate down or adjust your profit/cap-rate targets.`;
+      }
+    } else {
+      verdictEl.style.display = 'none';
+    }
+  }
 }
 
 function updateDash() {
@@ -10395,7 +10640,7 @@ async function generatePitchDeck() {
       buildSnowball();
     }
     if (i === 8) {
-      const holdEl = el('hold');
+      const holdEl = el('pur_hold');   // intake hold period field id
       const projYEl = el('proj_years');
       if (holdEl && projYEl && !projYEl._userEdited) {
         const h = parseFloat(holdEl.value);
