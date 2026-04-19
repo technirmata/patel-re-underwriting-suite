@@ -912,6 +912,18 @@ strong { color: #e2e8f0; }
   <div id="omStatus" class="ai-status-bar"></div>
   <div id="aiProgressWrap" style="display:none"><div class="ai-progress"><div class="ai-progress-bar" id="aiProgressBar"></div></div></div>
   <div id="aiFillSummary" style="display:none;margin-top:10px;font-size:11px;color:var(--muted)"></div>
+
+  <!-- AI Deep Analysis Results Panel -->
+  <div class="ai-result-panel" id="aiResultPanel">
+    <div class="ai-result-header">
+      <span class="ai-result-title">🤖 AI Deep Analysis</span>
+      <button class="ai-result-close" onclick="document.getElementById('aiResultPanel').classList.remove('visible')" title="Dismiss">✕</button>
+    </div>
+    <div class="ai-result-summary" id="aiResultSummary"></div>
+    <div class="ai-result-metrics" id="aiResultMetrics"></div>
+    <div class="ai-result-math" id="aiResultMath" style="display:none"></div>
+    <div class="ai-result-flags" id="aiResultFlags" style="display:none"></div>
+  </div>
 </div>
 
 <!-- Property Info -->
@@ -1367,6 +1379,7 @@ strong { color: #e2e8f0; }
   <label class="scr-row" style="cursor:pointer"><input type="checkbox" id="rf_environmental" onchange="R()"> <span class="scr-label">Environmental concerns (asbestos / lead)</span></label>
   <label class="scr-row" style="cursor:pointer"><input type="checkbox" id="rf_vacancy" onchange="R()"> <span class="scr-label">High vacancy (&gt;15%) or problem tenants</span></label>
   <label class="scr-row" style="cursor:pointer"><input type="checkbox" id="rf_seller_motivated" onchange="R()"> <span class="scr-label" style="color:var(--green)">✅ Seller highly motivated (boosts score)</span></label>
+  <div id="rfAiFlags" style="margin-top:4px"></div>
   <div id="rfScore" style="margin-top:10px;font-size:13px;font-weight:600"></div>
 </div>
 
@@ -3273,7 +3286,9 @@ function updateScreening(s) {
 
   // Red flags
   const flags = ['rf_foundation','rf_roof','rf_mold','rf_electrical','rf_liens','rf_environmental','rf_vacancy'];
-  const flagCount = flags.filter(f=>el(f)&&el(f).checked).length;
+  const aiFlagEls = document.querySelectorAll('#rfAiFlags input[type="checkbox"]');
+  const aiFlagCount = Array.from(aiFlagEls).filter(e=>e.checked).length;
+  const flagCount = flags.filter(f=>el(f)&&el(f).checked).length + aiFlagCount;
   const motivated = el('rf_seller_motivated')&&el('rf_seller_motivated').checked;
   const rfEl = el('rfScore');
   if(rfEl) rfEl.innerHTML = flagCount===0&&motivated?'<span style="color:var(--green)">✅ Clean deal — no red flags, motivated seller</span>':flagCount>0?'<span style="color:var(--yellow)">⚠️ '+flagCount+' red flag(s) flagged — review carefully</span>':'<span style="color:var(--muted)">No red flags checked</span>';
@@ -5415,119 +5430,52 @@ async function handleFile(event) {
 
 // ── AI Vision — analyze image files (photos, scanned docs, flyers) ───────────
 async function aiAnalyzeImage(b64data, mimeType, filename) {
-  var provider = _aiProvider || 'anthropic';
+  var provider = _aiProvider || 'groq';
   var apiKey   = _getAIKey(provider);
   if (!apiKey) { _aiStatus('⚙️ Add an API key in Settings to analyze images.', 'error'); return; }
-  if (provider !== 'anthropic' && provider !== 'openai') {
-    _aiStatus('⚠️ Image analysis needs Anthropic or OpenAI. Switch in ⚙️ Settings.', 'error'); return;
+  if (provider !== 'anthropic' && provider !== 'openai' && provider !== 'groq') {
+    _aiStatus('⚠️ Image analysis needs Groq (free), Anthropic, or OpenAI. Switch in ⚙️ Settings.', 'error'); return;
   }
   var btn = el('aiAnalyzeBtn');
   if (btn) { btn.disabled=true; btn.innerHTML='<span style="font-size:16px">👁</span> Reading image…'; }
   _aiStatus('👁 AI Vision reading image…', 'loading');
   _aiProgress(15);
 
-  var VPROMPT = 'You are a senior real estate underwriter analyzing a document image.\n' +
-    'Deep-analyze everything visible: listing flyers, OM pages, rent rolls, financials, property photos with text, aerials, contracts.\n\n' +
-    'STEPS:\n1. Document/image type\n2. Property: address, city, state, zip, type, units, sqft, year built, beds/baths\n' +
-    '3. ALL financials: price, rents, expenses, NOI, cap rate, occupancy — cross-validate all math\n' +
-    '4. Deal terms: seller info, financing, hold period, ARV, rehab\n5. Red flags: inflated projections, inconsistencies\n\n' +
-    'Return ONLY valid JSON (no markdown):\n' +
-    '{"prop_address":"","prop_city":"","prop_state":"","prop_zip":"","prop_type":"sfr|duplex|triplex|quadplex|mfr|rvpark|storage|mhp|mixed|land|commercial",' +
-    '"prop_units":0,"prop_sqft":0,"prop_year":0,"prop_beds":"","pur_price":0,"pur_arv":0,"pur_down_pct":0,"pur_close_pct":0,' +
-    '"pur_rehab":0,"pur_hold":0,"pur_rate":0,"spec_n":0,"spec_rate":0,"spec_occ":0,"fin_gross":0,"fin_other":0,"fin_vac":0,' +
-    '"fin_taxes":0,"fin_ins":0,"fin_mgmt_pct":0,"fin_maint_pct":0,"fin_capex_pct":0,"fin_util":0,"fin_hoa":0,"fin_noi":0,' +
-    '"ncp_cap":0,"mkt_tier":"","mkt_class":"","mkt_rent_growth":0,"exist_bal":0,"exist_rate":0,"exist_pmt":0,"exist_term":0,' +
-    '"seller_name":"","seller_phone":"","fin_notes":"","ai_summary":"","ai_flags":"","math_notes":""}\n' +
-    'Rules: monetary=raw numbers no $ or commas. Percentages=raw (5 not 0.05). Use 0 for missing.';
-
+  var VPROMPT = 'You are a senior commercial real estate underwriter analyzing a property document image.\n' +
+    'This image may be: a rent roll, T-12/T-3, P&L, offering memorandum page, PSA, or handwritten calculations.\n\n' +
+    'STEP 1 - READ EVERYTHING: Extract every number, label, table row, calculation visible in the image.\n' +
+    'STEP 2 - IDENTIFY DOCUMENT TYPE and map values to the correct fields.\n' +
+    'STEP 3 - CALCULATE all derived fields using these formulas:\n' +
+    '  fin_gross=spec_n×spec_rate×(spec_occ/100) | fin_noi=EGI-all_annual_expenses\n' +
+    '  ncp_cap=(fin_noi/pur_price)×100 | fin_vac_mo=fin_gross×(fin_vac/100)\n' +
+    '  fin_ins=pur_price×(fin_ins_pct/100) | fin_taxes=pur_price×(fin_taxes_pct/100)\n' +
+    '  pur_down=pur_price×(pur_down_pct/100) | pur_close=pur_price×(pur_close_pct/100)\n' +
+    'STEP 4 - FILL BOTH % AND $ for every dual-field pair.\n' +
+    'STEP 5 - RED FLAGS: Check all 8 standard flags. Add rf_ai_flags for anything else noticed.\n\n' +
+    'YOUR VALUES ARE AUTHORITATIVE. ncp_price=pur_price, ncp_noi=fin_noi always.\n\n' +
+    'Return ONLY a JSON object in <json>...</json> tags. No prose. Raw numbers (no $ or commas). Percentages as plain numbers (5 not 0.05).\n' +
+    '{"prop_address":"","prop_city":"","prop_state":"","prop_zip":"","prop_type":"sfr|duplex|triplex|quadplex|mfr|rvpark|storage|mhp|str|mixed|land|commercial","prop_units":0,"prop_sqft":0,"prop_year":0,"prop_beds":"","pur_price":0,"pur_arv":0,"pur_down_pct":0,"pur_down":0,"pur_close_pct":0,"pur_close":0,"pur_rehab_pct":0,"pur_rehab":0,"pur_hold":0,"pur_rate":0,"pur_appr":3,"spec_n":0,"spec_rate":0,"spec_occ":0,"fin_gross":0,"fin_other":0,"fin_vac":0,"fin_vac_mo":0,"fin_mgmt_pct":0,"fin_mgmt_mo":0,"fin_ins_pct":0,"fin_ins":0,"fin_taxes_pct":0,"fin_taxes":0,"fin_maint_pct":0,"fin_maint":0,"fin_capex_pct":0,"fin_capex":0,"fin_util":0,"fin_hoa":0,"fin_noi":0,"ncp_cap":0,"ncp_price":0,"ncp_noi":0,"mkt_tier":"","mkt_class":"","mkt_rent_growth":0,"mkt_rent_growth_flat":0,"exist_bal":0,"exist_rate":0,"exist_pmt":0,"exist_term":0,"seller_name":"","seller_phone":"","rf_foundation":false,"rf_roof":false,"rf_mold":false,"rf_electrical":false,"rf_liens":false,"rf_environmental":false,"rf_vacancy":false,"rf_seller_motivated":false,"rf_ai_flags":[],"ai_summary":"","ai_flags":"","math_notes":""}';
   try {
     var raw = '';
-    if (provider === 'anthropic') {
-      var resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {'x-api-key':apiKey,'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body: JSON.stringify({model:'claude-opus-4-7',max_tokens:2000,system:'Return only valid JSON, no markdown.',messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mimeType,data:b64data}},{type:'text',text:VPROMPT}]}]})
-      });
-      if (!resp.ok) throw new Error('API ' + resp.status + ': ' + (await resp.text()).slice(0,200));
-      raw = (await resp.json()).content[0].text;
-    } else {
-      var resp2 = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'},
-        body: JSON.stringify({model:'gpt-4o',max_tokens:2000,response_format:{type:'json_object'},messages:[{role:'user',content:[{type:'image_url',image_url:{url:'data:'+mimeType+';base64,'+b64data}},{type:'text',text:VPROMPT}]}]})
-      });
-      if (!resp2.ok) throw new Error('API ' + resp2.status + ': ' + (await resp2.text()).slice(0,200));
-      raw = (await resp2.json()).choices[0].message.content;
-    }
-    _aiProgress(80);
-    var d = _extractJSON(raw);
-    _aiProgress(90);
-
-    var setIf = function(id,val){ if(val===undefined||val===null||val===''||val===0)return; var e=el(id);if(e)e.value=val; };
-    if(d.prop_type){var s=el('prop_type');if(s){s.value=d.prop_type;if(typeof updatePropertyType==='function')updatePropertyType();}}
-    setIf('prop_address',d.prop_address);setIf('prop_city',d.prop_city);setIf('prop_state',d.prop_state);setIf('prop_zip',d.prop_zip);
-    setIf('prop_units',d.prop_units);setIf('prop_sqft',d.prop_sqft);setIf('prop_year',d.prop_year);setIf('prop_beds',d.prop_beds);
-    setIf('pur_price',d.pur_price);setIf('pur_arv',d.pur_arv);setIf('pur_down_pct',d.pur_down_pct);setIf('pur_close_pct',d.pur_close_pct);
-    setIf('pur_rehab',d.pur_rehab);setIf('pur_hold',d.pur_hold);setIf('pur_rate',d.pur_rate);
-    setIf('spec_n',d.spec_n);setIf('spec_rate',d.spec_rate);setIf('spec_occ',d.spec_occ);
-    if((d.spec_n||0)>0&&(d.spec_rate||0)>0&&typeof computeSpecIncome==='function')computeSpecIncome();else setIf('fin_gross',d.fin_gross);
-    setIf('fin_other',d.fin_other);setIf('fin_vac',d.fin_vac);setIf('fin_taxes',d.fin_taxes);setIf('fin_ins',d.fin_ins);
-    setIf('fin_mgmt_pct',d.fin_mgmt_pct);setIf('fin_maint_pct',d.fin_maint_pct);setIf('fin_capex_pct',d.fin_capex_pct);
-    setIf('fin_util',d.fin_util);setIf('fin_hoa',d.fin_hoa);
-    if(d.fin_noi){var n=el('fin_noi');if(n&&n.dataset.manual!=='true')n.value=Math.round(d.fin_noi);}
-    setIf('ncp_cap',d.ncp_cap);setIf('mkt_tier',d.mkt_tier);setIf('mkt_class',d.mkt_class);setIf('mkt_rent_growth',d.mkt_rent_growth);
-    setIf('exist_bal',d.exist_bal);setIf('exist_rate',d.exist_rate);setIf('exist_pmt',d.exist_pmt);setIf('exist_term',d.exist_term);
-    setIf('seller_name',d.seller_name);setIf('seller_phone',d.seller_phone);
-    var noteParts=[];
-    if(d.ai_summary)noteParts.push('📋 '+d.ai_summary);
-    if(d.ai_flags)noteParts.push('⚠️ FLAGS: '+d.ai_flags);
-    if(d.math_notes)noteParts.push('🔢 '+d.math_notes);
-    if(noteParts.length)setIf('fin_notes',noteParts.join('\n\n'));
-    if(typeof updateMapLinks==='function')updateMapLinks();
-    if(typeof R==='function')R();
-
-    var panel=el('aiResultPanel'),rSum=el('aiResultSummary'),rMet=el('aiResultMetrics'),rMath=el('aiResultMath'),rFlags=el('aiResultFlags');
-    if(panel){
-      if(rSum)rSum.innerHTML=(d.ai_summary||'')+' <em style="color:var(--muted);font-size:10px">[image: '+filename+']</em>';
-      if(rMet){
-        var fmt=function(n,p,s){if(!n||n===0)return'—';var v=Math.round(n);if(v>=1000000)return(p||'')+(v/1000000).toFixed(2)+'M'+(s||'');if(v>=1000)return(p||'')+(v/1000).toFixed(0)+'K'+(s||'');return(p||'')+v+(s||'');};
-        var metrics=[{label:'Price',value:fmt(d.pur_price,'$','')},{label:'Gross/mo',value:fmt(d.fin_gross,'$','')},{label:'NOI/yr',value:fmt(d.fin_noi,'$','')},{label:'Cap Rate',value:d.ncp_cap?d.ncp_cap.toFixed(2)+'%':'—'},{label:'Units',value:d.prop_units||d.spec_n||'—'},{label:'Type',value:(d.prop_type||'').toUpperCase()||'—'}];
-        rMet.innerHTML=metrics.map(function(m){return'<div class="ai-metric-box"><div class="ai-metric-label">'+m.label+'</div><div class="ai-metric-value">'+m.value+'</div></div>';}).join('');
-      }
-      if(rMath){rMath.style.display=d.math_notes?'block':'none';rMath.textContent=d.math_notes||'';}
-      if(rFlags){rFlags.style.display=d.ai_flags?'block':'none';rFlags.textContent=d.ai_flags||'';}
-      panel.classList.add('visible');
-      setTimeout(function(){panel.scrollIntoView({behavior:'smooth',block:'nearest'});},100);
-    }
-    _aiProgress(0);
-    var filled=Object.keys(d).filter(function(k){return!['math_notes','ai_summary','ai_flags'].includes(k)&&d[k]!==0&&d[k]!==''&&d[k]!==null;}).length;
-    _aiStatus('✅ Image analyzed — '+filled+' fields filled!','success');
-  } catch(e2) {
-    console.error('Vision failed:',e2);
-    _aiStatus('⚠️ Image analysis failed: '+(e2.message||'Unknown'),'error');
-    _aiProgress(0);
-  } finally {
-    if(btn){btn.disabled=false;btn.innerHTML='<span style="font-size:16px">⚡</span> AI Fill All Fields';}
-  }
-}
-
-
-// ── AI Vision — analyze image files ──────────────────────────────────────────
-async function aiAnalyzeImage(b64data, mimeType, filename) {
-  var provider = _aiProvider || 'anthropic';
-  var apiKey   = _getAIKey(provider);
-  if (!apiKey) { _aiStatus('⚙️ Add an API key in Settings to analyze images.', 'error'); return; }
-  if (provider !== 'anthropic' && provider !== 'openai') {
-    _aiStatus('⚠️ Image analysis needs Anthropic or OpenAI. Switch in ⚙️ Settings.', 'error'); return;
-  }
-  var btn = el('aiAnalyzeBtn');
-  if (btn) { btn.disabled=true; btn.innerHTML='<span style="font-size:16px">👁</span> Reading image…'; }
-  _aiStatus('👁 AI Vision reading image…', 'loading');
-  _aiProgress(15);
-  var VPROMPT = 'You are a senior real estate underwriter. Deep-analyze this image. Extract all deal data. Cross-validate all math. Return ONLY valid JSON: {"prop_address":"","prop_city":"","prop_state":"","prop_zip":"","prop_type":"sfr|duplex|triplex|quadplex|mfr|rvpark|storage|mhp|mixed|land|commercial","prop_units":0,"prop_sqft":0,"prop_year":0,"prop_beds":"","pur_price":0,"pur_arv":0,"pur_down_pct":0,"pur_close_pct":0,"pur_rehab":0,"pur_hold":0,"pur_rate":0,"spec_n":0,"spec_rate":0,"spec_occ":0,"fin_gross":0,"fin_other":0,"fin_vac":0,"fin_taxes":0,"fin_ins":0,"fin_mgmt_pct":0,"fin_maint_pct":0,"fin_capex_pct":0,"fin_util":0,"fin_hoa":0,"fin_noi":0,"ncp_cap":0,"mkt_tier":"","mkt_class":"","mkt_rent_growth":0,"exist_bal":0,"exist_rate":0,"exist_pmt":0,"exist_term":0,"seller_name":"","seller_phone":"","fin_notes":"","ai_summary":"2-3 sentence deal summary","ai_flags":"red flags or inconsistencies found","math_notes":"key calculations verified"} Monetary=raw numbers no $ or commas. Percentages=raw (5 not 0.05). Use 0 for missing fields.';
-  try {
-    var raw = '';
-    if (provider === 'anthropic') {
+      if (provider === 'groq') {
+    // Groq free vision: Llama 4 Scout
+    var groqVBody = {
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      messages: [{ role: 'user', content: [
+        { type: 'image_url', image_url: { url: 'data:'+mimeType+';base64,'+b64data } },
+        { type: 'text', text: VPROMPT }
+      ]}],
+      temperature: 0.1, max_tokens: 4000
+    };
+    var gvr = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'},
+      body:JSON.stringify(groqVBody)
+    });
+    var gvd = await gvr.json();
+    if(!gvr.ok) throw new Error((gvd.error&&gvd.error.message)||'Groq vision error');
+    raw = gvd.choices[0].message.content;
+  } else if (provider === 'anthropic') {
       var resp = await fetch('https://api.anthropic.com/v1/messages', {
         method:'POST',
         headers:{'x-api-key':apiKey,'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
@@ -5646,7 +5594,7 @@ async function aiAnalyze() {
     return;
   }
 
-  const provider = _aiProvider || 'anthropic';
+  const provider = _aiProvider || 'groq';
   const apiKey   = _getAIKey(provider);
   if (!apiKey) {
     _aiStatus('⚙️ No AI key set — click ⚙️ Settings to add a key.', 'error');
@@ -5663,79 +5611,173 @@ async function aiAnalyze() {
   _aiStatus('🔍 Pass 1 of 2 — reading and analyzing document…', 'loading');
   _aiProgress(10);
 
-  const ANALYSIS_PROMPT = `You are a senior real estate underwriter and analyst with 20+ years of experience in commercial and residential deal analysis.
+  const ANALYSIS_PROMPT = `You are a senior commercial real estate underwriter with 20+ years analyzing every document type: rent rolls, T-12s, T-3s, P&Ls, offering memorandums, PSAs, and handwritten calculations. You extract, compute, and cross-validate every number. YOUR VALUES ARE AUTHORITATIVE — they supersede any previously entered data.
 
-Your job is to DEEPLY analyze the following document before any data extraction. Think like an experienced underwriter reviewing a deal package.
+━━━ STEP 1: IDENTIFY DOCUMENT TYPE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Identify which document(s) are present:
 
-${currentType ? `Current property type selection: ${currentType}` : 'Determine the property type from the document.'}
+• RENT ROLL — table of units/spaces with tenant, rent, lease dates, status
+  → Read each row. Sum all potential rents. Count occupied vs vacant units.
+  → spec_n = total units | spec_rate = avg monthly rent per unit
+  → spec_occ = (occupied ÷ total) × 100 | fin_gross = sum of all occupied rents
+  → If individual unit rents listed: use actual occupied totals, not proforma
 
-DEEP ANALYSIS STEPS — work through each carefully:
+• T-12 (Trailing 12 Months) — actual income/expense by month for past year
+  → Use annual totals directly. Monthly average = annual ÷ 12.
+  → fin_gross = Gross Rental Income ÷ 12 (monthly)
+  → fin_noi = Net Operating Income from T-12 (annual)
+  → Line items: map each expense line to the correct field below
 
-1. DOCUMENT TYPE & DEAL STRUCTURE
-   - What kind of document is this? (OM, listing, appraisal, rent roll, financial statement, LOI, contract, broker package, etc.)
-   - What is the deal structure? (acquisition, refinance, seller financing, portfolio, etc.)
-   - Who is the seller / broker / listing source?
+• T-3 (Trailing 3 Months) — annualize by multiplying all figures × 4
+  → Note: "Annualized from T-3" in math_notes
 
-2. PROPERTY IDENTIFICATION
-   - Full property address, city, state, zip
-   - Property type classification (SFR, duplex, triplex, quadplex, multifamily, RV park, mobile home park, self-storage, short-term rental, commercial/NNN, office, retail, mixed-use, land)
-   - Physical details: units/pads/spaces, sqft, year built, bed/bath
+• P&L (Profit & Loss) — full year or YTD actual financials
+  → If YTD: annualize = figure × (12 ÷ months_elapsed)
+  → Same line-item mapping as T-12
 
-3. FINANCIAL DEEP DIVE — find, cross-validate, and compute:
-   - Purchase price / asking price
-   - After Repair Value (ARV) if mentioned
-   - Gross income: spec_n × spec_rate × (occ/100) — verify this math against any stated gross
-   - All operating expenses (taxes, insurance, management fee %, maintenance, CapEx, utilities, HOA, vacancy rate)
-   - NOI = Gross Income − Vacancy − All Expenses
-   - Cap rate = NOI / Price × 100
-   - Cross-check: if OM states NOI or cap rate, verify against your own calculation. Note any discrepancies.
-   - Existing debt: loan balance, interest rate, monthly payment, remaining term
-   - Rehab/renovation budget if mentioned
-   - Down payment %, closing costs %, target hold period, target loan rate
+• OM (Offering Memorandum) — full broker package
+  → Extract asking price, all in-place financials, property details
+  → Compare in-place vs pro-forma — flag discrepancies in rf_ai_flags
+  → seller_name/phone from broker/contact section
 
-4. MARKET & UNDERWRITING CONTEXT
-   - Market tier (primary/secondary/tertiary)
-   - Asset class (A/B/C/D)
-   - Rent growth assumptions
-   - Any red flags, inflated projections, missing data, or suspicious numbers
+• PSA (Purchase & Sale Agreement / Contract)
+  → pur_price = exact contract purchase price
+  → seller_name, seller_phone from seller signatures/contact
+  → Note earnest money, contingency periods, closing date in ai_summary
+  → Flag unusual clauses or risks in rf_ai_flags
 
-5. DATA QUALITY ASSESSMENT
-   - Which numbers are stated explicitly vs. inferred/computed?
-   - What's missing that should be here?
-   - Are the seller's projections realistic?
+• IMAGE / HANDWRITTEN — photos, screenshots, rough calculations
+  → Read every visible number, label, calculation
+  → Reconstruct the math: if "50 units × $800 = $40,000" → spec_n=50, spec_rate=800, fin_gross=40000
+  → Trust the source numbers; compute what's missing
 
-After your analysis, output the structured data using this exact format:
+━━━ STEP 2: INCOME LINE ITEMS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Map document line items to fields:
+  Gross Potential Rent / Scheduled Rent     → fin_gross (monthly) = annual ÷ 12
+  Vacancy & Credit Loss                     → fin_vac (%), fin_vac_mo ($/mo)
+  Effective Gross Income = Gross - Vacancy  → cross-check your math
+  Other Income / Laundry / Parking          → fin_other ($/mo)
+  spec_occ = 100 - fin_vac
 
-<analysis>
-[Your thorough step-by-step analysis above — be specific with numbers]
-</analysis>
+━━━ STEP 3: EXPENSE LINE ITEMS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Property Management / Mgmt Fee           → fin_mgmt_pct (% of gross) and fin_mgmt_mo ($/mo)
+  Insurance / Hazard Insurance             → fin_ins (annual $) and fin_ins_pct (% of price)
+  Property Taxes / Real Estate Taxes       → fin_taxes (annual $) and fin_taxes_pct (% of price)
+  Repairs & Maintenance / R&M              → fin_maint (annual $) and fin_maint_pct (% of price)
+  Capital Expenditures / CapEx / Reserves  → fin_capex (annual $) and fin_capex_pct (% of price)
+  Utilities (water, gas, electric, trash)  → fin_util ($/mo total)
+  HOA / Association Fees                   → fin_hoa ($/mo)
+  Other expenses                           → note in math_notes
+
+━━━ STEP 4: CALCULATOR FORMULAS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INCOME:
+  fin_gross = spec_n × spec_rate × (spec_occ/100)  [monthly]
+  fin_vac_mo = fin_gross × (fin_vac/100)
+  fin_mgmt_mo = fin_gross × (fin_mgmt_pct/100)
+
+EXPENSES (annual $):
+  fin_ins    = pur_price × (fin_ins_pct/100)        OR directly stated
+  fin_taxes  = pur_price × (fin_taxes_pct/100)      OR directly stated
+  fin_maint  = pur_price × (fin_maint_pct/100)      OR directly stated
+  fin_capex  = pur_price × (fin_capex_pct/100)      OR directly stated
+
+NOI (annual):
+  Annual_Gross  = fin_gross × 12
+  Annual_Vac    = fin_vac_mo × 12
+  Annual_Mgmt   = fin_mgmt_mo × 12
+  Eff_Gross     = Annual_Gross - Annual_Vac
+  fin_noi = Eff_Gross - Annual_Mgmt - fin_ins - fin_taxes - fin_maint - fin_capex
+            - (fin_util × 12) - (fin_hoa × 12)
+
+PURCHASE METRICS:
+  ncp_cap   = (fin_noi / pur_price) × 100
+  ncp_price = pur_price  [mirror]
+  ncp_noi   = fin_noi    [mirror]
+  pur_down  = pur_price × (pur_down_pct/100)
+  pur_close = pur_price × (pur_close_pct/100)
+  pur_rehab = pur_arv × (pur_rehab_pct/100)  [if ARV known]
+
+EXISTING DEBT P&I:
+  Monthly P&I = bal × (r/12) / (1 - (1 + r/12)^-term)  where r = rate/100
+
+━━━ STEP 5: CROSS-VALIDATION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  • Does stated NOI match your calculated NOI? Flag difference in math_notes.
+  • Does stated cap rate = fin_noi / pur_price × 100? Flag if off by >0.5%.
+  • Are expense ratios reasonable? (total expenses typically 35-55% of EGI)
+  • Are occupancy claims consistent with rent roll vs stated overall vacancy?
+  • Pro-forma vs in-place: if OM shows projected rents vs actual, flag the gap.
+
+━━━ STEP 6: PROPERTY TYPE CLASSIFICATION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  sfr=single family (spec_n=1) | duplex/triplex/quadplex | mfr=multifamily apartment
+  rvpark = RV park (spec_n=pads, spec_rate=pad rent/mo)
+  mhp = mobile home park (spec_n=lots, spec_rate=lot rent/mo)
+  storage = self-storage (spec_n=units, spec_rate=avg unit $/mo)
+  str = short-term rental (spec_n=nights available/mo, spec_rate=avg nightly rate)
+  commercial = NNN/industrial (spec_n=leasable sqft, spec_rate=$/sqft/yr, then convert: fin_gross=spec_n×spec_rate×occ/100÷12)
+  mixed = mixed-use | land = land/lot
+
+━━━ STEP 7: RED FLAGS — BE THOROUGH ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Standard flags (set true/false):
+  rf_foundation, rf_roof, rf_mold, rf_electrical, rf_liens, rf_environmental,
+  rf_vacancy (>15% vacancy or problem tenants), rf_seller_motivated
+
+AI flags (rf_ai_flags array) — include EVERYTHING you notice:
+  Financial:  overpriced vs comps, inflated NOI, unrealistic vacancy, expense ratio too low,
+              pro-forma vs actual gap >10%, negative cash flow at stated price
+  Physical:   deferred maintenance with $ estimate, building age concerns, renovation scope
+  Market:     declining area, oversupply, regulatory risks, rent control exposure
+  Deal:       short due diligence window, AS-IS sale, complex title, 1031 deadline pressure
+  Data gaps:  missing rent roll, no actual financials provided, unverifiable income claims
+  Math errors: seller's stated cap rate doesn't match stated NOI and price
+  Include specific numbers: "Stated cap rate 7.2% but calculated cap rate is 5.8% based on stated NOI/price"
+
+━━━ OUTPUT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${currentType ? `Current property type: ${currentType}` : 'Determine property type from document.'}
+
+Output ONLY the JSON wrapped in <json>...</json> — no prose, no markdown:
 
 <json>
 {
   "prop_address":"","prop_city":"","prop_state":"","prop_zip":"",
-  "prop_type":"sfr|duplex|triplex|quadplex|mfr|rvpark|storage|mhp|mixed|land|commercial",
+  "prop_type":"sfr|duplex|triplex|quadplex|mfr|rvpark|storage|mhp|str|mixed|land|commercial",
   "prop_units":0,"prop_sqft":0,"prop_year":0,"prop_beds":"",
-  "pur_price":0,"pur_arv":0,"pur_down_pct":0,"pur_close_pct":0,
-  "pur_rehab":0,"pur_hold":0,"pur_rate":0,
+  "pur_price":0,"pur_arv":0,
+  "pur_down_pct":0,"pur_down":0,
+  "pur_close_pct":0,"pur_close":0,
+  "pur_rehab_pct":0,"pur_rehab":0,
+  "pur_hold":0,"pur_rate":0,"pur_appr":3,
   "spec_n":0,"spec_rate":0,"spec_occ":0,
-  "fin_gross":0,"fin_other":0,"fin_vac":0,
-  "fin_taxes":0,"fin_ins":0,"fin_mgmt_pct":0,"fin_maint_pct":0,
-  "fin_capex_pct":0,"fin_util":0,"fin_hoa":0,"fin_noi":0,
-  "ncp_cap":0,"mkt_tier":"","mkt_class":"","mkt_rent_growth":0,
+  "fin_gross":0,"fin_other":0,
+  "fin_vac":0,"fin_vac_mo":0,
+  "fin_mgmt_pct":0,"fin_mgmt_mo":0,
+  "fin_ins_pct":0,"fin_ins":0,
+  "fin_taxes_pct":0,"fin_taxes":0,
+  "fin_maint_pct":0,"fin_maint":0,
+  "fin_capex_pct":0,"fin_capex":0,
+  "fin_util":0,"fin_hoa":0,"fin_noi":0,
+  "ncp_cap":0,"ncp_price":0,"ncp_noi":0,
+  "mkt_tier":"","mkt_class":"","mkt_rent_growth":0,"mkt_rent_growth_flat":0,
   "exist_bal":0,"exist_rate":0,"exist_pmt":0,"exist_term":0,
-  "seller_name":"","seller_phone":"","fin_notes":"",
-  "ai_summary":"2-3 sentence deal summary for the underwriter",
-  "ai_flags":"any red flags or data quality issues found",
-  "math_notes":"key computations: e.g. 50 pads × $400/mo × 95% occ = $19,000/mo gross"
+  "seller_name":"","seller_phone":"",
+  "rf_foundation":false,"rf_roof":false,"rf_mold":false,
+  "rf_electrical":false,"rf_liens":false,"rf_environmental":false,
+  "rf_vacancy":false,"rf_seller_motivated":false,
+  "rf_ai_flags":["specific flag with numbers if applicable"],
+  "ai_summary":"2-3 sentence deal summary: document type, property type, key financials",
+  "ai_flags":"data quality issues or verification warnings (empty if clean)",
+  "math_notes":"step-by-step key calculations shown, e.g. 48 units × $850/mo × 93% occ = $33,864/mo gross; T-12 NOI $284,500 verified; cap rate 284500/3,750,000 = 7.59%"
 }
 </json>
 
-RULES FOR JSON VALUES:
-- All monetary values: raw numbers, no $ or commas (450000 not $450,000)
-- All percentages: raw number without % symbol (5 for 5% vacancy, not 0.05)
-- Use 0 (not null/undefined) for fields where data is unavailable
-- Use your computed/cross-validated numbers, NOT blindly copy potentially wrong seller numbers
-- Only fill fields where you have actual evidence from the document
+RULES:
+- Monetary values: raw integers/decimals, no $ or commas (450000 not $450,000)
+- Percentages: raw number (5 for 5%, not 0.05)
+- Use 0 for unknown numbers, "" for unknown strings, false for unchecked flags
+- Fill BOTH the % AND the $ for every dual-field pair
+- ncp_price = pur_price; ncp_noi = fin_noi (always mirror these)
+- pur_appr = 3 unless document states otherwise
+- rf_ai_flags = [] if no additional flags found (never omit this key)
+- YOUR CALCULATED VALUES ARE AUTHORITATIVE — compute from source data, flag if seller numbers differ
 
 DOCUMENT:
 ${text.substring(0, 15000)}`;
@@ -5773,14 +5815,15 @@ ${text.substring(0, 15000)}`;
     const e = el(id);
     if (e) e.value = val;
   };
+  const setChk = (id, val) => { const e = el(id); if (e) e.checked = !!val; };
 
-  // Property type first (drives income calc UI)
+  // ── Property type first (drives income calc UI) ───────────────────────────
   if (d.prop_type) {
     const s = el('prop_type');
     if (s) { s.value = d.prop_type; if (typeof updatePropertyType === 'function') updatePropertyType(); }
   }
 
-  // Property info
+  // ── Property info ─────────────────────────────────────────────────────────
   setIf('prop_address', d.prop_address);
   setIf('prop_city',    d.prop_city);
   setIf('prop_state',   d.prop_state);
@@ -5790,16 +5833,20 @@ ${text.substring(0, 15000)}`;
   setIf('prop_year',    d.prop_year);
   setIf('prop_beds',    d.prop_beds);
 
-  // Purchase
+  // ── Purchase ──────────────────────────────────────────────────────────────
   setIf('pur_price',     d.pur_price);
   setIf('pur_arv',       d.pur_arv);
   setIf('pur_down_pct',  d.pur_down_pct);
+  setIf('pur_down',      d.pur_down);
   setIf('pur_close_pct', d.pur_close_pct);
+  setIf('pur_close',     d.pur_close);
+  setIf('pur_rehab_pct', d.pur_rehab_pct);
   setIf('pur_rehab',     d.pur_rehab);
   setIf('pur_hold',      d.pur_hold);
   setIf('pur_rate',      d.pur_rate);
+  setIf('pur_appr',      d.pur_appr);
 
-  // Income spec calculator
+  // ── Income spec calculator ────────────────────────────────────────────────
   setIf('spec_n',    d.spec_n);
   setIf('spec_rate', d.spec_rate);
   setIf('spec_occ',  d.spec_occ);
@@ -5809,40 +5856,91 @@ ${text.substring(0, 15000)}`;
     setIf('fin_gross', d.fin_gross);
   }
 
-  // Expenses
-  setIf('fin_other',     d.fin_other);
-  setIf('fin_vac',       d.fin_vac);
-  setIf('fin_taxes',     d.fin_taxes);
-  setIf('fin_ins',       d.fin_ins);
-  setIf('fin_mgmt_pct',  d.fin_mgmt_pct);
-  setIf('fin_maint_pct', d.fin_maint_pct);
-  setIf('fin_capex_pct', d.fin_capex_pct);
-  setIf('fin_util',      d.fin_util);
-  setIf('fin_hoa',       d.fin_hoa);
+  // ── Vacancy (both % and $/mo) ─────────────────────────────────────────────
+  setIf('fin_vac',    d.fin_vac);
+  setIf('fin_vac_mo', d.fin_vac_mo);
 
-  // NOI / cap
-  if (d.fin_noi) {
-    const n = el('fin_noi');
-    if (n && n.dataset.manual !== 'true') n.value = Math.round(d.fin_noi);
-  }
-  setIf('ncp_cap', d.ncp_cap);
+  // ── Expenses (all dual-field: % and $) ────────────────────────────────────
+  setIf('fin_mgmt_pct', d.fin_mgmt_pct);
+  setIf('fin_mgmt_mo',  d.fin_mgmt_mo);
+  setIf('fin_ins_pct',  d.fin_ins_pct);
+  setIf('fin_ins',      d.fin_ins);
+  setIf('fin_taxes_pct',d.fin_taxes_pct);
+  setIf('fin_taxes',    d.fin_taxes);
+  setIf('fin_maint_pct',d.fin_maint_pct);
+  setIf('fin_maint',    d.fin_maint);
+  setIf('fin_capex_pct',d.fin_capex_pct);
+  setIf('fin_capex',    d.fin_capex);
+  setIf('fin_util',     d.fin_util);
+  setIf('fin_hoa',      d.fin_hoa);
+  setIf('fin_other',    d.fin_other);
 
-  // Market
-  setIf('mkt_tier',        d.mkt_tier);
-  setIf('mkt_class',       d.mkt_class);
-  setIf('mkt_rent_growth', d.mkt_rent_growth);
+  // ── NOI / NCP calculator ──────────────────────────────────────────────────
+  // AI supersedes — always write fin_noi when AI provides it
+  if (d.fin_noi) { const n = el('fin_noi'); if (n) n.value = Math.round(d.fin_noi); }
+  setIf('ncp_cap',   d.ncp_cap);
+  setIf('ncp_price', d.ncp_price || d.pur_price);
+  setIf('ncp_noi',   d.ncp_noi   || d.fin_noi);
 
-  // Existing debt
+  // ── Market ────────────────────────────────────────────────────────────────
+  setIf('mkt_tier',             d.mkt_tier);
+  setIf('mkt_class',            d.mkt_class);
+  setIf('mkt_rent_growth',      d.mkt_rent_growth);
+  setIf('mkt_rent_growth_flat', d.mkt_rent_growth_flat);
+
+  // ── Existing debt ─────────────────────────────────────────────────────────
   setIf('exist_bal',  d.exist_bal);
   setIf('exist_rate', d.exist_rate);
   setIf('exist_pmt',  d.exist_pmt);
   setIf('exist_term', d.exist_term);
 
-  // Seller / notes
+  // ── Seller ────────────────────────────────────────────────────────────────
   setIf('seller_name',  d.seller_name);
   setIf('seller_phone', d.seller_phone);
 
-  // Build notes with AI summary + flags + math
+  // ── Red Flags (checkboxes) ────────────────────────────────────────────────
+  setChk('rf_foundation',      d.rf_foundation);
+  setChk('rf_roof',            d.rf_roof);
+  setChk('rf_mold',            d.rf_mold);
+  setChk('rf_electrical',      d.rf_electrical);
+  setChk('rf_liens',           d.rf_liens);
+  setChk('rf_environmental',   d.rf_environmental);
+  setChk('rf_vacancy',         d.rf_vacancy);
+  setChk('rf_seller_motivated',d.rf_seller_motivated);
+
+  // ── AI-discovered red flags (dynamic checkboxes) ──────────────────────────
+  const rfContainer = el('rfAiFlags');
+  if (rfContainer && Array.isArray(d.rf_ai_flags) && d.rf_ai_flags.length > 0) {
+    // Clear previous AI flags
+    rfContainer.innerHTML = '';
+    // Add divider
+    const divider = document.createElement('div');
+    divider.style.cssText = 'font-size:10px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin:8px 0 4px';
+    divider.textContent = '🤖 AI-Identified Flags';
+    rfContainer.appendChild(divider);
+    d.rf_ai_flags.forEach(function(flagText, i) {
+      if (!flagText || typeof flagText !== 'string') return;
+      const lbl = document.createElement('label');
+      lbl.className = 'scr-row';
+      lbl.style.cursor = 'pointer';
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.id = 'rf_ai_' + i;
+      chk.checked = true;
+      chk.onchange = function(){ if(typeof R==='function') R(); };
+      const span = document.createElement('span');
+      span.className = 'scr-label';
+      span.style.color = 'var(--yellow)';
+      span.textContent = flagText;
+      lbl.appendChild(chk);
+      lbl.appendChild(document.createTextNode(' '));
+      lbl.appendChild(span);
+      rfContainer.appendChild(lbl);
+    });
+    if (typeof R === 'function') R();
+  }
+
+  // ── Notes (AI summary + flags + math) ────────────────────────────────────
   const noteParts = [];
   if (d.ai_summary) noteParts.push('📋 ' + d.ai_summary);
   if (d.ai_flags)   noteParts.push('⚠️ FLAGS: ' + d.ai_flags);
@@ -5912,14 +6010,30 @@ ${text.substring(0, 15000)}`;
     (d.ai_flags ? ' · ⚠️ ' + d.ai_flags.split('.')[0] : '') + '.';
   _aiStatus(statusMsg, 'success');
 
-  const summary = el('aiFillSummary');
-  if (summary) {
-    summary.style.display = 'block';
-    const parts = [];
-    if (d.ai_summary) parts.push('<strong>Deal:</strong> ' + d.ai_summary);
-    if (d.math_notes) parts.push('<strong>Math:</strong> ' + d.math_notes);
-    if (d.ai_flags)   parts.push('<strong>⚠️ Flags:</strong> ' + d.ai_flags);
-    summary.innerHTML = parts.join('<br><br>');
+  // ── Populate AI Results Panel ───────────────────────────────────────────────
+  var panel = el('aiResultPanel');
+  var rSum  = el('aiResultSummary');
+  var rMet  = el('aiResultMetrics');
+  var rMath = el('aiResultMath');
+  var rFlg  = el('aiResultFlags');
+  if (panel) {
+    if (rSum) rSum.textContent = d.ai_summary || '';
+    if (rMet) {
+      var fmt = function(n,p,s){ if(!n||n===0) return '—'; var v=Math.round(n); if(v>=1000000) return (p||'')+(v/1000000).toFixed(2)+'M'+(s||''); if(v>=1000) return (p||'')+(v/1000).toFixed(0)+'K'+(s||''); return (p||'')+v+(s||''); };
+      var metrics = [
+        {label:'Price',    value: fmt(d.pur_price,'$','')},
+        {label:'Gross/mo', value: fmt(d.fin_gross,'$','')},
+        {label:'NOI/yr',   value: fmt(d.fin_noi,'$','')},
+        {label:'Cap Rate', value: d.ncp_cap ? d.ncp_cap.toFixed(2)+'%' : '—'},
+        {label:'Units',    value: (d.prop_units||d.spec_n||0)||'—'},
+        {label:'Type',     value: (d.prop_type||'').toUpperCase()||'—'}
+      ];
+      rMet.innerHTML = metrics.map(function(m){ return '<div class="ai-metric-box"><div class="ai-metric-label">'+m.label+'</div><div class="ai-metric-value">'+m.value+'</div></div>'; }).join('');
+    }
+    if (rMath) { rMath.style.display = d.math_notes ? 'block' : 'none'; rMath.textContent = d.math_notes || ''; }
+    if (rFlg)  { rFlg.style.display  = d.ai_flags   ? 'block' : 'none'; rFlg.textContent  = d.ai_flags   || ''; }
+    panel.classList.add('visible');
+    setTimeout(function(){ panel.scrollIntoView({behavior:'smooth', block:'nearest'}); }, 150);
   }
 
   if (btn) { btn.disabled=false; btn.innerHTML='<span style="font-size:16px">⚡</span> AI Fill All Fields'; }
@@ -6059,13 +6173,14 @@ Return ONLY valid JSON (no markdown):
   "math_notes": "e.g. 50 pads × $400/mo × 95% = $19,000/mo"
 }
 
+Wrap your answer in <json>...</json> tags.
+
 Listing source: ${sourceUrl}
 Text:
 ${text.substring(0,4000)}`;
 
     const raw = await callAI(prompt, apiKey, _aiProvider);
-    const clean = raw.replace(/```json[\s\S]*?```|```/gi,'').trim();
-    const d = JSON.parse(clean);
+    const d = _extractJSON(raw);
     autoFillFromListing(d);
     const note = d.math_notes ? ' · '+d.math_notes : '';
     ss('✅ Fields auto-filled!' + note, 'var(--green)');
@@ -6843,7 +6958,7 @@ function selectProvider(provider, suppressSave) {
   if(keyWrap) keyWrap.style.display = 'block';
 
   const hints = {
-    groq: '✅ <strong style="color:#4ade80">Default key pre-loaded — works instantly!</strong> Optionally enter your own key from <a href="https://console.groq.com/keys" target="_blank" style="color:var(--accent)">console.groq.com/keys</a> for higher rate limits. Uses Llama 3.3 70B.',
+    groq: '🆓 <strong style="color:#4ade80">FREE — no key needed, works instantly!</strong> Built-in shared key pre-loaded. Get your own free key at <a href="https://console.groq.com/keys" target="_blank" style="color:var(--accent)">console.groq.com</a> for unlimited use. Supports text (Llama 3.3 70B) &amp; image analysis (Llama 4 Scout).',
     perplexity: 'Get a key at <a href="https://www.perplexity.ai/settings/api" target="_blank" style="color:var(--accent)">perplexity.ai/settings/api</a> — uses sonar model with live web search',
     openai: 'Get a key at <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--accent)">platform.openai.com/api-keys</a> — uses gpt-4o-mini',
     anthropic: 'Get a key at <a href="https://console.anthropic.com/" target="_blank" style="color:var(--accent)">console.anthropic.com</a> — uses claude-haiku-4-5'
@@ -6913,13 +7028,13 @@ async function callAI(prompt, apiKey, provider) {
     groq: {
       url: 'https://api.groq.com/openai/v1/chat/completions',
       headers: { 'Authorization': 'Bearer '+apiKey, 'Content-Type': 'application/json' },
-      body: { model: 'llama-3.3-70b-versatile', messages:[{role:'system',content:'Return only valid JSON, no markdown formatting.'},{role:'user',content:prompt}], temperature:0.1, max_tokens:1400 },
+      body: { model: 'llama-3.3-70b-versatile', messages:[{role:'system',content:'You are a real estate underwriting expert. Wrap JSON output in <json>...</json> tags. No markdown. Raw numbers only.'},{role:'user',content:prompt}], temperature:0.1, max_tokens:4000 },
       parse: d => d.choices[0].message.content
     },
     perplexity: {
       url: 'https://api.perplexity.ai/chat/completions',
       headers: { 'Authorization': 'Bearer '+apiKey, 'Content-Type': 'application/json' },
-      body: { model: 'sonar', messages:[{role:'system',content:'Return only valid JSON, no markdown formatting.'},{role:'user',content:prompt}], temperature:0.1, max_tokens:1200 },
+      body: { model: 'sonar', messages:[{role:'system',content:'You are a real estate underwriting expert. Wrap JSON output in <json>...</json> tags. No markdown. Raw numbers only.'},{role:'user',content:prompt}], temperature:0.1, max_tokens:1200 },
       parse: d => d.choices[0].message.content
     },
     openai: {
