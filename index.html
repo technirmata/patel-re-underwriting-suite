@@ -5441,29 +5441,84 @@ async function aiAnalyzeImage(b64data, mimeType, filename) {
   _aiStatus('👁 AI Vision reading image…', 'loading');
   _aiProgress(15);
 
-  var VPROMPT = 'You are a senior commercial real estate underwriter analyzing a property document image.\n' +
-    'This image may be: a rent roll, T-12/T-3, P&L, offering memorandum page, PSA, or handwritten calculations.\n\n' +
-    'STEP 1 - READ EVERYTHING: Extract every number, label, table row, calculation visible in the image.\n' +
-    'STEP 2 - IDENTIFY DOCUMENT TYPE and map values to the correct fields.\n' +
-    'STEP 3 - FINANCING FIELDS (pur_rate = MORTGAGE INTEREST RATE, NOT cap rate):\n' +
-    '  pur_price  = asking/contract price | pur_arv = After Repair Value (or = pur_price if no rehab)\n' +
-    '  pur_rate   = loan/mortgage interest rate % (e.g. 7.0 for 7%) — DEFAULT 7.0 if not stated\n' +
-    '  pur_down_pct = down payment % of price — look for "X% down", LTV (down=100-LTV) — DEFAULT 20\n' +
-    '  pur_down   = pur_price × (pur_down_pct/100) — ALWAYS compute this\n' +
-    '  pur_close_pct = closing costs % — DEFAULT 2 if not stated\n' +
-    '  pur_close  = pur_price × (pur_close_pct/100) — ALWAYS compute this\n' +
-    '  pur_hold   = hold period in years — look for "5-year hold", "exit in X years" — DEFAULT 5\n' +
-    '  pur_appr   = annual appreciation % — DEFAULT 3 if not stated\n' +
-    '  pur_rehab  = renovation/rehab $ stated or estimated | pur_rehab_pct = as % of ARV\n' +
-    '  exist_bal/exist_rate/exist_pmt/exist_term = existing loan details (sub-to/assumption deals)\n\n' +
-    'STEP 4 - CALCULATE all derived fields:\n' +
-    '  fin_gross=spec_n×spec_rate×(spec_occ/100) | fin_noi=EGI-all_annual_expenses\n' +
-    '  ncp_cap=(fin_noi/pur_price)×100 | fin_vac_mo=fin_gross×(fin_vac/100)\n' +
-    '  fin_ins=pur_price×(fin_ins_pct/100) | fin_taxes=pur_price×(fin_taxes_pct/100)\n' +
-    'STEP 5 - FILL BOTH % AND $ for every dual-field pair.\n' +
-    'STEP 6 - RED FLAGS: Check all 8 standard flags. Add rf_ai_flags for anything else noticed.\n\n' +
-    'YOUR VALUES ARE AUTHORITATIVE. ncp_price=pur_price, ncp_noi=fin_noi always.\n\n' +
-    'Return ONLY a JSON object in <json>...</json> tags. No prose. Raw numbers (no $ or commas). Percentages as plain numbers (5 not 0.05).\n' +
+  var VPROMPT = 'You are a senior commercial real estate underwriter analyzing a property document image. Extract every visible number precisely.\n\n' +
+    '━━━ STEP 1: READ THE TABLE STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    'Before extracting ANY number, identify:\n' +
+    '  • Column headers: Are they months (Jan/Feb...), years (2021/2022/2023), quarters, or periods?\n' +
+    '  • Row labels: What does each row represent (income, vacancy, insurance, taxes, NOI, etc.)?\n' +
+    '  • TOTAL or ANNUAL columns vs MONTHLY columns — read the header carefully\n' +
+    '  • Is this Actuals/In-Place or Pro-Forma/Projected? → ALWAYS prefer Actuals over Pro-Forma\n\n' +
+    '━━━ STEP 2: TIME PERIOD RULES — CRITICAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    'MULTI-YEAR TABLE (columns = Year 1, Year 2, Year 3... or 2021, 2022, 2023...):\n' +
+    '  → USE ONLY THE MOST RECENT COMPLETED YEAR (rightmost actual year column)\n' +
+    '  → NEVER use a "Total", "5-Year Total", "Cumulative", or "Sum" column\n' +
+    '  → NEVER average across multiple years\n' +
+    '  → If table shows 2021 | 2022 | 2023: use ONLY 2023 figures\n' +
+    '  → If table shows Year 1 | Year 2 | Year 3 | Year 4 | Year 5: use ONLY Year 1 (current/in-place)\n\n' +
+    'T-12 (Trailing 12 Months) — monthly columns Jan through Dec or annual total:\n' +
+    '  → fin_noi = annual total (sum of all 12 months, or use the Annual Total column)\n' +
+    '  → fin_gross = annual total ÷ 12  (convert to MONTHLY)\n' +
+    '  → All expenses: use annual totals directly (they stay annual)\n\n' +
+    'T-3 (Trailing 3 Months) — only 3 months of data visible:\n' +
+    '  → ANNUALIZE ALL FIGURES × 4 before using them\n' +
+    '  → fin_noi = (3-month NOI) × 4\n' +
+    '  → fin_gross = ((3-month gross) × 4) ÷ 12  (annualize then convert to monthly)\n' +
+    '  → Note "Annualized from T-3" in math_notes\n\n' +
+    'MONTHLY SCHEDULE / RENT ROLL (rows = individual units, columns = unit/rent/status):\n' +
+    '  → Sum ALL unit rents = annual gross / 12 = fin_gross (monthly)\n' +
+    '  → Count occupied vs total units for occupancy\n' +
+    '  → DO NOT multiply rent roll by 12 — rent roll IS already monthly\n\n' +
+    'PER-MONTH COLUMN (header says "Monthly" or "Per Month"):\n' +
+    '  → fin_gross = that number directly (already monthly)\n' +
+    '  → Expenses shown monthly: multiply × 12 to get annual before using in NOI formula\n\n' +
+    'PER-YEAR / ANNUAL COLUMN (header says "Annual" or "Per Year" or "Yearly"):\n' +
+    '  → fin_gross = annual ÷ 12  (MUST convert to monthly)\n' +
+    '  → fin_noi = annual figure directly\n' +
+    '  → Expenses: use annual figures directly in NOI formula\n\n' +
+    '5-YEAR PROJECTION TABLE: USE ONLY YEAR 1 (current in-place). Ignore Years 2-5.\n\n' +
+    '━━━ STEP 3: IDENTIFY DOCUMENT TYPE AND EXTRACT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    'Rent Roll → sum unit rents → fin_gross(monthly), count units, occupancy\n' +
+    'T-12 → most recent 12-month annual totals → fin_noi(annual), fin_gross=annual÷12\n' +
+    'T-3 → 3-month figures × 4 → annualize → fin_noi(annual), fin_gross=annualized÷12\n' +
+    'P&L → annual income/expense lines → same as T-12 mapping\n' +
+    'OM → asking price, in-place cap rate, income/expense summary\n' +
+    'PSA → exact contract price, seller info, terms\n' +
+    'Handwritten → read every visible number, reconstruct the calculation\n\n' +
+    '━━━ STEP 4: FIELD UNITS — MEMORIZE THESE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    'fin_gross  = MONTHLY gross rent (e.g. 8500 for $8,500/month) — NEVER annual\n' +
+    'fin_noi    = ANNUAL net operating income (e.g. 72000 for $72,000/year) — NEVER monthly\n' +
+    'fin_vac    = vacancy PERCENTAGE (e.g. 7 for 7%) — NEVER a dollar amount\n' +
+    'fin_vac_mo = monthly vacancy dollar loss (e.g. 595 = fin_gross × fin_vac/100)\n' +
+    'fin_mgmt_pct = management fee PERCENTAGE of gross (e.g. 10 for 10%)\n' +
+    'fin_mgmt_mo  = monthly management cost in dollars\n' +
+    'fin_ins    = ANNUAL insurance cost in dollars (e.g. 3600 per year)\n' +
+    'fin_ins_pct  = insurance as % of purchase price\n' +
+    'fin_taxes  = ANNUAL property tax in dollars\n' +
+    'fin_taxes_pct = taxes as % of purchase price\n' +
+    'fin_maint  = ANNUAL maintenance cost in dollars\n' +
+    'fin_capex  = ANNUAL capital expenditures / reserves in dollars\n' +
+    'fin_util   = MONTHLY utilities in dollars\n' +
+    'fin_hoa    = MONTHLY HOA fee in dollars\n\n' +
+    '━━━ STEP 5: CALCULATE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    'Annual_Gross = fin_gross × 12\n' +
+    'Annual_Vac   = fin_vac_mo × 12 = Annual_Gross × (fin_vac/100)\n' +
+    'EGI          = Annual_Gross - Annual_Vac\n' +
+    'Annual_Mgmt  = fin_mgmt_mo × 12 = EGI × (fin_mgmt_pct/100)\n' +
+    'fin_noi      = EGI - Annual_Mgmt - fin_ins - fin_taxes - fin_maint - fin_capex - (fin_util×12) - (fin_hoa×12)\n' +
+    'ncp_cap      = (fin_noi / pur_price) × 100\n' +
+    'Show ALL math steps in math_notes — e.g. "$8,500/mo × 12 = $102,000 gross; T-12 NOI = $68,400/yr"\n\n' +
+    '━━━ STEP 6: FINANCING (pur_rate = MORTGAGE RATE, NOT cap rate) ━━━━━━━━━━━━━━━\n' +
+    '  pur_price  = contract/asking price | pur_arv = ARV or = pur_price if no rehab\n' +
+    '  pur_rate   = mortgage interest rate % — DEFAULT 7.0 if not stated\n' +
+    '  pur_down_pct = down payment % — DEFAULT 20 | pur_down = pur_price × (pur_down_pct/100)\n' +
+    '  pur_close_pct = closing costs % — DEFAULT 2 | pur_close = pur_price × (pur_close_pct/100)\n' +
+    '  pur_hold   = hold years — DEFAULT 5 | pur_appr = appreciation % — DEFAULT 3\n' +
+    '  exist_bal/exist_rate/exist_pmt/exist_term = existing loan if sub-to or assumption\n\n' +
+    '━━━ STEP 7: RED FLAGS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    'Set rf_* flags. rf_ai_flags = array of specific issues with numbers where possible.\n\n' +
+    'YOUR VALUES ARE AUTHORITATIVE. ncp_price=pur_price, ncp_noi=fin_noi always.\n' +
+    'Fill BOTH % and $ for every dual-field pair. Use 0 for unknown, not null.\n\n' +
+    'Return ONLY <json>...</json>. No prose. Raw numbers, no $ or commas. Percentages as plain numbers (7 not 0.07).\n' +
     '{"prop_address":"","prop_city":"","prop_state":"","prop_zip":"","prop_type":"sfr|duplex|triplex|quadplex|mfr|rvpark|storage|mhp|str|mixed|land|commercial","prop_units":0,"prop_sqft":0,"prop_year":0,"prop_beds":"","pur_price":0,"pur_arv":0,"pur_down_pct":0,"pur_down":0,"pur_close_pct":0,"pur_close":0,"pur_rehab_pct":0,"pur_rehab":0,"pur_hold":0,"pur_rate":0,"pur_appr":3,"spec_n":0,"spec_rate":0,"spec_occ":0,"fin_gross":0,"fin_other":0,"fin_vac":0,"fin_vac_mo":0,"fin_mgmt_pct":0,"fin_mgmt_mo":0,"fin_ins_pct":0,"fin_ins":0,"fin_taxes_pct":0,"fin_taxes":0,"fin_maint_pct":0,"fin_maint":0,"fin_capex_pct":0,"fin_capex":0,"fin_util":0,"fin_hoa":0,"fin_noi":0,"ncp_cap":0,"ncp_price":0,"ncp_noi":0,"mkt_tier":"","mkt_class":"","mkt_rent_growth":0,"mkt_rent_growth_flat":0,"exist_bal":0,"exist_rate":0,"exist_pmt":0,"exist_term":0,"seller_name":"","seller_phone":"","rf_foundation":false,"rf_roof":false,"rf_mold":false,"rf_electrical":false,"rf_liens":false,"rf_environmental":false,"rf_vacancy":false,"rf_seller_motivated":false,"rf_ai_flags":[],"ai_summary":"","ai_flags":"","math_notes":""}';
   try {
     var raw = '';
@@ -5623,6 +5678,35 @@ async function aiAnalyze() {
 
   const ANALYSIS_PROMPT = `You are a senior commercial real estate underwriter with 20+ years analyzing every document type: rent rolls, T-12s, T-3s, P&Ls, offering memorandums, PSAs, and handwritten calculations. You extract, compute, and cross-validate every number. YOUR VALUES ARE AUTHORITATIVE — they supersede any previously entered data.
 
+━━━ CRITICAL: TABLE READING & TIME PERIOD RULES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BEFORE extracting any number from a table, identify what each column represents:
+
+MULTI-YEAR TABLE (columns labeled Year 1/2/3/4/5 or 2021/2022/2023 etc.):
+  → USE ONLY THE MOST RECENT COMPLETED YEAR (rightmost actual column)
+  → NEVER use "Total", "5-Year Total", "Cumulative", or "Sum" columns
+  → 5-year projection table: use ONLY Year 1 (current in-place). Ignore Years 2-5.
+
+T-3 / QUARTERLY (only 3 months of data):
+  → ANNUALIZE everything × 4 before using. Note "Annualized from T-3" in math_notes.
+  → fin_gross = (3-month gross × 4) ÷ 12  [annualize first, then convert to monthly]
+
+YTD (Year-To-Date, partial year):
+  → Annualize = figure × (12 ÷ months_elapsed_in_year)
+
+FIELD UNITS — NEVER CONFUSE THESE:
+  fin_gross  = MONTHLY gross rent  (annual figure ÷ 12)    — NEVER put annual here
+  fin_noi    = ANNUAL net operating income                  — NEVER put monthly here
+  fin_ins    = ANNUAL insurance dollars
+  fin_taxes  = ANNUAL property tax dollars
+  fin_maint  = ANNUAL maintenance dollars
+  fin_capex  = ANNUAL capex/reserves dollars
+  fin_util   = MONTHLY utilities dollars
+  fin_hoa    = MONTHLY HOA dollars
+  fin_mgmt_mo = MONTHLY management cost dollars
+  fin_vac_mo  = MONTHLY vacancy loss dollars
+
+ALWAYS PREFER: Actual/In-Place numbers over Pro-Forma/Projected numbers.
+
 ━━━ STEP 1: IDENTIFY DOCUMENT TYPE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Identify which document(s) are present:
 
@@ -5633,12 +5717,15 @@ Identify which document(s) are present:
   → If individual unit rents listed: use actual occupied totals, not proforma
 
 • T-12 (Trailing 12 Months) — actual income/expense by month for past year
-  → Use annual totals directly. Monthly average = annual ÷ 12.
-  → fin_gross = Gross Rental Income ÷ 12 (monthly)
-  → fin_noi = Net Operating Income from T-12 (annual)
-  → Line items: map each expense line to the correct field below
+  → If monthly columns: sum all 12 months for each line item = annual total
+  → If a single "Annual Total" column exists: use that directly
+  → fin_gross = Annual Gross Rental Income ÷ 12  (MUST convert to monthly)
+  → fin_noi = Annual NOI (sum of 12 months, or annual total column)  [stays annual]
+  → NEVER use a partial month or multi-year total — only the trailing 12
 
 • T-3 (Trailing 3 Months) — annualize by multiplying all figures × 4
+  → fin_noi = (3-month NOI) × 4  [annual]
+  → fin_gross = (3-month gross × 4) ÷ 12  [annualize THEN convert to monthly]
   → Note: "Annualized from T-3" in math_notes
 
 • P&L (Profit & Loss) — full year or YTD actual financials
