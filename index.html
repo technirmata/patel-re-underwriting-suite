@@ -1345,6 +1345,7 @@ strong { color: #e2e8f0; }
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Capital</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="11" onclick="ST(11);partnerInit();partnerCompute()">👥 Partners</div>
   <div class="tab" data-tab="15" onclick="ST(15);mxRender()">📊 Metrics</div>
+  <div class="tab" data-tab="16" onclick="ST(16);dscInit()">🛡 Discipline</div>
   <!-- Phase: Deal -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Deal</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="8" onclick="ST(8);seedFA();buildProjection()">📈 Projections</div>
@@ -3416,6 +3417,87 @@ strong { color: #e2e8f0; }
   <div id="pn_warn" class="vb-warn" style="display:none"></div>
 </div><!-- end panel11 -->
 
+<!-- ══════════════════════════════════════════════ PANEL 16: DISCIPLINE — lender/appraiser-driven sanity checks -->
+<div class="panel" id="panel16">
+  <div class="ri-hdr">
+    <div>
+      <h2 style="margin:0;font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.2px">🛡 Underwriting Discipline</h2>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:3px">Lender + appraiser deal-killer guards. Conservative overlay, reverse cap solver, seller-truth-vs-your-truth, tax/rent/market gates, KP profile, seller-finance compatibility.</div>
+    </div>
+  </div>
+
+  <!-- Section 1: Conservative-Overlay (Blank-style one-click discipline) -->
+  <div class="card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <span>🛡 Conservative Overlay</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-primary btn-sm" id="dscOverlayApplyBtn" onclick="dscOverlayApply()" style="font-size:11px">⚡ Apply Conservative Overlay</button>
+        <button class="btn btn-outline btn-sm" id="dscOverlayResetBtn" onclick="dscOverlayReset()" style="font-size:11px;display:none">↺ Restore Broker Case</button>
+      </div>
+    </div>
+    <div style="font-size:11.5px;color:var(--text2);line-height:1.6;margin-bottom:10px">
+      One click locks: <strong>10% vacancy floor · 50% expense floor (55% if owner pays utilities) · exit cap +50bps · $250/unit replacement reserve · DSCR floor 1.25x · LTV cap 70% on deals &gt; $1M</strong>. Encodes Michael Blank / Nighthawk Equity discipline.
+    </div>
+    <div id="dscOverlayDelta" style="display:none;font-size:12px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;line-height:1.7"></div>
+    <div id="dscOverlayStatus" style="font-size:11.5px;color:var(--muted);margin-top:6px"></div>
+  </div>
+
+  <!-- Section 2: Reverse Cap Solver -->
+  <div class="card">
+    <div class="card-title">🔢 Reverse Cap Solver — Max Offer Price</div>
+    <div style="font-size:11.5px;color:var(--text2);line-height:1.5;margin-bottom:10px">Given the cap rate you'll accept and your <strong>adjusted</strong> NOI (after conservative overlay), solve for the maximum price the deal pencils at.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+      <div class="field"><label>Adjusted NOI / yr ($)</label><input type="number" step="1000" id="dsc_rev_noi" oninput="dscReverseCap()" placeholder="From conservative overlay"></div>
+      <div class="field"><label>Target cap rate (%)</label><input type="number" step="0.1" id="dsc_rev_cap" value="6" oninput="dscReverseCap()"></div>
+    </div>
+    <div id="dsc_rev_result" style="margin-top:10px;font-size:14px;color:var(--text);padding:12px 14px;background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(139,92,246,.04));border:1px solid rgba(99,102,241,.3);border-radius:10px"></div>
+  </div>
+
+  <!-- Section 3: Seller-Truth vs Your-Truth -->
+  <div class="card">
+    <div class="card-title">⚖ Seller-Truth vs Your-Truth Pro Forma</div>
+    <div style="font-size:11.5px;color:var(--text2);line-height:1.5;margin-bottom:10px">Side-by-side comparison: what the seller/broker reports vs your conservative re-underwriting. Highlights deltas + missing-line warnings.</div>
+    <div style="overflow-x:auto"><table class="pn-table" id="dsc_truth_table"></table></div>
+    <div id="dsc_truth_warnings" style="font-size:12px;color:#fbbf24;margin-top:10px;line-height:1.6"></div>
+  </div>
+
+  <!-- Section 4: Tax Mismatch Check -->
+  <div class="card">
+    <div class="card-title">🏛 Tax Record Reconciliation</div>
+    <div style="font-size:11.5px;color:var(--text2);line-height:1.5;margin-bottom:10px">80–90% of failed deals trace to a tax-record mismatch. Enter both numbers — flag if delta &gt; 5%.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+      <div class="field"><label>Seller-reported tax / yr ($)</label><input type="number" step="100" id="dsc_tax_seller" oninput="dscTaxCheck()"></div>
+      <div class="field"><label>County record tax / yr ($)</label><input type="number" step="100" id="dsc_tax_county" oninput="dscTaxCheck()"></div>
+    </div>
+    <div id="dsc_tax_result" style="margin-top:10px;font-size:13px"></div>
+  </div>
+
+  <!-- Section 5: KP / Sponsor Profile -->
+  <div class="card">
+    <div class="card-title">👤 Key Principal (KP) Profile</div>
+    <div style="font-size:11.5px;color:var(--text2);line-height:1.5;margin-bottom:10px">Lenders gate loan terms on KP credit + track record. Agency baseline: NW ≥ loan, liq ≥ 9-10%, FICO ≥ 650, 1+ yr similar-asset experience.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+      <div class="field"><label>KP FICO score</label><input type="number" step="1" id="dsc_kp_fico" placeholder="e.g. 720" oninput="dscKpCheck()"></div>
+      <div class="field"><label>KP net worth ($)</label><input type="number" step="10000" id="dsc_kp_nw" oninput="dscKpCheck()"></div>
+      <div class="field"><label>KP liquid cash ($)</label><input type="number" step="10000" id="dsc_kp_liq" oninput="dscKpCheck()"></div>
+      <div class="field"><label>Years similar-asset exp.</label><input type="number" step="0.5" id="dsc_kp_exp" placeholder="e.g. 3" oninput="dscKpCheck()"></div>
+    </div>
+    <div id="dsc_kp_result" style="margin-top:10px;font-size:13px"></div>
+  </div>
+
+  <!-- Section 6: Market Tier + Rural Disqualifier -->
+  <div class="card">
+    <div class="card-title">🌆 Market Tier &amp; Rural Disqualifier</div>
+    <div id="dsc_tier_result" style="font-size:13px;line-height:1.7"></div>
+  </div>
+
+  <!-- Section 7: Seller-Finance Compatibility -->
+  <div class="card">
+    <div class="card-title">🤝 Seller-Finance Lender Compatibility</div>
+    <div id="dsc_sf_result" style="font-size:13px;line-height:1.7"></div>
+  </div>
+</div><!-- end panel16 -->
+
 <!-- ══════════════════════════════════════════════ PANEL 15: METRICS (whole-deal + per-investor canonical view) -->
 <div class="panel" id="panel15">
   <div class="vb-hdr">
@@ -3600,7 +3682,8 @@ function ST(i) {
     8: buildProjection,
     13:()=>{ if(typeof fcInit==='function') fcInit(); },
     14:()=>{ if(typeof riAutoOpen==='function') riAutoOpen(); },
-    15:()=>{ if(typeof mxRender==='function') mxRender(); }
+    15:()=>{ if(typeof mxRender==='function') mxRender(); },
+    16:()=>{ if(typeof dscInit==='function') dscInit(); }
   };
   if(panelCalc[i]) setTimeout(panelCalc[i], 50);
 }
@@ -14905,6 +14988,313 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
   // Initial render if user lands directly on this panel via deep-link
   if(document.readyState !== 'loading') setTimeout(function(){ if(_id('mxKpiGrid')) mxRender(); }, 700);
   else document.addEventListener('DOMContentLoaded', function(){ setTimeout(function(){ if(_id('mxKpiGrid')) mxRender(); }, 700); });
+})();
+</script>
+
+<script>
+/* ── Discipline tab (panel16) ───────────────────────────────────────────
+   Lender + appraiser deal-killer guards in one tab:
+     1. Conservative-Overlay (Blank-style one-click discipline)
+     2. Reverse-Cap solver (max-offer pricing)
+     3. Seller-Truth vs Your-Truth pro forma
+     4. Tax record reconciliation (the 80-90% killer)
+     5. KP / Sponsor profile (FICO, NW, liq, experience)
+     6. Market tier + rural disqualifier
+     7. Seller-finance lender compatibility check
+   ──────────────────────────────────────────────────────────────────── */
+(function(){
+  var DSC_KEY = 'jp_discipline_v1';
+  function _id(x){return document.getElementById(x);}
+  function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function _$(n){if(!isFinite(n)||n==null)return '—';return (n<0?'-':'')+'$'+Math.abs(Math.round(n)).toLocaleString();}
+  function _pct(n,d){if(!isFinite(n)||n==null)return '—';return (n*100).toFixed(d||1)+'%';}
+  function _gv(id){ try { return (typeof gvs==='function')?gvs(id):''; } catch(e){return '';} }
+  function _gn(id){ try { return (typeof gv==='function')?gv(id):0; } catch(e){return 0;} }
+
+  function _loadState(){ try { return JSON.parse(localStorage.getItem(DSC_KEY)||'{}'); } catch(e){ return {}; } }
+  function _saveState(s){ try { localStorage.setItem(DSC_KEY, JSON.stringify(s)); } catch(e){} }
+
+  // ── 1. Conservative Overlay ─────────────────────────────────────────
+  // One-click applies Blank/Nighthawk underwriting discipline:
+  //  * Vacancy floor 10%
+  //  * Expense ratio floor 50% (55% if owner pays utilities)
+  //  * Exit cap +50bps over current
+  //  * $250/unit replacement reserve (deducted from NOI)
+  //  * DSCR floor 1.25x
+  //  * LTV cap 70% on deals > $1M
+  // Stores a "broker_case" snapshot so user can restore the original numbers.
+  window.dscOverlayApply = function(){
+    var st = _loadState();
+    if(st.applied){ _renderOverlayStatus(st); return; }
+    // Snapshot broker case from current Intake
+    var snapshot = {
+      grossRent: _gn('fin_gsi') || 0,
+      vacancyPct: _gn('fin_vacancy') || 0,
+      totalExp: _gn('fin_op_total') || 0,
+      noi: (typeof S !== 'undefined' && S.noi) || 0,
+      mktExitCap: _gn('mkt_exit_cap') || 0
+    };
+    st.brokerCase = snapshot;
+    st.applied = true;
+    st.appliedAt = new Date().toISOString();
+    // Compute conservative-overlay adjustments
+    var price = (typeof S !== 'undefined' && S.price) ? S.price : (_gn('pur_price')||0);
+    var units = _gn('prop_units') || 1;
+    var grossRent = snapshot.grossRent || 0;
+    var totalExp = snapshot.totalExp || 0;
+    var ownerPaysUtils = !!_gv('owner_utils'); // hint flag if user has set it
+    var expFloor = ownerPaysUtils ? 0.55 : 0.50;
+    var vacFloor = 0.10;
+
+    // Adjusted income/expense
+    var adjVacancy = Math.max(grossRent * vacFloor, grossRent * (snapshot.vacancyPct/100||0));
+    var adjGSI = grossRent;
+    var adjEGI = adjGSI - adjVacancy;
+    var minExpDollars = adjEGI * expFloor;
+    var adjExp = Math.max(totalExp, minExpDollars);
+    var reserves = units * 250;
+    var adjNOI = adjEGI - adjExp - reserves;
+    var origCap = price>0 ? snapshot.noi/price : 0;
+    var adjExitCap = (snapshot.mktExitCap/100||0.06) + 0.005;
+    var adjPrice = adjExitCap>0 ? adjNOI/adjExitCap : 0;
+
+    st.adjusted = {
+      vacancy: adjVacancy, egi: adjEGI, exp: adjExp, reserves: reserves,
+      noi: adjNOI, exitCap: adjExitCap, maxPrice: adjPrice, expFloor: expFloor,
+      ltvCap: price > 1000000 ? 0.70 : 0.75
+    };
+    _saveState(st);
+    _renderOverlayStatus(st);
+    // Auto-fill the reverse-cap solver with the new adjusted NOI
+    var noiInp = _id('dsc_rev_noi'), capInp = _id('dsc_rev_cap');
+    if(noiInp) noiInp.value = Math.round(adjNOI);
+    if(capInp) capInp.value = (adjExitCap*100).toFixed(2);
+    dscReverseCap();
+    if(typeof showProjToast==='function') showProjToast('🛡 Conservative overlay applied — see deltas below');
+  };
+
+  window.dscOverlayReset = function(){
+    var st = _loadState();
+    st.applied = false;
+    delete st.adjusted;
+    _saveState(st);
+    _renderOverlayStatus(st);
+    if(typeof showProjToast==='function') showProjToast('↺ Restored broker case');
+  };
+
+  function _renderOverlayStatus(st){
+    var box = _id('dscOverlayDelta');
+    var status = _id('dscOverlayStatus');
+    var applyBtn = _id('dscOverlayApplyBtn');
+    var resetBtn = _id('dscOverlayResetBtn');
+    if(!box) return;
+    if(!st.applied || !st.adjusted){
+      box.style.display = 'none';
+      if(status) status.textContent = 'Click Apply to lock in conservative discipline.';
+      if(applyBtn) applyBtn.style.display = 'inline-flex';
+      if(resetBtn) resetBtn.style.display = 'none';
+      return;
+    }
+    var b = st.brokerCase || {};
+    var a = st.adjusted;
+    var noiDelta = (b.noi||0) - a.noi;
+    var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">';
+    html += '<div><strong style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em">Vacancy floor 10%</strong><div style="font-weight:700;color:#fbbf24">'+_$(a.vacancy)+'</div></div>';
+    html += '<div><strong style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em">Expense floor '+(a.expFloor*100).toFixed(0)+'%</strong><div style="font-weight:700;color:#fbbf24">'+_$(a.exp)+'</div></div>';
+    html += '<div><strong style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em">Reserves $250/unit</strong><div style="font-weight:700;color:#fbbf24">'+_$(a.reserves)+'</div></div>';
+    html += '<div><strong style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em">Adjusted NOI</strong><div style="font-weight:700;color:#10b981">'+_$(a.noi)+'<span style="color:var(--muted);font-size:11px;font-weight:500">'+(noiDelta>0?(' (− '+_$(noiDelta)+' vs broker)'):'')+'</span></div></div>';
+    html += '<div><strong style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em">Exit cap +50bps</strong><div style="font-weight:700;color:#fbbf24">'+(a.exitCap*100).toFixed(2)+'%</div></div>';
+    html += '<div><strong style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em">Max supportable price</strong><div style="font-weight:700;color:var(--accent);font-size:16px">'+_$(a.maxPrice)+'</div></div>';
+    html += '<div><strong style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em">LTV cap</strong><div style="font-weight:700;color:#fbbf24">'+(a.ltvCap*100).toFixed(0)+'%</div></div>';
+    html += '<div><strong style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em">DSCR floor</strong><div style="font-weight:700;color:#fbbf24">1.25x</div></div>';
+    html += '</div>';
+    box.innerHTML = html; box.style.display='block';
+    if(status) status.innerHTML = '✅ <strong>Applied</strong> — broker-case snapshot stored. Click <strong>↺ Restore</strong> to compare back.';
+    if(applyBtn) applyBtn.style.display = 'none';
+    if(resetBtn) resetBtn.style.display = 'inline-flex';
+  }
+
+  // ── 2. Reverse Cap Solver ───────────────────────────────────────────
+  window.dscReverseCap = function(){
+    var noi = parseFloat(_id('dsc_rev_noi')?_id('dsc_rev_noi').value:'')||0;
+    var capPct = parseFloat(_id('dsc_rev_cap')?_id('dsc_rev_cap').value:'')||0;
+    var box = _id('dsc_rev_result'); if(!box) return;
+    if(!noi || !capPct){ box.innerHTML = '<span style="color:var(--muted)">Enter both NOI + target cap rate to solve max price.</span>'; return; }
+    var maxPrice = noi / (capPct/100);
+    var current = (typeof S !== 'undefined' && S.price) ? S.price : (_gn('pur_price')||0);
+    var delta = current - maxPrice;
+    var deltaPct = current > 0 ? (delta/current*100) : 0;
+    var color = delta > 0 ? '#fbbf24' : (delta < 0 ? '#10b981' : 'var(--accent)');
+    var verdict = delta > 0 ? ('Currently asking '+_$(current)+' — over by '+_$(delta)+' ('+deltaPct.toFixed(1)+'%)') : (delta < 0 ? ('Currently asking '+_$(current)+' — under by '+_$(Math.abs(delta))) : 'Currently asking exactly the max');
+    box.innerHTML = '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em">Max offer price</div>'
+      + '<div style="font-size:24px;font-weight:800;color:var(--accent);margin-top:2px">'+_$(maxPrice)+'</div>'
+      + '<div style="font-size:11.5px;color:'+color+';margin-top:6px">'+verdict+'</div>'
+      + '<div style="font-size:10.5px;color:var(--muted);margin-top:4px">Formula: NOI ÷ cap = '+_$(noi)+' ÷ '+capPct+'% = '+_$(maxPrice)+'</div>';
+  };
+
+  // ── 3. Seller-Truth vs Your-Truth ───────────────────────────────────
+  window.dscRenderTruthTable = function(){
+    var t = _id('dsc_truth_table'); if(!t) return;
+    var st = _loadState();
+    var b = st.brokerCase || {};
+    var a = st.adjusted   || {};
+    function row(label, broker, your, fmtFn, isWorse){
+      fmtFn = fmtFn || _$;
+      var bV = (broker===null||broker===undefined||!isFinite(broker))?'—':fmtFn(broker);
+      var yV = (your===null||your===undefined||!isFinite(your))?'—':fmtFn(your);
+      var deltaCell = '—';
+      if(isFinite(broker) && isFinite(your)){
+        var d = your - broker;
+        deltaCell = (d>0?'+':'')+fmtFn(d);
+      }
+      var deltaColor = (isFinite(broker) && isFinite(your))
+        ? ((isWorse && your<broker)||(!isWorse && your>broker) ? '#fbbf24' : '#94a3b8')
+        : 'var(--muted)';
+      return '<tr><td>'+label+'</td><td>'+bV+'</td><td>'+yV+'</td><td style="color:'+deltaColor+';font-weight:700">'+deltaCell+'</td></tr>';
+    }
+    var html = '<thead><tr><th>Line item</th><th>Seller / broker</th><th>Your conservative</th><th>Δ</th></tr></thead><tbody>';
+    html += row('Gross Scheduled Income',  b.grossRent, a.egi!=null?(a.egi+(a.vacancy||0)):null);
+    html += row('Vacancy',                  null,        a.vacancy, _$, true);
+    html += row('Effective Gross Income',   b.grossRent, a.egi);
+    html += row('Operating expenses',       b.totalExp,  a.exp, _$, true);
+    html += row('Replacement reserves',     null,        a.reserves, _$, true);
+    html += row('NOI',                       b.noi,       a.noi, _$, true);
+    html += row('Exit cap rate',             b.mktExitCap?b.mktExitCap/100:null, a.exitCap, function(x){return (x*100).toFixed(2)+'%';}, true);
+    html += '</tbody>';
+    t.innerHTML = html;
+    // Warnings — missing lines
+    var w = _id('dsc_truth_warnings'); if(!w) return;
+    var warns = [];
+    if(!st.applied) warns.push('Click <strong>Apply Conservative Overlay</strong> to populate "Your conservative" column.');
+    if(b.totalExp && a.exp && (a.exp/b.totalExp > 1.20)) warns.push('Seller-reported expenses are <strong>'+(a.exp/b.totalExp*100-100).toFixed(0)+'% lower</strong> than the conservative re-underwriting — common red flag.');
+    if(b.grossRent && b.totalExp && b.grossRent>0 && (b.totalExp/b.grossRent < 0.30)) warns.push('Seller expense ratio is &lt; 30% of GSI — almost certainly under-reported. Double-check insurance, mgmt, payroll, R&amp;M.');
+    if(!b.grossRent) warns.push('No gross rent in Intake — fill the Deal Intake tab to populate this table.');
+    w.innerHTML = warns.length ? '⚠ '+warns.join('<br>⚠ ') : '✅ No structural concerns detected in line-by-line reconciliation.';
+  };
+
+  // ── 4. Tax Record Reconciliation ────────────────────────────────────
+  window.dscTaxCheck = function(){
+    var seller = parseFloat(_id('dsc_tax_seller')?_id('dsc_tax_seller').value:'')||0;
+    var county = parseFloat(_id('dsc_tax_county')?_id('dsc_tax_county').value:'')||0;
+    var box = _id('dsc_tax_result'); if(!box) return;
+    if(!seller || !county){ box.innerHTML = '<span style="color:var(--muted)">Enter both numbers to check delta.</span>'; return; }
+    var delta = county - seller;
+    var pct = seller > 0 ? Math.abs(delta/seller*100) : 0;
+    if(pct < 5){
+      box.innerHTML = '<span style="color:#10b981">✅ Delta '+_$(Math.abs(delta))+' ('+pct.toFixed(1)+'%) — within 5% tolerance, no flag.</span>';
+    } else if(pct < 15){
+      box.innerHTML = '<span style="color:#fbbf24">⚠ Delta '+_$(Math.abs(delta))+' ('+pct.toFixed(1)+'%) — material gap, request reconciliation from seller before LOI.</span>';
+    } else {
+      box.innerHTML = '<span style="color:#fca5a5">❌ Delta '+_$(Math.abs(delta))+' ('+pct.toFixed(1)+'%) — '+(delta>0?'seller UNDER-reported':'seller OVER-reported')+' tax. This is the #1 deal-killer per lender feedback (80-90% of failed deals).</span>';
+    }
+    // Save to state
+    var st = _loadState(); st.tax={seller:seller, county:county}; _saveState(st);
+  };
+
+  // ── 5. KP Profile ───────────────────────────────────────────────────
+  window.dscKpCheck = function(){
+    var fico = parseFloat(_id('dsc_kp_fico')?_id('dsc_kp_fico').value:'')||0;
+    var nw   = parseFloat(_id('dsc_kp_nw')?_id('dsc_kp_nw').value:'')||0;
+    var liq  = parseFloat(_id('dsc_kp_liq')?_id('dsc_kp_liq').value:'')||0;
+    var exp  = parseFloat(_id('dsc_kp_exp')?_id('dsc_kp_exp').value:'')||0;
+    var box = _id('dsc_kp_result'); if(!box) return;
+    var price = (typeof S !== 'undefined' && S.price) ? S.price : (_gn('pur_price')||0);
+    var loan = price * 0.75;
+    var checks = [];
+    var passes = 0;
+    function ck(label, ok, sub){
+      checks.push('<div style="display:flex;align-items:center;gap:8px;padding:6px 0"><span style="color:'+(ok?'#10b981':'#fca5a5')+';font-weight:700;width:18px">'+(ok?'✓':'✕')+'</span><span style="flex:1">'+label+'</span><span style="color:var(--muted);font-size:11.5px">'+sub+'</span></div>');
+      if(ok) passes++;
+    }
+    if(fico){ ck('FICO ≥ 650 (agency floor)', fico>=650, fico+' / 650'); }
+    if(loan && nw){ ck('Net worth ≥ loan amount', nw>=loan, _$(nw)+' / '+_$(loan)); }
+    if(loan && liq){ ck('Liquidity ≥ 9% of loan', liq>=loan*0.09, _$(liq)+' / '+_$(loan*0.09)); }
+    if(exp){ ck('Similar-asset experience ≥ 1 yr', exp>=1, exp+' yrs'); }
+    if(!checks.length){ box.innerHTML = '<span style="color:var(--muted)">Fill the KP fields above to gate loan terms.</span>'; return; }
+    var n = checks.length;
+    var verdict = passes===n ? '<span style="color:#10b981">✅ Passes all '+n+' agency baseline checks — full term sheet on the table.</span>'
+                 : passes>=n-1 ? '<span style="color:#fbbf24">⚠ '+passes+' of '+n+' — likely needs a co-GP or guarantor to fill the gap.</span>'
+                 : '<span style="color:#fca5a5">❌ '+passes+' of '+n+' — agency exec unlikely without significant changes (co-GP, larger LP raise, or smaller loan).</span>';
+    box.innerHTML = verdict + '<div style="margin-top:8px">'+checks.join('')+'</div>';
+    var st = _loadState(); st.kp = {fico:fico,nw:nw,liq:liq,exp:exp}; _saveState(st);
+  };
+
+  // ── 6. Market Tier + Rural Disqualifier ─────────────────────────────
+  window.dscRenderTier = function(){
+    var box = _id('dsc_tier_result'); if(!box) return;
+    var tier = (_gv('mkt_tier')||'').toUpperCase();
+    var price = (typeof S !== 'undefined' && S.price) ? S.price : (_gn('pur_price')||0);
+    var lines = [];
+    if(!tier){ box.innerHTML = '<span style="color:var(--muted)">Set <strong>Market Tier</strong> in Intake (under "Market Context") to assess lender appetite.</span>'; return; }
+    var labels = {A:'Primary', B:'Secondary', C:'Tertiary', D:'Sub-tertiary / Rural'};
+    var label = labels[tier] || tier;
+    var stat = '';
+    if(tier === 'A'){ stat = '<span style="color:#10b981">✅ <strong>Primary market</strong> — full agency / CMBS / bank menu available. Best terms.</span>'; }
+    else if(tier === 'B'){ stat = '<span style="color:#10b981">✅ <strong>Secondary market</strong> — agency + most CMBS lenders comfortable. Standard pricing.</span>'; }
+    else if(tier === 'C'){ stat = '<span style="color:#fbbf24">⚠ <strong>Tertiary market</strong> — limited agency appetite, typically requires bridge/DSCR with stricter LTV. Premium pricing.</span>'; }
+    else { stat = '<span style="color:#fca5a5">❌ <strong>'+label+'</strong> — agency execution unlikely. Most CMBS shops decline. Local bank or seller financing only. <strong>Disqualifier flag.</strong></span>'; }
+    lines.push(stat);
+    if(price >= 1000000) lines.push('<span style="color:var(--muted)">Loan size '+_$(price*0.75)+' (assumes 75% LTV) — large enough for non-recourse agency in primary/secondary tiers.</span>');
+    if(price < 1000000) lines.push('<span style="color:var(--muted)">Loan size '+_$(price*0.75)+' — below most non-recourse minimums; expect recourse small-balance or DSCR program.</span>');
+    box.innerHTML = lines.join('<br>');
+  };
+
+  // ── 7. Seller-Finance Lender Compatibility ──────────────────────────
+  window.dscRenderSF = function(){
+    var box = _id('dsc_sf_result'); if(!box) return;
+    var price = (typeof S !== 'undefined' && S.price) ? S.price : (_gn('pur_price')||0);
+    var sfAmt = _gn('sf_amt') || 0;        // Creative-finance Seller Finance carry $
+    if(!price){ box.innerHTML = '<span style="color:var(--muted)">Set asking price in Intake to assess seller-finance compatibility.</span>'; return; }
+    if(!sfAmt){ box.innerHTML = '<span style="color:var(--muted)">No seller carry in Creative Finance tab — N/A. Add a seller-carry amount there if you intend to negotiate one.</span>'; return; }
+    var sfPct = sfAmt/price*100;
+    var lines = [];
+    lines.push('Seller carry amount: <strong>'+_$(sfAmt)+'</strong> ('+sfPct.toFixed(1)+'% of price)');
+    var verdict;
+    if(sfPct === 0){ verdict = '<span style="color:#10b981">✅ No seller carry — clean stack, no lender objection.</span>'; }
+    else if(sfPct <= 10){ verdict = '<span style="color:#fbbf24">⚠ Carry &le; 10% — most senior lenders will permit as 2nd lien with consent. Expect tighter LTV cap on the senior (often 65%) and lender approval letter required.</span>'; }
+    else if(sfPct <= 20){ verdict = '<span style="color:#fca5a5">❌ Carry 10-20% — most agency + CMBS lenders <strong>decline</strong>. They want skin-in-the-game from buyer. Local bank or DSCR may permit; expect rate premium.</span>'; }
+    else { verdict = '<span style="color:#fca5a5">❌❌ Carry &gt; 20% — almost universally rejected by senior lenders. Restructure the equity stack before approaching debt.</span>'; }
+    lines.push(verdict);
+    if(price >= 5000000) lines.push('<span style="color:var(--muted)">⚠ Deal size > $5M — tighter scrutiny. Most CMBS conduits flat-out forbid seller carry on deals this size.</span>');
+    box.innerHTML = lines.join('<br>');
+  };
+
+  window.dscInit = function(){
+    // Restore prior state
+    var st = _loadState();
+    if(st.tax){
+      if(_id('dsc_tax_seller')) _id('dsc_tax_seller').value = st.tax.seller||'';
+      if(_id('dsc_tax_county')) _id('dsc_tax_county').value = st.tax.county||'';
+    }
+    if(st.kp){
+      if(_id('dsc_kp_fico')) _id('dsc_kp_fico').value = st.kp.fico||'';
+      if(_id('dsc_kp_nw')) _id('dsc_kp_nw').value = st.kp.nw||'';
+      if(_id('dsc_kp_liq')) _id('dsc_kp_liq').value = st.kp.liq||'';
+      if(_id('dsc_kp_exp')) _id('dsc_kp_exp').value = st.kp.exp||'';
+    }
+    _renderOverlayStatus(st);
+    dscReverseCap();
+    dscRenderTruthTable();
+    dscTaxCheck();
+    dscKpCheck();
+    dscRenderTier();
+    dscRenderSF();
+  };
+
+  // Re-render whenever Intake changes while panel16 is active
+  document.addEventListener('input', function(e){
+    var p = _id('panel16'); if(!p || !p.classList.contains('active')) return;
+    if(!e.target || !e.target.id) return;
+    if(/^(prop_|mkt_|pur_|fin_|sf_)/.test(e.target.id)){
+      clearTimeout(window._dscDebounce);
+      window._dscDebounce = setTimeout(function(){
+        dscRenderTruthTable(); dscRenderTier(); dscRenderSF();
+      }, 200);
+    }
+  });
+
+  if(document.readyState !== 'loading') setTimeout(function(){ if(_id('dsc_rev_result')) dscInit(); }, 700);
+  else document.addEventListener('DOMContentLoaded', function(){ setTimeout(function(){ if(_id('dsc_rev_result')) dscInit(); }, 700); });
 })();
 </script>
 
