@@ -452,6 +452,12 @@ strong { color: #e2e8f0; }
 .auth-guest{width:100%;padding:11px 14px;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;border:1.5px solid var(--accent);background:rgba(99,102,241,.08);color:#a5b4fc;transition:.15s;display:flex;align-items:center;justify-content:center;gap:6px}
 .auth-guest:hover{background:rgba(99,102,241,.18);color:#ffffff;border-color:var(--accent2);transform:translateY(-1px)}
 .auth-guest:active{transform:translateY(0)}
+.auth-oauth{width:100%;padding:11px 14px;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;border:1.5px solid transparent;transition:.15s;display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:6px}
+.auth-oauth:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.35)}
+.auth-oauth:active{transform:translateY(0)}
+.auth-oauth-github{background:#0d1117;color:#fff;border-color:#30363d}
+.auth-oauth-github:hover{background:#161b22;border-color:#484f58}
+.auth-oauth-github svg{flex-shrink:0}
 .auth-strength{height:3px;border-radius:2px;margin-top:5px;transition:all .3s;background:var(--surface3)}
 /* user badge in topbar */
 .user-badge{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px 4px 6px;font-size:12.5px;cursor:default}
@@ -1138,6 +1144,11 @@ strong { color: #e2e8f0; }
 
     <!-- LOGIN PANEL -->
     <div class="auth-body" id="authPanel_login">
+      <button class="auth-oauth auth-oauth-github" onclick="authOAuthGitHub()" type="button">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        Continue with GitHub
+      </button>
+      <div class="auth-divider"><span>or sign in with email</span></div>
       <div class="auth-field">
         <label>Email</label>
         <input type="email" id="auth_login_user" placeholder="your@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')authLogin()">
@@ -1159,6 +1170,11 @@ strong { color: #e2e8f0; }
 
     <!-- REGISTER PANEL -->
     <div class="auth-body" id="authPanel_register" style="display:none">
+      <button class="auth-oauth auth-oauth-github" onclick="authOAuthGitHub()" type="button">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        Sign up with GitHub
+      </button>
+      <div class="auth-divider"><span>or with email</span></div>
       <div class="auth-field">
         <label>Display Name</label>
         <input type="text" id="auth_reg_user" placeholder="Choose a username" maxlength="30" autocomplete="username">
@@ -9114,6 +9130,32 @@ function authGuest() {
   _authDismiss();
   _authUpdateTopbar();
 }
+
+// ── GitHub OAuth ─────────────────────────────────────────────────────────
+// Replaces the broken password-reset-email flow for any user willing to
+// sign in via GitHub (no SMTP needed).
+async function authOAuthGitHub(){
+  if(!_sbOk()){ _authShowErr('auth_login_err','Supabase not configured.'); return; }
+  try {
+    const redirectTo = window.location.origin + window.location.pathname;
+    const { data, error } = await _sbClient().auth.signInWithOAuth({
+      provider: 'github',
+      options: { redirectTo: redirectTo, scopes: 'read:user user:email' }
+    });
+    if(error){
+      // Most common case: provider not enabled in Supabase Auth settings yet
+      var msg = error.message || 'GitHub sign-in failed';
+      if(/not enabled|unsupported|provider/i.test(msg)){
+        msg = '⚠ GitHub sign-in is being set up. Try again in a minute, or use email/password for now.';
+      }
+      _authShowErr('auth_login_err', msg);
+    }
+    // On success the browser auto-redirects to GitHub; no further code runs here.
+  } catch(err){
+    _authShowErr('auth_login_err','Error: ' + (err.message || 'unknown'));
+  }
+}
+window.authOAuthGitHub = authOAuthGitHub;
 
 async function authLogout() {
   _tmConfirm('Sign out? Your projects stay saved locally.','Sign Out', async function(){
