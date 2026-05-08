@@ -333,8 +333,9 @@ input[disabled], input[readonly] { opacity: 0.75; cursor: not-allowed; }
 .loi-opt-detail{font-size:11.5px;color:#444;display:flex;gap:12px;flex-wrap:wrap}
 .loi-opt-detail span{background:#eef2f8;padding:2px 10px;border-radius:20px;border:1px solid #c8d3e8}
 .loi-terms{margin-bottom:8px}
-.loi-term{font-size:12px;margin-bottom:7px;padding-left:18px;position:relative;text-align:justify}
-.loi-term::before{content:'●';position:absolute;left:0;color:#1b3d6b;font-size:9px;top:3px}
+.loi-term{font-size:12px;margin-bottom:7px;padding-left:18px;position:relative;text-align:justify;color:#1a1a2e}
+.loi-term strong{color:#1b3d6b;font-weight:700}
+.loi-term::before{content:'●';position:absolute;left:0;color:#1e6e4f;font-size:11px;top:1px;font-weight:900}
 .loi-expiry-hdr{font-size:12px;font-weight:800;letter-spacing:1.5px;color:#1b3d6b;text-align:center;background:#eef2f8;padding:6px 8px;margin:18px 0 10px;border-top:1px solid #b8c4d8;border-bottom:1px solid #b8c4d8}
 .loi-sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:22px}
 .loi-sig-line{border-top:1px solid #1a1a2e;padding-top:5px;margin-bottom:18px}
@@ -1888,7 +1889,6 @@ strong { color: #e2e8f0; }
     <div class="field"><label>PMI Rate (%) <span class="info" title="Required if LTV &gt; 80%">?</span></label><input type="number" id="c_pmi" value="0.5" step=".1"></div>
     <div class="field"><label>Closing Costs ($)</label><input type="number" id="c_close" placeholder="6000"></div>
   </div>
-  <button class="btn btn-primary" style="margin-top:8px" onclick="calcConv()">Calculate</button>
 </div>
 <div id="convResult" class="card"></div>
 <div id="convCumSummary"></div>
@@ -1950,7 +1950,6 @@ strong { color: #e2e8f0; }
     <div class="field"><label>Amort Period (yrs)</label><input type="number" id="fha_amort" value="30"></div>
     <div class="field"><label>Upfront MIP <span class="info" title="1.75% of loan, financed in">?</span></label><input value="1.75%" disabled style="background:var(--surface3);color:var(--muted);border:1px solid var(--border);padding:8px;border-radius:7px;width:100%"></div>
   </div>
-  <button class="btn btn-primary" style="margin-top:8px" onclick="calcFHA()">Calculate</button>
 </div>
 <div id="fhaResult" class="card"></div>
 </div>
@@ -1984,7 +1983,6 @@ strong { color: #e2e8f0; }
     <div class="field"><label>Exit Refi Rate (%)</label><input type="number" id="hm_refi_rate" value="7.0" step=".125"></div>
     <div class="field"><label>Exit Refi LTV (%)</label><input type="number" id="hm_refi_ltv" value="75" step="1"></div>
   </div>
-  <button class="btn btn-primary" style="margin-top:8px" onclick="calcHM()">Calculate</button>
 </div>
 <div id="hmResult" class="card"></div>
 </div>
@@ -2009,7 +2007,6 @@ strong { color: #e2e8f0; }
   </div>
   <div class="field"><label>IO Period (yrs, 0=none) <span class="info" title="Interest-only period before amortization begins">?</span></label><input type="number" id="dscr_io_yrs" value="0"></div>
   <div class="field"><label>Min DSCR Required</label><input type="number" id="dscr_min" value="1.25" step=".05"></div>
-  <button class="btn btn-primary" style="margin-top:8px" onclick="calcDSCR()">Calculate</button>
 </div>
 <div id="dscrResult" class="card"></div>
 </div>
@@ -2055,7 +2052,6 @@ strong { color: #e2e8f0; }
     <div class="field"><label>Market Rate (for comparison %)</label><input type="number" id="st_mkt_rate" value="7.0" step=".125"></div>
     <div class="field"><label>Closing Costs ($)</label><input type="number" id="st_close" placeholder="3000"></div>
   </div>
-  <button class="btn btn-primary" style="margin-top:8px" onclick="calcSubTo()">Calculate</button>
 </div>
 <div id="stResult" class="card"></div>
 </div>
@@ -2123,7 +2119,6 @@ strong { color: #e2e8f0; }
   </div>
 </div>
 
-<button class="btn btn-primary" onclick="calcSF()">Calculate All Loans</button>
 <div id="sfResult" style="margin-top:14px"></div>
 
 </div><!-- end sf cpanel -->
@@ -2153,7 +2148,6 @@ strong { color: #e2e8f0; }
     <div class="field"><label>Your Monthly Expenses ($)</label><input type="number" id="lto_expenses" placeholder="400"></div>
     <div class="field"><label>Annual Appreciation (%)</label><input type="number" id="lto_appr" value="3" step=".5"></div>
   </div>
-  <button class="btn btn-primary" style="margin-top:8px" onclick="calcLTO()">Calculate</button>
 </div>
 <div id="ltoResult" class="card"></div>
 </div>
@@ -2227,8 +2221,7 @@ strong { color: #e2e8f0; }
     <div class="field"><label>Gross Monthly Rent ($)</label><input type="number" id="mb_rent" placeholder="2500"></div>
     <div class="field"><label>Monthly Operating Expenses ($)</label><input type="number" id="mb_expenses" placeholder="450"></div>
   </div>
-  <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="calcMorby()">⚡ Calculate Morby Deal</button>
-</div>
+  </div>
 </div>
 
 <!-- RIGHT: Results -->
@@ -2341,7 +2334,6 @@ strong { color: #e2e8f0; }
         <div class="field"><label>Loan Term (yrs)</label><input type="number" id="sb_term" value="30" oninput="buildSnowball()"></div>
         <div class="field"><label>Extra/mo ($)</label><input type="number" id="sb_extra" placeholder="e.g. 200" oninput="buildSnowball()"></div>
       </div>
-      <button class="btn btn-primary btn-sm" style="width:100%;margin-top:4px" onclick="buildSnowball()">Calculate Payoff</button>
     </div>
     <div id="sb_results" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
       <div class="card2" style="text-align:center">
@@ -3295,8 +3287,10 @@ function ST(i) {
   document.querySelectorAll('.panel').forEach((p,j) => p.classList.toggle('active', j===i));
   const panelCalc = {
     1: runRecommendation,
+    2: ()=>{ if(typeof calcConv==='function') calcConv(); },
+    3: ()=>{ ['calcFHA','calcHM','calcDSCR','calcSubTo','calcSF','calcLTO'].forEach(function(fn){ try{ if(typeof window[fn]==='function') window[fn](); }catch(e){} }); },
     4: ()=>{ syncCalcFromIntake('morby'); calcMorby(); },
-    5: ()=>{ updateDash(); seedNCP(); },
+    5: ()=>{ updateDash(); seedNCP(); if(typeof buildSnowball==='function') buildSnowball(); },
     7: updateExec,
     8: buildProjection
   };
@@ -5484,8 +5478,9 @@ body{font-family:'Times New Roman',Times,serif;color:#1a1a2e;background:#fff}
 .loi-opt-detail{font-size:10pt;color:#444;display:flex;gap:10pt;flex-wrap:wrap}
 .loi-opt-detail span{background:#eef2f8;padding:1pt 8pt;border-radius:20pt;border:1pt solid #c8d3e8}
 .loi-terms{margin-bottom:6pt}
-.loi-term{font-size:10.5pt;margin-bottom:6pt;padding-left:16pt;position:relative;text-align:justify;line-height:1.45}
-.loi-term::before{content:'●';position:absolute;left:0;color:#1b3d6b;font-size:8pt;top:3pt}
+.loi-term{font-size:10.5pt;margin-bottom:6pt;padding-left:16pt;position:relative;text-align:justify;line-height:1.45;color:#1a1a2e}
+.loi-term strong{color:#1b3d6b;font-weight:700}
+.loi-term::before{content:'●';position:absolute;left:0;color:#1e6e4f;font-size:9pt;top:2pt;font-weight:900}
 .loi-expiry-hdr{font-size:10.5pt;font-weight:800;letter-spacing:1.5px;color:#1b3d6b;text-align:center;background:#eef2f8;padding:5pt 8pt;margin:14pt 0 8pt;border-top:1pt solid #b8c4d8;border-bottom:1pt solid #b8c4d8}
 .loi-sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:28pt;margin-top:20pt}
 .loi-sig-line{border-top:1pt solid #1a1a2e;padding-top:4pt;margin-bottom:16pt}
