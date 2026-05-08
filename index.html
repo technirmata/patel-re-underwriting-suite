@@ -1193,8 +1193,6 @@ strong { color: #e2e8f0; }
       </div>
       <div class="auth-err" id="auth_login_err" style="margin-bottom:10px;font-size:13px"></div>
       <button class="auth-btn" onclick="authLogin()">Sign In</button>
-      <div class="auth-divider"><span>or</span></div>
-      <button class="auth-guest" onclick="authGuest()">→ Try without an account</button>
     </div>
 
     <!-- REGISTER PANEL -->
@@ -1227,8 +1225,6 @@ strong { color: #e2e8f0; }
       </div>
       <div class="auth-err" id="auth_reg_err" style="margin-bottom:10px;font-size:13px"></div>
       <button class="auth-btn" onclick="authRegister()">Create Account</button>
-      <div class="auth-divider"><span>or</span></div>
-      <button class="auth-guest" onclick="authGuest()">→ Try without an account</button>
     </div>
 
     <!-- FORGOT PASSWORD PANEL — entry: enter email to receive reset link -->
@@ -1413,6 +1409,7 @@ strong { color: #e2e8f0; }
   <div class="tab" data-tab="11" onclick="ST(11);partnerInit();partnerCompute()">👥 Partners</div>
   <div class="tab" data-tab="15" onclick="ST(15);mxRender()">📊 Metrics</div>
   <div class="tab" data-tab="16" onclick="ST(16);dscInit()">🛡 Discipline</div>
+  <div class="tab" data-tab="17" onclick="ST(17);adminRender()" style="display:none">🛠 Admin</div>
   <!-- Phase: Deal -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Deal</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="8" onclick="ST(8);seedFA();buildProjection()">📈 Projections</div>
@@ -3484,6 +3481,35 @@ strong { color: #e2e8f0; }
   <div id="pn_warn" class="vb-warn" style="display:none"></div>
 </div><!-- end panel11 -->
 
+<!-- ══════════════════════════════════════════════ PANEL 17: ADMIN — paid users + admin grants -->
+<div class="panel" id="panel17">
+  <div class="ri-hdr">
+    <div>
+      <h2 style="margin:0;font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.2px">🛠 Admin Dashboard</h2>
+      <div id="adminSub" style="font-size:11.5px;color:var(--muted);margin-top:3px">Manage paid users, admin grants, trial status. RLS-gated — only admins can read or modify these rows.</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-shrink:0">
+      <button class="btn btn-outline btn-sm" onclick="adminRender(true)" title="Reload from Supabase">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- KPI tiles -->
+  <div class="card">
+    <div class="card-title">📊 Account Overview</div>
+    <div class="mx-kpi-grid" id="adminKpiGrid"></div>
+  </div>
+
+  <!-- Users table -->
+  <div class="card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <span>👥 Users</span>
+      <input type="text" id="adminFilter" placeholder="Filter by email…" oninput="adminApplyFilter(this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:12px;border-radius:8px;padding:6px 10px;width:220px">
+    </div>
+    <div style="overflow-x:auto;max-height:560px;overflow-y:auto"><table class="pn-table" id="adminUsersTable"></table></div>
+    <div id="adminError" style="font-size:12px;color:#fca5a5;margin-top:8px;display:none"></div>
+  </div>
+</div><!-- end panel17 -->
+
 <!-- ══════════════════════════════════════════════ PANEL 16: DISCIPLINE — lender/appraiser-driven sanity checks -->
 <div class="panel" id="panel16">
   <div class="ri-hdr">
@@ -3779,7 +3805,8 @@ function ST(i) {
     13:()=>{ if(typeof fcInit==='function') fcInit(); },
     14:()=>{ if(typeof riAutoOpen==='function') riAutoOpen(); },
     15:()=>{ if(typeof mxRender==='function') mxRender(); },
-    16:()=>{ if(typeof dscInit==='function') dscInit(); }
+    16:()=>{ if(typeof dscInit==='function') dscInit(); },
+    17:()=>{ if(typeof adminRender==='function') adminRender(); }
   };
   if(panelCalc[i]) setTimeout(panelCalc[i], 50);
 }
@@ -9228,18 +9255,28 @@ function _subStatus(userId){
   catch(e){ return 'trialing'; }
 }
 
-async function _trialFetchUserCreatedAt(){
+// Cache the user's profile (subscription_status, is_admin, trial_ends_at) so we don't
+// re-query Supabase on every banner refresh. Re-fetched on auth-state change.
+let _profileCache = null;
+let _profileFetchedAt = 0;
+async function _fetchProfile(force){
   const session = _getSession();
-  if(!session) return null;
-  // Prefer Supabase auth.user.created_at — single source of truth across devices
-  if(_sbOk()){
-    try {
-      const { data: { user } } = await _sbClient().auth.getUser();
-      if(user && user.created_at) return user.created_at;
-    } catch(e){}
+  if(!session) { _profileCache = null; return null; }
+  if(!force && _profileCache && _profileCache.user_id === session.userId && (Date.now() - _profileFetchedAt) < 60000){
+    return _profileCache;
   }
-  return session.loginTime || null;
+  if(!_sbOk()) return null;
+  try {
+    const { data, error } = await _sbClient().from('profiles')
+      .select('user_id,email,full_name,is_admin,subscription_status,trial_started_at,trial_ends_at')
+      .eq('user_id', session.userId).maybeSingle();
+    if(error){ console.warn('profile fetch:', error.message); return null; }
+    _profileCache = data;
+    _profileFetchedAt = Date.now();
+    return data;
+  } catch(e){ console.warn('profile fetch ex:', e); return null; }
 }
+window._fetchProfile = _fetchProfile;
 
 async function trialUpdateBanner(){
   const session = _getSession();
@@ -9247,32 +9284,45 @@ async function trialUpdateBanner(){
   if(!bar) return;
   if(!session){ bar.style.display='none'; return; }
 
-  const subState = _subStatus(session.userId);
-  if(subState === 'active'){ bar.style.display='none'; return; }
-  if(subState === 'past_due' || subState === 'canceled'){
+  const profile = await _fetchProfile();
+  if(!profile){ bar.style.display='none'; return; }
+
+  // Comp + active hide the banner entirely
+  if(profile.subscription_status === 'active' || profile.subscription_status === 'comp'){
+    bar.style.display='none';
+    return;
+  }
+  if(profile.subscription_status === 'past_due' || profile.subscription_status === 'canceled'){
     bar.className = 'trial-banner trial-expired';
-    bar.style.display = 'flex';
-    bar.innerHTML = '⛔ <strong>Subscription '+subState.replace('_',' ')+'.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Update billing →</a>';
+    bar.style.display='flex';
+    bar.innerHTML = '⛔ <strong>Subscription '+profile.subscription_status.replace('_',' ')+'.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Update billing →</a>';
     return;
   }
 
-  const createdAt = await _trialFetchUserCreatedAt();
-  const days = _trialDaysLeft(createdAt);
-  if(days === null){ bar.style.display='none'; return; }
+  // Trial state — compute days from trial_ends_at
+  const endMs = new Date(profile.trial_ends_at).getTime();
+  if(!isFinite(endMs)){ bar.style.display='none'; return; }
+  const daysLeft = Math.max(0, Math.ceil((endMs - Date.now()) / 86400000));
 
-  if(days <= 0){
+  if(daysLeft <= 0){
     bar.className = 'trial-banner trial-expired';
     bar.innerHTML = '⛔ <strong>Trial expired.</strong> Subscribe to keep using the suite. &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Subscribe →</a>';
     bar.style.display='flex';
-    setTimeout(trialOpenPaywall, 200);
-  } else if(days <= 2){
+    setTimeout(trialOpenPaywall, 300);
+  } else if(daysLeft <= 2){
     bar.className = 'trial-banner trial-warn';
-    bar.innerHTML = '⚠ <strong>'+days+' day'+(days===1?'':'s')+' left in your trial.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Upgrade now →</a>';
+    bar.innerHTML = '⚠ <strong>'+daysLeft+' day'+(daysLeft===1?'':'s')+' left in your trial.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Upgrade now →</a>';
     bar.style.display='flex';
   } else {
     bar.className = 'trial-banner trial-active';
-    bar.innerHTML = '🎁 <strong>'+days+' days left in your trial.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Upgrade →</a>';
+    bar.innerHTML = '🎁 <strong>'+daysLeft+' days left in your trial.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Upgrade →</a>';
     bar.style.display='flex';
+  }
+
+  // Also reveal admin tab if applicable
+  const adminTab = document.querySelector('.tab[data-tab="17"]');
+  if(adminTab){
+    adminTab.style.display = profile.is_admin ? '' : 'none';
   }
 }
 
@@ -9301,6 +9351,128 @@ function _trialHook(){ try { trialUpdateBanner(); } catch(e){} }
 if(document.readyState !== 'loading') setTimeout(_trialHook, 800);
 else document.addEventListener('DOMContentLoaded', function(){ setTimeout(_trialHook, 800); });
 setInterval(_trialHook, 60000);
+
+// ── Admin dashboard ─────────────────────────────────────────────────────
+// Fetches all profiles (RLS gates — only admins can read all). Renders
+// a users table with action buttons. Auto-hidden from non-admins by the
+// trialUpdateBanner() function which toggles the tab's display.
+let _adminUsers = [];
+let _adminFilter = '';
+
+function _$money(n){if(!isFinite(n)||n==null)return '—';return '$'+Math.round(n).toLocaleString();}
+function _adminFmtDate(s){
+  if(!s) return '—';
+  try { return new Date(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch(e){ return s; }
+}
+
+async function adminRender(force){
+  const session = _getSession();
+  if(!session){ return; }
+  const profile = await _fetchProfile();
+  if(!profile || !profile.is_admin){
+    // Should never happen — RLS would reject too — but defense in depth
+    const e = document.getElementById('adminError');
+    if(e){ e.style.display='block'; e.textContent='Admin access required.'; }
+    return;
+  }
+
+  if(force || !_adminUsers.length){
+    try {
+      const { data, error } = await _sbClient().from('profiles')
+        .select('user_id,email,full_name,is_admin,subscription_status,subscription_id,trial_started_at,trial_ends_at,last_seen_at,created_at')
+        .order('created_at', { ascending: false });
+      if(error) throw error;
+      _adminUsers = data || [];
+      const eErr = document.getElementById('adminError');
+      if(eErr){ eErr.style.display='none'; eErr.textContent=''; }
+    } catch(e){
+      const eErr = document.getElementById('adminError');
+      if(eErr){ eErr.style.display='block'; eErr.textContent = 'Load failed: '+(e.message||e); }
+      return;
+    }
+  }
+
+  _adminRenderKpis();
+  _adminRenderTable();
+}
+window.adminRender = adminRender;
+
+window.adminApplyFilter = function(v){
+  _adminFilter = (v||'').toLowerCase();
+  _adminRenderTable();
+};
+
+function _adminRenderKpis(){
+  const box = document.getElementById('adminKpiGrid'); if(!box) return;
+  const total = _adminUsers.length;
+  const trialing = _adminUsers.filter(u=>u.subscription_status==='trialing').length;
+  const active = _adminUsers.filter(u=>u.subscription_status==='active').length;
+  const comp = _adminUsers.filter(u=>u.subscription_status==='comp').length;
+  const past = _adminUsers.filter(u=>u.subscription_status==='past_due'||u.subscription_status==='canceled').length;
+  const admins = _adminUsers.filter(u=>u.is_admin).length;
+  const tiles = [
+    {label:'Total users', val:total, cls:'accent', sub:''},
+    {label:'Trialing', val:trialing, cls:'muted', sub:'7-day countdown'},
+    {label:'Paid', val:active, cls:'good', sub:'subscription_status=active'},
+    {label:'Comp', val:comp, cls:'accent', sub:'free-pass / staff'},
+    {label:'Past due / Canceled', val:past, cls: past?'bad':'muted', sub:''},
+    {label:'Admins', val:admins, cls:'accent', sub:''}
+  ];
+  box.innerHTML = tiles.map(t=>'<div class="mx-kpi '+t.cls+'"><div class="mx-kpi-label">'+t.label+'</div><div class="mx-kpi-val">'+t.val+'</div>'+(t.sub?'<div class="mx-kpi-sub">'+t.sub+'</div>':'')+'</div>').join('');
+}
+
+function _adminRenderTable(){
+  const t = document.getElementById('adminUsersTable'); if(!t) return;
+  const filt = _adminFilter;
+  const rows = filt
+    ? _adminUsers.filter(u => (u.email||'').toLowerCase().includes(filt) || (u.full_name||'').toLowerCase().includes(filt))
+    : _adminUsers;
+  let html = '<thead><tr><th>Email</th><th>Name</th><th>Status</th><th>Trial ends</th><th>Joined</th><th>Last seen</th><th>Admin</th><th>Actions</th></tr></thead><tbody>';
+  rows.forEach(u => {
+    const sCls = {trialing:'#fbbf24', active:'#10b981', comp:'#a5b4fc', past_due:'#fca5a5', canceled:'#fca5a5'}[u.subscription_status] || '#94a3b8';
+    const trialDays = u.trial_ends_at ? Math.ceil((new Date(u.trial_ends_at).getTime() - Date.now())/86400000) : null;
+    const trialTxt = trialDays === null ? '—' : (trialDays > 0 ? trialDays+' days' : 'expired');
+    const adminBadge = u.is_admin ? '<span style="color:#a5b4fc;font-weight:700">★ ADMIN</span>' : '';
+    html += '<tr>'
+      + '<td style="font-family:ui-monospace,monospace;font-size:11px">'+_e(u.email||'—')+'</td>'
+      + '<td>'+_e(u.full_name||'—')+'</td>'
+      + '<td style="color:'+sCls+';font-weight:700;text-transform:uppercase;font-size:10.5px">'+_e(u.subscription_status||'—')+'</td>'
+      + '<td>'+trialTxt+'</td>'
+      + '<td>'+_adminFmtDate(u.created_at)+'</td>'
+      + '<td>'+_adminFmtDate(u.last_seen_at)+'</td>'
+      + '<td>'+adminBadge+'</td>'
+      + '<td style="white-space:nowrap">'
+        + '<button class="wm-icon-btn" title="Toggle admin" onclick="adminToggleAdmin(\''+_e(u.user_id)+'\','+(u.is_admin?'false':'true')+')">★</button> '
+        + '<button class="wm-icon-btn" title="Comp subscription" onclick="adminSetSub(\''+_e(u.user_id)+'\',\'comp\')">🎟</button> '
+        + '<button class="wm-icon-btn" title="Mark active" onclick="adminSetSub(\''+_e(u.user_id)+'\',\'active\')">✓</button> '
+        + '<button class="wm-icon-btn" title="Cancel" onclick="adminSetSub(\''+_e(u.user_id)+'\',\'canceled\')">✕</button>'
+      + '</td>'
+      + '</tr>';
+  });
+  html += '</tbody>';
+  t.innerHTML = html;
+}
+
+function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+window.adminToggleAdmin = async function(uid, makeAdmin){
+  if(!confirm((makeAdmin?'Grant':'Revoke')+' admin for this user?')) return;
+  try {
+    const { error } = await _sbClient().from('profiles').update({is_admin: makeAdmin}).eq('user_id', uid);
+    if(error) throw error;
+    if(typeof showProjToast==='function') showProjToast(makeAdmin?'★ Admin granted':'Admin revoked');
+    adminRender(true);
+  } catch(e){ alert('Update failed: '+(e.message||e)); }
+};
+window.adminSetSub = async function(uid, status){
+  if(!confirm('Set subscription_status = "'+status+'" for this user?')) return;
+  try {
+    const { error } = await _sbClient().from('profiles').update({subscription_status: status}).eq('user_id', uid);
+    if(error) throw error;
+    if(typeof showProjToast==='function') showProjToast('Subscription set to '+status);
+    adminRender(true);
+  } catch(e){ alert('Update failed: '+(e.message||e)); }
+};
 
 async function authLogout() {
   _tmConfirm('Sign out? Your projects stay saved locally.','Sign Out', async function(){
