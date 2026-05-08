@@ -704,6 +704,87 @@ strong { color: #e2e8f0; }
 .tm-pop-btn:hover{opacity:.85}
 .tm-pop-cancel{background:#252837;border:1px solid #2a2d3e !important;color:#64748b}
 .tm-pop-ok{background:#6366f1;color:#fff}
+/* ── Workspace modal v2 (members / roles / settings tabs) ──────────────── */
+.wm-modal{height:auto;max-height:92vh;width:760px;max-width:96vw}
+.wm-header{padding:14px 18px;gap:14px;flex-wrap:wrap}
+.wm-header h2{font-size:14.5px}
+.wm-header-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.wm-header-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.wm-ws-select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12.5px;font-weight:600;cursor:pointer;outline:none;max-width:240px;flex:1;min-width:140px;transition:.15s}
+.wm-ws-select:focus,.wm-ws-select:hover{border-color:var(--accent)}
+.wm-toolbtn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 11px;color:var(--text);font-size:11.5px;font-weight:600;cursor:pointer;transition:.15s;line-height:1}
+.wm-toolbtn:hover{border-color:var(--accent);color:var(--accent)}
+.wm-tool-cloud{color:#34d399;border-color:rgba(52,211,153,.3)}
+.wm-tool-cloud:hover{color:#34d399;border-color:#34d399;background:rgba(52,211,153,.08)}
+.wm-tool-join{color:#a5b4fc;border-color:rgba(165,180,252,.3)}
+.wm-tool-join:hover{color:#a5b4fc;border-color:#a5b4fc;background:rgba(165,180,252,.08)}
+.wm-tabs{display:flex;gap:0;padding:0 16px;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.wm-tab{padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:.15s;user-select:none}
+.wm-tab:hover{color:var(--text)}
+.wm-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.wm-tab-count{background:var(--surface3);color:var(--muted);font-size:10.5px;padding:1px 7px;border-radius:99px;font-weight:700;min-width:18px;text-align:center;line-height:1.4}
+.wm-tab.active .wm-tab-count{background:rgba(99,102,241,.18);color:var(--accent)}
+.wm-body{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+.wm-section-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:2px}
+.wm-section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.wm-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;transition:.15s}
+.wm-row:hover{border-color:rgba(99,102,241,.35)}
+.wm-row-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.wm-row-info{flex:1;min-width:0}
+.wm-row-name{font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wm-row-sub{font-size:11px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wm-role-select{background:var(--surface3);border:1px solid var(--border);border-radius:7px;padding:5px 8px;color:var(--text);font-size:11.5px;font-weight:600;cursor:pointer;outline:none;flex-shrink:0}
+.wm-role-select:focus{border-color:var(--accent)}
+.wm-row-actions{display:flex;gap:4px;flex-shrink:0}
+.wm-icon-btn{background:none;border:1px solid transparent;cursor:pointer;font-size:13px;padding:5px 8px;border-radius:7px;color:var(--muted);transition:.15s}
+.wm-icon-btn:hover{background:var(--surface3);color:var(--text);border-color:var(--border)}
+.wm-icon-btn.danger:hover{color:#ef4444;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+.wm-empty{text-align:center;padding:32px 20px;color:var(--muted);background:var(--surface2);border:1px dashed var(--border);border-radius:12px}
+.wm-empty-icon{font-size:30px;opacity:.4;margin-bottom:6px}
+.wm-empty-title{font-size:13px;font-weight:600;color:var(--text);opacity:.8;margin-bottom:4px}
+.wm-empty-sub{font-size:11.5px;opacity:.65;line-height:1.5;max-width:300px;margin:0 auto}
+.wm-btn-primary{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;line-height:1}
+.wm-btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.wm-btn-outline{background:transparent;color:var(--text);border:1px solid var(--border);padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;line-height:1}
+.wm-btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.wm-perm-grid{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.wm-perm-row{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;background:var(--surface3);border-radius:7px;font-size:12px}
+.wm-perm-label{color:var(--text2)}
+.wm-toggle{position:relative;width:34px;height:20px;background:var(--surface);border:1px solid var(--border);border-radius:99px;cursor:pointer;transition:.15s;flex-shrink:0}
+.wm-toggle.on{background:var(--accent);border-color:var(--accent)}
+.wm-toggle::after{content:'';position:absolute;top:1px;left:1px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.15s}
+.wm-toggle.on::after{left:15px}
+.wm-role-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.wm-role-card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.wm-role-name-input{flex:1;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;outline:none;padding:2px 0;min-width:0}
+.wm-role-color-swatch{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;padding:0;background:none;transition:.15s}
+.wm-role-color-swatch:hover{border-color:var(--text)}
+.wm-settings-row{display:flex;flex-direction:column;gap:6px}
+.wm-settings-row > label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.wm-settings-row input[type=text]{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;transition:.15s}
+.wm-settings-row input[type=text]:focus{border-color:var(--accent)}
+.wm-danger{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:6px;flex-wrap:wrap}
+.wm-danger-info{flex:1;min-width:200px}
+.wm-danger-title{font-size:12.5px;font-weight:700;color:#f87171}
+.wm-danger-sub{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5}
+.wm-danger-btn{background:#ef4444;color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer;transition:.15s;flex-shrink:0;line-height:1}
+.wm-danger-btn:hover{background:#dc2626}
+.wm-share-card{background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(139,92,246,.06));border:1px solid rgba(99,102,241,.25);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.wm-share-card-icon{font-size:24px;flex-shrink:0}
+.wm-share-info{flex:1;min-width:160px}
+.wm-share-title{font-size:13px;font-weight:700;color:var(--text)}
+.wm-share-code{font-family:monospace;font-size:13px;color:var(--accent);background:rgba(0,0,0,.2);border-radius:6px;padding:2px 8px;letter-spacing:.1em;display:inline-block;margin-top:4px}
+.wm-share-sub{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}
+@media (max-width:600px){
+  .wm-modal{width:100vw;height:100vh;max-height:100vh;border-radius:0;border:none}
+  .wm-header{padding:10px 14px}
+  .wm-header h2{font-size:13.5px}
+  .wm-tabs{padding:0 12px}
+  .wm-tab{padding:10px 10px;font-size:12.5px}
+  .wm-body{padding:14px}
+  .wm-row{padding:9px 10px}
+  .wm-row-av{width:30px;height:30px;font-size:12px}
+}
 .tm-pop-del{background:#ef4444;color:#fff}
 /* END TM POPUP CSS */
 
@@ -8398,7 +8479,7 @@ function _userChipRender(){
   html += '<div class="um-divider"></div>';
   html += '<div class="um-action" onclick="_userChipClose();(typeof openTeams===\'function\')&&openTeams()">'
     + '<span class="um-item-icon">⚙</span>'
-    + '<span class="um-item-text">Manage workspaces, teams &amp; roles</span></div>';
+    + '<span class="um-item-text">Manage workspace</span></div>';
   if(s){
     html += '<div class="um-divider"></div>';
     html += '<div class="um-action danger" onclick="_userChipClose();(typeof authLogout===\'function\')&&authLogout()">'
@@ -11200,16 +11281,313 @@ function _tmSeed(){
 }
 function openTeams(){
   var m=document.getElementById('tmModal');if(!m)return;
-  m.style.display='flex';_selWsId=null;_selTmId=null;_dTab='roles';
   _tmSeed();
-  _rWs();_rTeams();_rDetail();
-  var data=_tmGet();
-  var ob=document.getElementById('tmOwnerSwitchBtn');var lbl=document.getElementById('tmActiveLabel');
-  if(ob)ob.style.display=data.activeUserId?'block':'none';
-  if(lbl){var ctx=_tmCtx();lbl.textContent=ctx?('Active: '+ctx.user.name+(ctx.role?' ('+ctx.role.name+')':'')):'Active: Owner';}
+  m.style.display='flex';
+  _wmTab_cur='members';
+  _selWsId=null;_selTmId=null;
+  _wmRender();
 }
 function closeTeams(){var m=document.getElementById('tmModal');if(m)m.style.display='none';}
 window.openTeams=openTeams;window.closeTeams=closeTeams;
+
+// ── New flat workspace modal (members / roles / settings tabs) ──────────
+var _wmTab_cur = 'members';
+function _wmTab(name){_wmTab_cur=name;_wmRender();}
+window._wmTab=_wmTab;
+
+function _wmGetWs(){
+  var data=_tmGet();
+  if(!data.workspaces || !data.workspaces.length){_tmSeed();data=_tmGet();}
+  if(!_selWsId){_selWsId = data.activeWorkspaceId || (data.workspaces[0]&&data.workspaces[0].id);}
+  var ws=(data.workspaces||[]).find(function(w){return w.id===_selWsId;});
+  if(!ws && data.workspaces.length){_selWsId=data.workspaces[0].id;ws=data.workspaces[0];}
+  return ws;
+}
+
+function _wmGetTeam(){
+  var ws=_wmGetWs();
+  if(!ws) return null;
+  if(!ws.teams) ws.teams=[];
+  if(!ws.teams.length){
+    ws.teams.push({
+      id:_tmId('tm'), name:'Default',
+      roles:[
+        {id:_tmId('role'),name:'Admin',color:'#6366f1',perms:_allPerms(true)},
+        {id:_tmId('role'),name:'Analyst',color:'#10b981',perms:{save_project:true,delete_project:false,manage_members:false,manage_roles:false,view_exec:true,view_pitch:true,export_data:true,share_link:true}},
+        {id:_tmId('role'),name:'Viewer',color:'#64748b',perms:{save_project:false,delete_project:false,manage_members:false,manage_roles:false,view_exec:true,view_pitch:true,export_data:false,share_link:false}}
+      ],
+      members:[]
+    });
+    var data=_tmGet();
+    var idx=(data.workspaces||[]).findIndex(function(w){return w.id===ws.id;});
+    if(idx>=0){data.workspaces[idx]=ws;_tmSet(data);}
+  }
+  _selTmId = ws.teams[0].id;
+  return ws.teams[0];
+}
+
+function _wmRender(){
+  var sel=document.getElementById('wmWsSelect');
+  var data=_tmGet();
+  if(sel){
+    sel.innerHTML='';
+    (data.workspaces||[]).forEach(function(w){
+      var opt=document.createElement('option');opt.value=w.id;
+      opt.textContent=w.name+(w.id===data.activeWorkspaceId?' (active)':'');
+      if(w.id===_selWsId) opt.selected=true;
+      sel.appendChild(opt);
+    });
+  }
+  var team=_wmGetTeam();
+  ['members','roles'].forEach(function(t){
+    var el=document.getElementById('wmCount_'+t);
+    if(el) el.textContent = team ? (team[t]||[]).length : 0;
+  });
+  ['members','roles','settings'].forEach(function(t){
+    var el=document.getElementById('wmTab_'+t);
+    if(el) el.classList.toggle('active', t===_wmTab_cur);
+  });
+  var body=document.getElementById('wmBody');
+  if(!body) return;
+  body.innerHTML='';
+  if(!team){
+    body.innerHTML='<div class="wm-empty"><div class="wm-empty-icon">🏢</div><div class="wm-empty-title">No workspace yet</div><div class="wm-empty-sub">Click <strong>+ New</strong> in the header to create one.</div></div>';
+    return;
+  }
+  if(_wmTab_cur==='members')      _wmRenderMembers(body, team);
+  else if(_wmTab_cur==='roles')   _wmRenderRoles(body, team);
+  else                            _wmRenderSettings(body);
+}
+window._wmRender=_wmRender;
+
+function _wmSwitchWs(id){_selWsId=id;_selTmId=null;_wmRender();}
+window._wmSwitchWs=_wmSwitchWs;
+
+function _wmRenderMembers(body, team){
+  var members=team.members||[];
+  var roles=team.roles||[];
+  var hdr=document.createElement('div');hdr.className='wm-section-hdr';
+  hdr.innerHTML='<div class="wm-section-title">'+members.length+' member'+(members.length===1?'':'s')+'</div>';
+  var inv=document.createElement('button');inv.className='wm-btn-primary';inv.textContent='+ Invite member';
+  inv.onclick=function(){_wmInviteMember(team);};
+  hdr.appendChild(inv);
+  body.appendChild(hdr);
+  if(!members.length){
+    var emp=document.createElement('div');emp.className='wm-empty';
+    emp.innerHTML='<div class="wm-empty-icon">👥</div><div class="wm-empty-title">No members yet</div><div class="wm-empty-sub">Invite teammates by name or email and assign each a role.</div>';
+    body.appendChild(emp);return;
+  }
+  members.forEach(function(m){
+    var row=document.createElement('div');row.className='wm-row';
+    var av=document.createElement('div');av.className='wm-row-av';
+    av.textContent=(m.name||m.email||'?').charAt(0).toUpperCase();
+    if(m.color) av.style.background=m.color;
+    var info=document.createElement('div');info.className='wm-row-info';
+    info.innerHTML='<div class="wm-row-name">'+_e(m.name||'(unnamed)')+'</div>'
+                  +'<div class="wm-row-sub">'+_e(m.email||'no email')+'</div>';
+    var roleSel=document.createElement('select');roleSel.className='wm-role-select';
+    var noOpt=document.createElement('option');noOpt.value='';noOpt.textContent='No role';
+    if(!m.roleId) noOpt.selected=true;
+    roleSel.appendChild(noOpt);
+    roles.forEach(function(r){
+      var o=document.createElement('option');o.value=r.id;o.textContent=r.name;
+      if(m.roleId===r.id) o.selected=true;
+      roleSel.appendChild(o);
+    });
+    roleSel.onchange=function(){
+      var d=_tmGet();var ws=d.workspaces.find(function(w){return w.id===_selWsId;});
+      var t=ws.teams.find(function(tt){return tt.id===_selTmId;});
+      var mm=t.members.find(function(x){return x.id===m.id;});
+      if(mm){mm.roleId=this.value||null;_tmSet(d);_wmRender();}
+    };
+    var actions=document.createElement('div');actions.className='wm-row-actions';
+    var del=document.createElement('button');del.className='wm-icon-btn danger';del.innerHTML='🗑';del.title='Remove member';
+    del.onclick=function(){
+      _tmConfirm('Remove <strong>'+_e(m.name||m.email||'this member')+'</strong> from the workspace?','Remove',function(){
+        var d=_tmGet();var ws=d.workspaces.find(function(w){return w.id===_selWsId;});
+        var t=ws.teams.find(function(tt){return tt.id===_selTmId;});
+        t.members=t.members.filter(function(x){return x.id!==m.id;});
+        _tmSet(d);_wmRender();
+      });
+    };
+    actions.appendChild(del);
+    row.appendChild(av);row.appendChild(info);row.appendChild(roleSel);row.appendChild(actions);
+    body.appendChild(row);
+  });
+}
+
+function _wmInviteMember(team){
+  _tmPop({
+    title:'Invite member',
+    fields:[
+      {id:'name',label:'Display name',type:'text',placeholder:'e.g. Alex'},
+      {id:'email',label:'Email (optional)',type:'text',placeholder:'alex@example.com'}
+    ],
+    onOk:function(v){
+      var name=(v.name||'').trim();var email=(v.email||'').trim();
+      if(!name && !email) return;
+      var d=_tmGet();var ws=d.workspaces.find(function(w){return w.id===_selWsId;});
+      var t=ws.teams.find(function(tt){return tt.id===_selTmId;});
+      var defRole=(t.roles||[]).find(function(r){return /viewer/i.test(r.name);})||(t.roles||[])[0];
+      t.members.push({id:_tmId('mem'),name:name||email,email:email,roleId:defRole?defRole.id:null,color:'#6366f1'});
+      _tmSet(d);_wmRender();
+    }
+  });
+}
+
+function _wmRenderRoles(body, team){
+  var roles=team.roles||[];
+  var hdr=document.createElement('div');hdr.className='wm-section-hdr';
+  hdr.innerHTML='<div class="wm-section-title">'+roles.length+' role'+(roles.length===1?'':'s')+'</div>';
+  var add=document.createElement('button');add.className='wm-btn-primary';add.textContent='+ New role';
+  add.onclick=function(){_wmAddRole(team);};
+  hdr.appendChild(add);
+  body.appendChild(hdr);
+  if(!roles.length){
+    var emp=document.createElement('div');emp.className='wm-empty';
+    emp.innerHTML='<div class="wm-empty-icon">🎭</div><div class="wm-empty-title">No roles defined</div><div class="wm-empty-sub">Roles control what members can do. Click <strong>+ New role</strong> to add one.</div>';
+    body.appendChild(emp);return;
+  }
+  roles.forEach(function(r){
+    var card=document.createElement('div');card.className='wm-role-card';
+    var ch=document.createElement('div');ch.className='wm-role-card-hdr';
+    var swatch=document.createElement('button');swatch.className='wm-role-color-swatch';swatch.style.background=r.color;swatch.title='Change color';
+    swatch.onclick=function(){
+      var ci=document.createElement('input');ci.type='color';ci.value=r.color;ci.style.cssText='position:absolute;opacity:0;pointer-events:none';document.body.appendChild(ci);
+      ci.oninput=function(){
+        var d=_tmGet();var ws=d.workspaces.find(function(w){return w.id===_selWsId;});
+        var t=ws.teams.find(function(tt){return tt.id===_selTmId;});
+        var rr=t.roles.find(function(x){return x.id===r.id;});
+        if(rr){rr.color=ci.value;_tmSet(d);swatch.style.background=ci.value;}
+      };
+      ci.onchange=function(){_wmRender();ci.remove();};
+      ci.click();
+    };
+    var ni=document.createElement('input');ni.className='wm-role-name-input';ni.value=r.name;
+    ni.onchange=function(){
+      var d=_tmGet();var ws=d.workspaces.find(function(w){return w.id===_selWsId;});
+      var t=ws.teams.find(function(tt){return tt.id===_selTmId;});
+      var rr=t.roles.find(function(x){return x.id===r.id;});
+      if(rr){rr.name=ni.value.trim()||rr.name;_tmSet(d);_wmRender();}
+    };
+    var del=document.createElement('button');del.className='wm-icon-btn danger';del.innerHTML='🗑';del.title='Delete role';
+    del.onclick=function(){
+      _tmConfirm('Delete role <strong>'+_e(r.name)+'</strong>? Members with this role will become unassigned.','Delete',function(){
+        var d=_tmGet();var ws=d.workspaces.find(function(w){return w.id===_selWsId;});
+        var t=ws.teams.find(function(tt){return tt.id===_selTmId;});
+        t.roles=t.roles.filter(function(x){return x.id!==r.id;});
+        (t.members||[]).forEach(function(m){if(m.roleId===r.id) m.roleId=null;});
+        _tmSet(d);_wmRender();
+      });
+    };
+    ch.appendChild(swatch);ch.appendChild(ni);ch.appendChild(del);
+    card.appendChild(ch);
+    var grid=document.createElement('div');grid.className='wm-perm-grid';
+    PERM_DEFS.forEach(function(def){
+      var pr=document.createElement('div');pr.className='wm-perm-row';
+      pr.innerHTML='<span class="wm-perm-label">'+_e(def.label)+'</span>';
+      var tg=document.createElement('div');tg.className='wm-toggle'+(r.perms&&r.perms[def.key]!==false?' on':'');
+      tg.onclick=function(){
+        var d=_tmGet();var ws=d.workspaces.find(function(w){return w.id===_selWsId;});
+        var tm=ws.teams.find(function(tt){return tt.id===_selTmId;});
+        var rr=tm.roles.find(function(x){return x.id===r.id;});
+        if(!rr) return;
+        if(!rr.perms) rr.perms={};
+        rr.perms[def.key]=!tg.classList.contains('on');
+        _tmSet(d);tg.classList.toggle('on');
+        if(typeof _tmApplyPerms==='function') _tmApplyPerms();
+      };
+      pr.appendChild(tg);grid.appendChild(pr);
+    });
+    card.appendChild(grid);
+    body.appendChild(card);
+  });
+}
+
+function _wmAddRole(team){
+  _tmPop({
+    title:'New role',
+    fields:[{id:'name',label:'Role name',type:'text',placeholder:'e.g. Senior Analyst'}],
+    onOk:function(v){
+      var n=(v.name||'').trim();if(!n) return;
+      var d=_tmGet();var ws=d.workspaces.find(function(w){return w.id===_selWsId;});
+      var t=ws.teams.find(function(tt){return tt.id===_selTmId;});
+      t.roles.push({id:_tmId('role'),name:n,color:'#6366f1',perms:_allPerms(false)});
+      _tmSet(d);_wmRender();
+    }
+  });
+}
+
+function _wmRenderSettings(body){
+  var data=_tmGet();var ws=data.workspaces.find(function(w){return w.id===_selWsId;});
+  if(!ws) return;
+  var row=document.createElement('div');row.className='wm-settings-row';
+  row.innerHTML='<label>Workspace name</label>';
+  var inp=document.createElement('input');inp.type='text';inp.value=ws.name;
+  inp.onchange=function(){
+    var v=(inp.value||'').trim();if(!v){inp.value=ws.name;return;}
+    var d=_tmGet();var w=d.workspaces.find(function(x){return x.id===ws.id;});
+    if(w){w.name=v;_tmSet(d);_wmRender();if(typeof _userChipUpdate==='function') _userChipUpdate();}
+  };
+  row.appendChild(inp);body.appendChild(row);
+  var actrow=document.createElement('div');actrow.className='wm-settings-row';
+  actrow.innerHTML='<label>Active workspace</label>';
+  var btn=document.createElement('button');
+  var isActive=(data.activeWorkspaceId===ws.id);
+  btn.className=isActive?'wm-btn-primary':'wm-btn-outline';
+  btn.textContent=isActive?'✓ Currently active':'Set as active';
+  btn.onclick=function(){
+    var d=_tmGet();
+    d.activeWorkspaceId=(d.activeWorkspaceId===ws.id)?null:ws.id;
+    _tmSet(d);
+    if(typeof _userChipUpdate==='function') _userChipUpdate();
+    if(typeof showProjToast==='function') showProjToast(d.activeWorkspaceId?'Set "'+ws.name+'" as active':'Cleared active workspace');
+    _wmRender();
+  };
+  actrow.appendChild(btn);body.appendChild(actrow);
+  if(ws.shareCode){
+    var sc=document.createElement('div');sc.className='wm-share-card';
+    sc.innerHTML='<div class="wm-share-card-icon">☁</div>'
+      +'<div class="wm-share-info">'
+      +'<div class="wm-share-title">Cloud-synced</div>'
+      +'<div class="wm-share-code">'+_e(ws.shareCode)+'</div>'
+      +'<div class="wm-share-sub">Share this code so teammates can join — they\'ll see the same projects in real time.</div>'
+      +'</div>';
+    var copy=document.createElement('button');copy.className='wm-btn-outline';copy.textContent='Copy code';
+    copy.onclick=function(){
+      try{navigator.clipboard.writeText(ws.shareCode);if(typeof showProjToast==='function')showProjToast('Code copied!');}catch(e){}
+    };
+    sc.appendChild(copy);body.appendChild(sc);
+  } else {
+    var pub=document.createElement('div');pub.className='wm-settings-row';
+    pub.innerHTML='<label>Cloud sync</label>';
+    var b=document.createElement('button');b.className='wm-btn-outline';b.textContent='☁ Publish workspace (get share code)';
+    b.style.alignSelf='flex-start';
+    b.onclick=function(){_tmPublishWs();};
+    pub.appendChild(b);body.appendChild(pub);
+  }
+  var dz=document.createElement('div');dz.className='wm-danger';
+  dz.innerHTML='<div class="wm-danger-info"><div class="wm-danger-title">⚠️ Delete workspace</div><div class="wm-danger-sub">Permanently removes this workspace, its members, and roles. Project files stay in your local browser storage.</div></div>';
+  var dbtn=document.createElement('button');dbtn.className='wm-danger-btn';dbtn.textContent='Delete';
+  dbtn.onclick=function(){
+    _tmConfirm('Delete workspace <strong>'+_e(ws.name)+'</strong>? This cannot be undone.','Delete',function(){
+      var d=_tmGet();
+      d.workspaces=d.workspaces.filter(function(x){return x.id!==ws.id;});
+      if(d.activeWorkspaceId===ws.id) d.activeWorkspaceId=null;
+      _selWsId=null;_selTmId=null;
+      _tmSet(d);
+      if(d.workspaces.length){_wmRender();}
+      else{closeTeams();}
+      if(typeof _userChipUpdate==='function') _userChipUpdate();
+    });
+  };
+  dz.appendChild(dbtn);body.appendChild(dz);
+}
+window._wmRenderMembers=_wmRenderMembers;
+window._wmRenderRoles=_wmRenderRoles;
+window._wmRenderSettings=_wmRenderSettings;
+window._wmInviteMember=_wmInviteMember;
+window._wmAddRole=_wmAddRole;
 
 function _rWs(){
   var list=document.getElementById('tmWsList');if(!list)return;var data=_tmGet();list.innerHTML='';
@@ -11757,37 +12135,31 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
 
 <!-- ── Teams / Workspace / Role / Member Modal ── -->
 <div class="tm-overlay" id="tmModal" style="display:none" onclick="if(event.target===this)closeTeams()">
-  <div class="tm-modal">
-    <div class="tm-header">
-      <h2>🏢 Workspaces &amp; Teams</h2>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span id="tmActiveLabel" style="font-size:11px;color:var(--muted)">Active: Owner</span>
-        <button id="tmOwnerSwitchBtn" onclick="_tmSwitchToOwner()" style="display:none;font-size:11px;padding:3px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);cursor:pointer">↩ Back to Owner</button>
+  <div class="tm-modal wm-modal">
+    <div class="tm-header wm-header">
+      <div class="wm-header-left">
+        <h2 style="margin:0">⚙ Manage workspace</h2>
+        <select id="wmWsSelect" class="wm-ws-select" onchange="_wmSwitchWs(this.value)" title="Switch workspace"></select>
+      </div>
+      <div class="wm-header-right">
+        <button class="wm-toolbtn" onclick="_tmAddWs()" title="New workspace">+ New</button>
+        <button class="wm-toolbtn wm-tool-cloud" onclick="_tmPublishWs()" title="Publish to cloud (get share code)">☁</button>
+        <button class="wm-toolbtn wm-tool-join" onclick="_tmJoinWs()" title="Join by share code">🔗</button>
         <button class="tm-close-btn" onclick="closeTeams()">✕</button>
       </div>
     </div>
-    <div class="tm-body">
-      <!-- Pane 1: Workspaces -->
-      <div class="tm-pane">
-        <div class="tm-pane-hdr">Workspaces
-          <div style="display:flex;gap:4px">
-            <button onclick="_tmAddWs()" title="New workspace">+ New</button>
-            <button onclick="_tmPublishWs()" title="Publish to cloud / get share code" style="background:var(--surface2);color:#34d399;border:1px solid rgba(52,211,153,.3)">&#x2601;</button>
-            <button onclick="_tmJoinWs()" title="Join workspace by code" style="background:var(--surface2);color:#a5b4fc;border:1px solid rgba(165,180,252,.3)">&#x1F517;</button>
-          </div>
-        </div>
-        <div class="tm-pane-list" id="tmWsList"></div>
-      </div>
-      <!-- Pane 2: Teams -->
-      <div class="tm-pane">
-        <div class="tm-pane-hdr"><span id="tmTeamsPaneTitle">Teams</span> <button onclick="_tmAddTeam()">+ New</button></div>
-        <div class="tm-pane-list" id="tmTeamList"></div>
-      </div>
-      <!-- Pane 3: Detail (Roles + Members tabs — rendered by _rDetail()) -->
-      <div class="tm-detail">
-        <div id="tmDetailPane" class="tm-detail-inner"></div>
-      </div>
+    <div class="wm-tabs">
+      <div class="wm-tab" id="wmTab_members" onclick="_wmTab('members')">👥 Members <span class="wm-tab-count" id="wmCount_members">0</span></div>
+      <div class="wm-tab" id="wmTab_roles" onclick="_wmTab('roles')">🎭 Roles <span class="wm-tab-count" id="wmCount_roles">0</span></div>
+      <div class="wm-tab" id="wmTab_settings" onclick="_wmTab('settings')">⚙ Settings</div>
     </div>
+    <div class="wm-body" id="wmBody"></div>
+    <!-- Hidden stubs so legacy _rWs/_rTeams/_rDetail no-op safely -->
+    <div id="tmWsList" style="display:none"></div>
+    <div id="tmTeamList" style="display:none"></div>
+    <div id="tmDetailPane" style="display:none"></div>
+    <span id="tmActiveLabel" style="display:none"></span>
+    <button id="tmOwnerSwitchBtn" style="display:none" onclick="_tmSwitchToOwner()"></button>
   </div>
 </div>
 
