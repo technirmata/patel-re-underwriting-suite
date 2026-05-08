@@ -887,6 +887,39 @@ strong { color: #e2e8f0; }
   .ai-fab{bottom:16px;right:16px;width:50px;height:50px;font-size:20px}
 }
 
+/* ── Metrics tab (panel15) ─────────────────────────────────────────────── */
+.mx-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.mx-kpi{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:14px 16px;position:relative;overflow:hidden}
+.mx-kpi:hover{border-color:rgba(99,102,241,.35)}
+.mx-kpi-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.mx-kpi-val{font-size:24px;font-weight:800;color:var(--text);line-height:1.1;letter-spacing:-.5px}
+.mx-kpi-sub{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
+.mx-kpi.good{border-color:rgba(16,185,129,.35);background:linear-gradient(135deg,rgba(16,185,129,.06),var(--surface2))}
+.mx-kpi.good .mx-kpi-val{color:#10b981}
+.mx-kpi.warn{border-color:rgba(245,158,11,.35);background:linear-gradient(135deg,rgba(245,158,11,.06),var(--surface2))}
+.mx-kpi.warn .mx-kpi-val{color:#f59e0b}
+.mx-kpi.bad{border-color:rgba(239,68,68,.35);background:linear-gradient(135deg,rgba(239,68,68,.06),var(--surface2))}
+.mx-kpi.bad .mx-kpi-val{color:#ef4444}
+.mx-kpi.accent{border-color:rgba(99,102,241,.35);background:linear-gradient(135deg,rgba(99,102,241,.07),var(--surface2))}
+.mx-kpi.accent .mx-kpi-val{color:var(--accent)}
+.mx-verdict-strong{background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(16,185,129,.04));border-left:4px solid #10b981;padding:14px 18px;border-radius:8px;color:#34d399}
+.mx-verdict-warn{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.04));border-left:4px solid #f59e0b;padding:14px 18px;border-radius:8px;color:#fbbf24}
+.mx-verdict-weak{background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(239,68,68,.04));border-left:4px solid #ef4444;padding:14px 18px;border-radius:8px;color:#fca5a5}
+.mx-verdict-strong strong,.mx-verdict-warn strong,.mx-verdict-weak strong{font-size:14px;display:block;margin-bottom:6px}
+.mx-exit-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mx-exit-col{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.mx-exit-title{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.mx-exit-stat{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12.5px}
+.mx-exit-stat:last-child{border-bottom:none}
+.mx-exit-stat-label{color:var(--muted)}
+.mx-exit-stat-val{color:var(--text);font-weight:700}
+.mx-exit-stat-val.good{color:#10b981}
+.mx-exit-empty{text-align:center;color:var(--muted);padding:24px 14px;font-size:12.5px;line-height:1.6}
+@media (max-width:760px){
+  .mx-exit-grid{grid-template-columns:1fr}
+  .mx-kpi-val{font-size:21px}
+}
+
 /* ── AI Research checklist (panel14) ───────────────────────────────────── */
 .ri-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px;flex-wrap:wrap}
 .ri-empty{text-align:center;padding:32px 16px;color:var(--muted)}
@@ -1289,6 +1322,7 @@ strong { color: #e2e8f0; }
   <!-- Phase: Capital -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Capital</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="11" onclick="ST(11);partnerInit();partnerCompute()">👥 Partners</div>
+  <div class="tab" data-tab="15" onclick="ST(15);mxRender()">📊 Metrics</div>
   <!-- Phase: Deal -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Deal</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="8" onclick="ST(8);seedFA();buildProjection()">📈 Projections</div>
@@ -3360,6 +3394,49 @@ strong { color: #e2e8f0; }
   <div id="pn_warn" class="vb-warn" style="display:none"></div>
 </div><!-- end panel11 -->
 
+<!-- ══════════════════════════════════════════════ PANEL 15: METRICS (whole-deal + per-investor canonical view) -->
+<div class="panel" id="panel15">
+  <div class="vb-hdr">
+    <div>
+      <h2 style="margin:0;font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.2px">📊 Metrics</h2>
+      <div id="mxSub" style="font-size:11.5px;color:var(--muted);margin-top:3px">Whole-deal KPIs + per-investor returns. The canonical "show this to LPs" view.</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-shrink:0">
+      <button class="btn btn-outline btn-sm" onclick="mxExportPdf()" title="Export full metrics view as PDF">📄 Export PDF</button>
+      <button class="btn btn-outline btn-sm" onclick="mxRender()" title="Recompute">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- ── Whole-deal KPI grid ── -->
+  <div class="card">
+    <div class="card-title">🏢 Whole-Deal KPIs</div>
+    <div class="mx-kpi-grid" id="mxKpiGrid"></div>
+  </div>
+
+  <!-- ── Verdict + benchmark notes ── -->
+  <div class="card" id="mxVerdictCard">
+    <div class="card-title">🎯 Deal Verdict</div>
+    <div id="mxVerdict" style="font-size:13px;line-height:1.7;color:var(--text2)"></div>
+  </div>
+
+  <!-- ── Per-investor cards ── -->
+  <div class="card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <span>👤 Per-Investor Returns</span>
+      <span id="mxInvSummary" style="font-size:11.5px;color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0"></span>
+    </div>
+    <div id="mxInvestors"></div>
+  </div>
+
+  <!-- ── Exit-scenario comparator ── -->
+  <div class="card">
+    <div class="card-title">🚪 Exit Scenarios</div>
+    <div id="mxExit"></div>
+  </div>
+
+  <div id="mxWarn" class="vb-warn" style="display:none"></div>
+</div><!-- end panel15 -->
+
 <!-- ══════════════════════════════════════════════ PANEL 14: AI RESEARCH (deal-specific checklist) -->
 <div class="panel" id="panel14">
   <div class="ri-hdr">
@@ -3500,7 +3577,8 @@ function ST(i) {
     7: updateExec,
     8: buildProjection,
     13:()=>{ if(typeof fcInit==='function') fcInit(); },
-    14:()=>{ if(typeof riAutoOpen==='function') riAutoOpen(); }
+    14:()=>{ if(typeof riAutoOpen==='function') riAutoOpen(); },
+    15:()=>{ if(typeof mxRender==='function') mxRender(); }
   };
   if(panelCalc[i]) setTimeout(panelCalc[i], 50);
 }
@@ -14442,6 +14520,252 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
   // Init
   if(document.readyState !== 'loading') setTimeout(function(){ if(_id('riChecklist')) riAutoOpen(); }, 600);
   else document.addEventListener('DOMContentLoaded', function(){ setTimeout(function(){ if(_id('riChecklist')) riAutoOpen(); }, 600); });
+})();
+</script>
+
+<script>
+/* ── Metrics tab (panel15) ─────────────────────────────────────────────────
+   The canonical "show this to LPs" view: whole-deal KPIs + per-investor
+   cards (cloned from Partners) + simple exit-scenario summary. PDF export
+   bundles the whole page in print-ready layout.
+   ──────────────────────────────────────────────────────────────────── */
+(function(){
+  function _id(x){return document.getElementById(x);}
+  function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function _$(n){if(!isFinite(n)||n==null)return '—';return (n<0?'-':'')+'$'+Math.abs(Math.round(n)).toLocaleString();}
+  function _pct(n,d){if(!isFinite(n)||n==null)return '—';return (n*100).toFixed(d||1)+'%';}
+  function _x(n,d){if(!isFinite(n)||n==null)return '—';return n.toFixed(d||2)+'x';}
+  function _gv(id){ try { return (typeof gvs==='function')?gvs(id):''; } catch(e){return '';} }
+  function _gn(id){ try { return (typeof gv==='function')?gv(id):0; } catch(e){return 0;} }
+
+  // Score a metric against a benchmark to color-code KPIs
+  function _scoreCap(cap, tier){
+    if(!cap) return 'muted';
+    var t = (tier||'B').toUpperCase();
+    var floor = t==='A'?0.045:t==='B'?0.06:0.075;
+    if(cap >= floor*1.15) return 'good';
+    if(cap >= floor)      return 'accent';
+    return 'warn';
+  }
+  function _scoreDSCR(d){ if(!d)return 'muted'; if(d>=1.30)return 'good'; if(d>=1.20)return 'accent'; if(d>=1.10)return 'warn'; return 'bad'; }
+  function _scoreCoC(c){ if(!c)return 'muted'; if(c>=0.10)return 'good'; if(c>=0.07)return 'accent'; if(c>=0.04)return 'warn'; return 'bad'; }
+  function _scoreIRR(i){ if(!i)return 'muted'; if(i>=0.15)return 'good'; if(i>=0.10)return 'accent'; if(i>=0.06)return 'warn'; return 'bad'; }
+  function _scoreEM(e){ if(!e)return 'muted'; if(e>=2.0)return 'good'; if(e>=1.5)return 'accent'; if(e>=1.2)return 'warn'; return 'bad'; }
+
+  function _renderKpis(){
+    var box = _id('mxKpiGrid'); if(!box) return;
+    var S = window.S || {};
+    var tier = (_gv('mkt_tier')||'B').toUpperCase();
+    var brkOcc = (S.totalExp && S.grossRent) ? (S.totalExp + (S.dscr ? (S.grossRent - S.totalExp - S.noi) : 0)) / Math.max(1, S.grossRent) : null;
+    // Debt yield approximation: NOI / loan amount
+    var loanAmt = S.price && S.down ? Math.max(S.price - S.down, 0) : 0;
+    var debtYield = loanAmt && S.noi ? S.noi / loanAmt : null;
+    var pricePerUnit = (S.price && _gn('prop_units')) ? S.price / _gn('prop_units') : null;
+    var noiPerUnit = (S.noi && _gn('prop_units')) ? S.noi / _gn('prop_units') : null;
+
+    var tiles = [
+      {label:'NOI / yr',           val:_$(S.noi),           cls:S.noi?'accent':'muted', sub:noiPerUnit?_$(noiPerUnit)+' / unit':''},
+      {label:'Cap Rate',           val:_pct(S.capRate),     cls:_scoreCap(S.capRate, tier), sub:'Tier '+tier+' floor: '+(tier==='A'?'4.5%':tier==='B'?'6%':'7.5%')},
+      {label:'DSCR',               val:S.dscr?S.dscr.toFixed(2)+'x':'—', cls:_scoreDSCR(S.dscr), sub:'Lender min usually 1.20–1.25x'},
+      {label:'Cash-on-Cash',       val:_pct(S.coc),         cls:_scoreCoC(S.coc), sub:'Yr 1 cash return'},
+      {label:'IRR (5-yr)',         val:_pct(S.irr),         cls:_scoreIRR(S.irr), sub:'Levered, default 5-yr hold'},
+      {label:'Equity Multiple',    val:_x(S.em),            cls:_scoreEM(S.em), sub:'Total $ out / $ in'},
+      {label:'GRM',                val:S.grm?S.grm.toFixed(1)+'x':'—', cls:'muted', sub:'Price / annual rent'},
+      {label:'Debt Yield',         val:_pct(debtYield),     cls:debtYield?(debtYield>=0.10?'good':debtYield>=0.08?'accent':'warn'):'muted', sub:'NOI / loan — lender hurdle'},
+      {label:'Total ROI',          val:_pct(S.roi),         cls:S.roi?'good':'muted', sub:'Cash + appreciation'},
+      {label:'Price / Unit',       val:_$(pricePerUnit),    cls:'muted', sub:_gn('prop_units')?(_gn('prop_units')+' units'):''},
+      {label:'Cash Flow / mo',     val:_$(S.cf),            cls:S.cf>0?'accent':S.cf<0?'bad':'muted', sub:'After debt service'},
+      {label:'Loan Amount',        val:_$(loanAmt),         cls:'muted', sub:S.down?(_pct(1-S.down/S.price,0)+' LTV'):''}
+    ];
+    box.innerHTML = tiles.map(function(t){
+      return '<div class="mx-kpi '+t.cls+'">'
+        + '<div class="mx-kpi-label">'+t.label+'</div>'
+        + '<div class="mx-kpi-val">'+t.val+'</div>'
+        + (t.sub?'<div class="mx-kpi-sub">'+_e(t.sub)+'</div>':'')
+        + '</div>';
+    }).join('');
+  }
+
+  function _renderVerdict(){
+    var box = _id('mxVerdict'); if(!box) return;
+    var S = window.S || {};
+    if(!S.price){ box.innerHTML = '<span style="color:var(--muted)">Fill the Deal Intake to see the verdict.</span>'; return; }
+    var tier = (_gv('mkt_tier')||'B').toUpperCase();
+    var capF = tier==='A'?0.045:tier==='B'?0.06:0.075;
+    var positives = [], concerns = [], killers = [];
+
+    if(S.capRate >= capF*1.15) positives.push('Cap rate '+_pct(S.capRate)+' comfortably above '+tier+'-tier floor of '+_pct(capF));
+    else if(S.capRate >= capF)  positives.push('Cap rate '+_pct(S.capRate)+' meets '+tier+'-tier floor');
+    else                        concerns.push('Cap rate '+_pct(S.capRate)+' below '+tier+'-tier floor of '+_pct(capF));
+
+    if(S.dscr >= 1.25) positives.push('DSCR '+S.dscr.toFixed(2)+'x clears typical lender minimum');
+    else if(S.dscr >= 1.10) concerns.push('DSCR '+S.dscr.toFixed(2)+'x is thin — most lenders require ≥ 1.25x');
+    else if(S.dscr) killers.push('DSCR '+S.dscr.toFixed(2)+'x will fail lender underwriting');
+
+    if(S.coc >= 0.08) positives.push('Cash-on-cash '+_pct(S.coc)+' strong');
+    else if(S.coc < 0.04 && S.coc) concerns.push('Cash-on-cash '+_pct(S.coc)+' below typical 7-10% target');
+
+    if(S.irr >= 0.15) positives.push('IRR '+_pct(S.irr)+' clears institutional 15% target');
+    else if(S.irr < 0.10 && S.irr) concerns.push('IRR '+_pct(S.irr)+' below typical 10% threshold');
+
+    if(_gv('mkt_tier') === 'C' || _gv('mkt_tier') === 'D') concerns.push('Market tier '+tier+' may limit lender appetite (agency prefers A/B; rural typically disqualifies)');
+
+    var verdict, vClass;
+    if(killers.length){ verdict = '🔴 Weak deal — has at least one disqualifier'; vClass = 'mx-verdict-weak'; }
+    else if(concerns.length > positives.length){ verdict = '🟡 Marginal — multiple concerns, stress-test before LOI'; vClass = 'mx-verdict-warn'; }
+    else { verdict = '🟢 Strong deal'; vClass = 'mx-verdict-strong'; }
+
+    var html = '<div class="'+vClass+'"><strong>'+verdict+'</strong>';
+    if(positives.length){ html += '<div style="margin-top:6px;color:#86efac">✓ ' + positives.join('<br>✓ ') + '</div>'; }
+    if(concerns.length){  html += '<div style="margin-top:6px;color:#fbbf24">⚠ ' + concerns.join('<br>⚠ ') + '</div>'; }
+    if(killers.length){   html += '<div style="margin-top:6px;color:#fca5a5">✕ ' + killers.join('<br>✕ ') + '</div>'; }
+    html += '</div>';
+    box.innerHTML = html;
+  }
+
+  function _renderInvestors(){
+    var box = _id('mxInvestors'); if(!box) return;
+    var summary = _id('mxInvSummary');
+    // Make sure Partners is computed so its cards exist
+    if(typeof partnerCompute === 'function') {
+      try { partnerCompute(); } catch(e){}
+    }
+    // Clone the Partners panel's per-investor cards
+    var src = _id('pn_investor_cards');
+    if(!src || !src.children.length){
+      box.innerHTML = '<div class="ri-empty"><div style="font-size:32px;opacity:.3">👤</div><div style="font-weight:600;margin-top:8px;color:var(--text)">No investors yet</div><div style="font-size:11.5px;color:var(--muted);margin-top:6px">Go to <strong>👥 Partners</strong> and add investors to see per-investor metrics here.</div></div>';
+      if(summary) summary.textContent = '';
+      return;
+    }
+    var grid = document.createElement('div');
+    grid.className = 'pn-card-grid';
+    Array.from(src.children).forEach(function(c){
+      var clone = c.cloneNode(true);
+      // Strip inline action buttons that don't make sense in read-only Metrics
+      // (PDF + Share buttons remain — they're per-investor exports)
+      grid.appendChild(clone);
+    });
+    box.innerHTML = '';
+    box.appendChild(grid);
+    // Header summary
+    var nInvs = grid.children.length;
+    if(summary) summary.textContent = nInvs + ' investor' + (nInvs===1?'':'s') + ' · click 📄 PDF or 🔗 Share on any card to send their personalized report';
+  }
+
+  function _renderExit(){
+    var box = _id('mxExit'); if(!box) return;
+    var S = window.S || {};
+    if(!S.price || !S.noi){
+      box.innerHTML = '<div class="mx-exit-empty">Fill the Deal Intake first to see exit-scenario projections.</div>';
+      return;
+    }
+    // Read partners config for hold period + refi year
+    var pn;
+    try { pn = JSON.parse(localStorage.getItem('jp_partners_v1')||'{}'); } catch(e){ pn = {}; }
+    var hold = pn.hold || 5;
+    var refiY = pn.refiYear || 0;
+    var exitCap = (pn.exitCap || 6) / 100;
+    var rentG = (pn.rentG || 3) / 100;
+    var expG = (pn.expG || 2.5) / 100;
+
+    // Forward NOI at sale year
+    var saleNOI = S.grossRent * Math.pow(1+rentG, hold) - S.totalExp * Math.pow(1+expG, hold);
+    var saleProceeds = exitCap > 0 ? saleNOI / exitCap : 0;
+
+    // Refi scenario: refi at year R, then sale at year R+5 (or hold)
+    var refiSaleY = refiY > 0 ? Math.max(refiY+5, hold) : hold;
+    var refiSaleNOI = S.grossRent * Math.pow(1+rentG, refiSaleY) - S.totalExp * Math.pow(1+expG, refiSaleY);
+    var refiSaleProceeds = exitCap > 0 ? refiSaleNOI / exitCap : 0;
+
+    var scen5y = '<div class="mx-exit-col">'
+      + '<div class="mx-exit-title">Scenario A — Sale at Y'+hold+'</div>'
+      + '<div class="mx-exit-stat"><span class="mx-exit-stat-label">Sale year</span><span class="mx-exit-stat-val">Y'+hold+'</span></div>'
+      + '<div class="mx-exit-stat"><span class="mx-exit-stat-label">Forward NOI</span><span class="mx-exit-stat-val">'+_$(saleNOI)+'</span></div>'
+      + '<div class="mx-exit-stat"><span class="mx-exit-stat-label">Exit cap</span><span class="mx-exit-stat-val">'+_pct(exitCap)+'</span></div>'
+      + '<div class="mx-exit-stat"><span class="mx-exit-stat-label">Sale proceeds</span><span class="mx-exit-stat-val good">'+_$(saleProceeds)+'</span></div>'
+      + '</div>';
+
+    var scenRefi = refiY > 0
+      ? '<div class="mx-exit-col">'
+        + '<div class="mx-exit-title">Scenario B — Refi Y'+refiY+' → Sale Y'+refiSaleY+'</div>'
+        + '<div class="mx-exit-stat"><span class="mx-exit-stat-label">Refi year</span><span class="mx-exit-stat-val">Y'+refiY+'</span></div>'
+        + '<div class="mx-exit-stat"><span class="mx-exit-stat-label">Sale year</span><span class="mx-exit-stat-val">Y'+refiSaleY+'</span></div>'
+        + '<div class="mx-exit-stat"><span class="mx-exit-stat-label">Forward NOI at sale</span><span class="mx-exit-stat-val">'+_$(refiSaleNOI)+'</span></div>'
+        + '<div class="mx-exit-stat"><span class="mx-exit-stat-label">Sale proceeds</span><span class="mx-exit-stat-val good">'+_$(refiSaleProceeds)+'</span></div>'
+        + '</div>'
+      : '<div class="mx-exit-col"><div class="mx-exit-title">Scenario B — Refi → Hold longer</div><div class="mx-exit-empty">No refi modeled. Set <strong>Refi at year</strong> in the Partners tab to add this scenario.</div></div>';
+
+    box.innerHTML = '<div class="mx-exit-grid">' + scen5y + scenRefi + '</div>'
+      + '<div style="font-size:10.5px;color:var(--muted);margin-top:10px;line-height:1.5">Per-investor IRR/EM under each scenario is shown on each investor card above. Sprint 3 will add a side-by-side investor IRR comparator across both scenarios.</div>';
+  }
+
+  window.mxRender = function(){
+    // Make sure intake-driven values are fresh
+    if(typeof R === 'function') { try { R(); } catch(e){} }
+    _renderKpis();
+    _renderVerdict();
+    _renderInvestors();
+    _renderExit();
+    // Sub-line
+    var sub = _id('mxSub');
+    var addr = _gv('prop_address') || '';
+    var price = (window.S && window.S.price) || 0;
+    if(sub){
+      var bits = [];
+      if(addr) bits.push(addr);
+      if(price) bits.push('$'+Math.round(price).toLocaleString());
+      var nInv = (function(){ try { var d=JSON.parse(localStorage.getItem('jp_partners_v1')||'{}'); return (d.investors||[]).length; } catch(e){ return 0; } })();
+      if(nInv) bits.push(nInv+' investor'+(nInv===1?'':'s'));
+      sub.textContent = bits.length ? bits.join(' · ') : 'Whole-deal KPIs + per-investor returns. The canonical "show this to LPs" view.';
+    }
+  };
+
+  window.mxExportPdf = function(){
+    var S = window.S || {};
+    if(!S.price){ alert('Fill the Deal Intake first.'); return; }
+    var addr = _gv('prop_address') || 'Deal';
+    var w = window.open('', '_blank', 'width=900,height=1100');
+    if(!w){ alert('Pop-up blocked.'); return; }
+    // Re-render to make sure everything's fresh
+    mxRender();
+    var kpiHtml = _id('mxKpiGrid') ? _id('mxKpiGrid').outerHTML : '';
+    var verdictHtml = _id('mxVerdict') ? _id('mxVerdict').outerHTML : '';
+    var invHtml = _id('mxInvestors') ? _id('mxInvestors').outerHTML : '';
+    var exitHtml = _id('mxExit') ? _id('mxExit').outerHTML : '';
+    var appCss = Array.from(document.querySelectorAll('style')).map(function(s){return s.textContent;}).join('\n');
+    w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Metrics — '+_e(addr)+'</title><style>'+appCss+'</style><style>'
+      +'body{background:#fff!important;color:#111!important;padding:24px;font-family:Inter,system-ui,sans-serif}'
+      +'.mx-kpi{box-shadow:none}'
+      +'.print-hdr h1{margin:0 0 4pt;color:#1b3d6b;font-size:18pt;border-bottom:2px solid #1b3d6b;padding-bottom:6pt}'
+      +'.print-hdr .sub{font-size:11pt;color:#475569;margin-bottom:18pt}'
+      +'.print-section{margin-bottom:18pt;page-break-inside:avoid}'
+      +'.print-section h2{font-size:13pt;color:#1b3d6b;margin:0 0 10pt;border-bottom:1px solid #d1d5db;padding-bottom:4pt}'
+      +'@page{margin:.5in}'
+      +'</style></head><body>'
+      +'<div class="print-hdr"><h1>📊 Metrics — '+_e(addr)+'</h1><div class="sub">Generated '+(new Date()).toLocaleDateString()+' · Asking '+_$(S.price)+'</div></div>'
+      +'<div class="print-section"><h2>Whole-Deal KPIs</h2>'+kpiHtml+'</div>'
+      +'<div class="print-section"><h2>Verdict</h2>'+verdictHtml+'</div>'
+      +'<div class="print-section"><h2>Per-Investor Returns</h2>'+invHtml+'</div>'
+      +'<div class="print-section"><h2>Exit Scenarios</h2>'+exitHtml+'</div>'
+      +'</body></html>');
+    w.document.close();
+    setTimeout(function(){w.print();}, 600);
+  };
+
+  // Re-render if any intake field changes while Metrics is the active panel
+  document.addEventListener('input', function(e){
+    var p = _id('panel15');
+    if(!p || !p.classList.contains('active')) return;
+    if(!e.target || !e.target.id) return;
+    if(/^(prop_|mkt_|pur_|fin_|fha_|conv_|dscr_|hm_|sf_|sub_|lto_|morby_|pn_|amort_|exp_|other_|noi_|ncp_)/.test(e.target.id)){
+      clearTimeout(window._mxDebounce);
+      window._mxDebounce = setTimeout(mxRender, 250);
+    }
+  });
+
+  // Initial render if user lands directly on this panel via deep-link
+  if(document.readyState !== 'loading') setTimeout(function(){ if(_id('mxKpiGrid')) mxRender(); }, 700);
+  else document.addEventListener('DOMContentLoaded', function(){ setTimeout(function(){ if(_id('mxKpiGrid')) mxRender(); }, 700); });
 })();
 </script>
 
