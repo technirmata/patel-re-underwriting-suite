@@ -1198,8 +1198,8 @@ strong { color: #e2e8f0; }
   <!-- Divider: Capital -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Capital</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="11" onclick="ST(11);partnerInit();partnerCompute()">👥 Partners</div>
-  <!-- Divider: Calculators -->
-  <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Calculators</div><div class="tab-phase-line"></div></div>
+  <!-- Divider: Finance Calculator -->
+  <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Finance Calculator</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="10" onclick="ST(10);vbInit();vbCompute()">💰 Velocity</div>
 </div>
 
@@ -1600,7 +1600,8 @@ strong { color: #e2e8f0; }
     Formula: <strong style="color:#c4b5fd">Price = NOI ÷ Cap Rate</strong> &nbsp;|&nbsp;
     <strong style="color:#fbbf24">Cap Rate = NOI ÷ Price</strong> &nbsp;|&nbsp;
     <strong style="color:#86efac">NOI = Price × Cap Rate</strong>
-    &nbsp;&nbsp;<button class="btn btn-outline btn-sm" onclick="ncp_push('ncp_')" style="font-size:10px;padding:2px 8px;margin-left:8px">⬆ Push Price to Intake</button>
+    &nbsp;&nbsp;<button class="btn btn-outline btn-sm" onclick="ncp_resetAll('ncp_')" style="font-size:10px;padding:2px 8px;margin-left:4px">↺ Reset</button>
+    &nbsp;<button class="btn btn-outline btn-sm" onclick="ncp_push('ncp_')" style="font-size:10px;padding:2px 8px">⬆ Push Price to Intake</button>
   </div>
 </div>
 
@@ -1926,7 +1927,8 @@ strong { color: #e2e8f0; }
     Formula: <strong style="color:#c4b5fd">Price = NOI ÷ Cap Rate</strong> &nbsp;|&nbsp;
     <strong style="color:#fbbf24">Cap Rate = NOI ÷ Price</strong> &nbsp;|&nbsp;
     <strong style="color:#86efac">NOI = Price × Cap Rate</strong>
-    &nbsp;&nbsp;<button class="btn btn-outline btn-sm" onclick="ncp_push('ncp_c_')" style="font-size:10px;padding:2px 8px;margin-left:8px">⬆ Push Price to Intake</button>
+    &nbsp;&nbsp;<button class="btn btn-outline btn-sm" onclick="ncp_resetAll('ncp_c_')" style="font-size:10px;padding:2px 8px;margin-left:4px">↺ Reset</button>
+    &nbsp;<button class="btn btn-outline btn-sm" onclick="ncp_push('ncp_c_')" style="font-size:10px;padding:2px 8px">⬆ Push Price to Intake</button>
   </div>
 </div>
 </div>
@@ -4112,7 +4114,23 @@ function calcNCP(pfx) {
   const filled = [price, capPct, noi].filter(v => v !== null && !isNaN(v) && v > 0).length;
 
   if (filled < 2) { resEl.innerHTML = '<span style="color:var(--muted)">Enter any two values to calculate the third.</span>'; return; }
-  if (filled === 3) { resEl.innerHTML = '<span style="color:var(--yellow)">⚠️ All three filled — clear one field (click ✕) to recalculate.</span>'; return; }
+
+  // Three-filled state: consistency check (no longer just a warning — compute implied 3rd from the other two and compare)
+  if (filled === 3) {
+    const impliedPrice = noi / (capPct / 100);
+    const diff = impliedPrice - price;
+    const tol = Math.max(price * 0.005, 100);  // 0.5% or $100 tolerance
+    if (Math.abs(diff) < tol) {
+      resEl.innerHTML = '<span style="color:#86efac">✅ All three values are consistent.</span> &nbsp;'
+        + '<span style="color:var(--muted)">Price ' + fd(price) + ' = NOI ' + fd(noi) + ' ÷ Cap ' + capPct + '%</span>';
+    } else {
+      const dir = diff > 0 ? 'higher' : 'lower';
+      resEl.innerHTML = '<span style="color:#fbbf24">⚠️ Inconsistent.</span> &nbsp;'
+        + 'NOI / Cap implies <strong style="color:#c4b5fd">Price ' + fd(impliedPrice) + '</strong> (' + fd(Math.abs(diff)) + ' ' + dir + ' than entered). '
+        + '<span style="color:var(--muted)">Click ✕ on the value you want recomputed.</span>';
+    }
+    return;
+  }
 
   let result = '';
   if (price === null || isNaN(price)) {
@@ -4134,7 +4152,16 @@ function calcNCP(pfx) {
 function ncp_clear(fieldId, pfx) {
   pfx = pfx || 'ncp_';
   const e = el(fieldId);
-  if (e) { e.value = ''; el(pfx+'result').innerHTML = '<span style="color:var(--muted)">Enter any two values to calculate the third.</span>'; }
+  if (e) e.value = '';
+  // Recompute immediately — with one field cleared and the other two valid, calcNCP fills in the missing value
+  calcNCP(pfx);
+}
+
+function ncp_resetAll(pfx) {
+  pfx = pfx || 'ncp_';
+  ['price','cap','noi'].forEach(function(k){ var e = el(pfx+k); if (e) e.value = ''; });
+  var r = el(pfx+'result');
+  if (r) r.innerHTML = '<span style="color:var(--muted)">Enter any two values to calculate the third.</span>';
 }
 
 function seedNCP(pfx) {
