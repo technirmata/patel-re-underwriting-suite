@@ -1177,31 +1177,31 @@ strong { color: #e2e8f0; }
   <div class="lm-grade"><div class="lm-label">Grade</div><div class="grade-val g-none" id="lb_grade">—</div></div>
 </div>
 
-<!-- TABS -->
+<!-- TABS — workflow order: Intake → Analyze → Finance Calculators → Capital → Deal → Pitch -->
 <div class="tabs">
-  <!-- Phase 1: Intake -->
+  <!-- Phase: Intake (the deal as input) -->
   <div class="tab active" data-tab="0" onclick="ST(0)">📋 Deal Intake</div>
-  <!-- Divider: Analyze -->
+  <!-- Phase: Analyze (compare structures + KPIs) -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Analyze</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="1" onclick="ST(1)">✅ Recommendation</div>
+  <div class="tab" data-tab="5" onclick="ST(5)">📊 Dashboard</div>
+  <!-- Phase: Finance Calculators (every financing-structure calc grouped here) -->
+  <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Finance Calculators</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="2" onclick="ST(2)">🏦 Conventional</div>
   <div class="tab" data-tab="3" onclick="ST(3)">🎨 Creative Finance</div>
   <div class="tab" data-tab="4" onclick="ST(4)">⚡ Morby Method</div>
-  <div class="tab" data-tab="5" onclick="ST(5)">📊 Dashboard</div>
-  <!-- Divider: Deal -->
+  <div class="tab" data-tab="10" onclick="ST(10);vbInit();vbCompute()">💰 Velocity</div>
+  <!-- Phase: Capital -->
+  <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Capital</div><div class="tab-phase-line"></div></div>
+  <div class="tab" data-tab="11" onclick="ST(11);partnerInit();partnerCompute()">👥 Partners</div>
+  <!-- Phase: Deal -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Deal</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="8" onclick="ST(8);seedFA();buildProjection()">📈 Projections</div>
   <div class="tab" data-tab="6" onclick="ST(6);syncIntakeToLOI()">📝 LOI Builder</div>
-  <!-- Divider: Pitch -->
+  <!-- Phase: Pitch -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Pitch</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="9" onclick="ST(9);refreshPitchDeckPreview()">🎯 Pitch Deck</div>
   <div class="tab" data-tab="7" onclick="ST(7);updateExec()">📄 Exec Report</div>
-  <!-- Divider: Capital -->
-  <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Capital</div><div class="tab-phase-line"></div></div>
-  <div class="tab" data-tab="11" onclick="ST(11);partnerInit();partnerCompute()">👥 Partners</div>
-  <!-- Divider: Finance Calculator -->
-  <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Finance Calculator</div><div class="tab-phase-line"></div></div>
-  <div class="tab" data-tab="10" onclick="ST(10);vbInit();vbCompute()">💰 Velocity</div>
 </div>
 
 <!-- ══════════════════════════════════════════════ PANEL 0: INTAKE & SCREEN -->
