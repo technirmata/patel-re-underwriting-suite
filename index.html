@@ -457,7 +457,32 @@ strong { color: #e2e8f0; }
 .auth-oauth:active{transform:translateY(0)}
 .auth-oauth-github{background:#0d1117;color:#fff;border-color:#30363d}
 .auth-oauth-github:hover{background:#161b22;border-color:#484f58}
-.auth-oauth-github svg{flex-shrink:0}
+.auth-oauth-google{background:#fff;color:#1f1f1f;border-color:#dadce0}
+.auth-oauth-google:hover{background:#f8f9fa;border-color:#5f6368}
+.auth-oauth svg{flex-shrink:0}
+
+/* Trial banner */
+.trial-banner{position:sticky;top:0;width:100%;padding:8px 16px;font-size:12.5px;font-weight:600;text-align:center;display:none;align-items:center;justify-content:center;gap:8px;z-index:101;border-bottom:1px solid var(--border)}
+.trial-banner.trial-active{background:linear-gradient(90deg,rgba(99,102,241,.18),rgba(139,92,246,.18));color:#a5b4fc}
+.trial-banner.trial-warn{background:linear-gradient(90deg,rgba(245,158,11,.20),rgba(245,158,11,.10));color:#fbbf24}
+.trial-banner.trial-expired{background:linear-gradient(90deg,rgba(239,68,68,.22),rgba(239,68,68,.12));color:#fca5a5}
+.trial-banner a{color:inherit;text-decoration:underline;cursor:pointer;font-weight:800}
+.trial-banner a:hover{filter:brightness(1.2)}
+.trial-cta{background:rgba(255,255,255,.08);border:1px solid currentColor;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;text-decoration:none}
+/* Paywall modal */
+.paywall-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);z-index:99998;display:none;align-items:center;justify-content:center;padding:20px}
+.paywall-overlay.open{display:flex}
+.paywall-modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;width:min(440px,100%);max-height:calc(100vh - 32px);overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.7);padding:28px 30px}
+.paywall-icon{font-size:42px;margin-bottom:8px;text-align:center}
+.paywall-title{font-size:20px;font-weight:800;color:var(--text);text-align:center;letter-spacing:-.3px}
+.paywall-sub{font-size:13px;color:var(--text2);text-align:center;margin-top:6px;line-height:1.55}
+.paywall-features{margin:20px 0 22px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px}
+.paywall-feature{display:flex;gap:9px;align-items:flex-start;padding:5px 0;font-size:12.5px;color:var(--text2);line-height:1.5}
+.paywall-feature::before{content:"✓";color:#10b981;font-weight:900;flex-shrink:0}
+.paywall-cta{width:100%;padding:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.2px;transition:.15s}
+.paywall-cta:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(99,102,241,.45)}
+.paywall-secondary{width:100%;padding:9px;background:transparent;color:var(--muted);border:none;font-size:12px;cursor:pointer;margin-top:10px;text-decoration:underline}
+.paywall-secondary:hover{color:var(--text)}
 .auth-strength{height:3px;border-radius:2px;margin-top:5px;transition:all .3s;background:var(--surface3)}
 /* user badge in topbar */
 .user-badge{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px 4px 6px;font-size:12.5px;cursor:default}
@@ -1144,11 +1169,15 @@ strong { color: #e2e8f0; }
 
     <!-- LOGIN PANEL -->
     <div class="auth-body" id="authPanel_login">
+      <button class="auth-oauth auth-oauth-google" onclick="authOAuthGoogle()" type="button">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.836.86-3.048.86-2.344 0-4.328-1.583-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
       <button class="auth-oauth auth-oauth-github" onclick="authOAuthGitHub()" type="button">
         <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
         Continue with GitHub
       </button>
-      <div class="auth-divider"><span>or sign in with email</span></div>
+      <div class="auth-divider"><span>or with email</span></div>
       <div class="auth-field">
         <label>Email</label>
         <input type="email" id="auth_login_user" placeholder="your@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')authLogin()">
@@ -1238,6 +1267,28 @@ strong { color: #e2e8f0; }
       <div class="auth-err" id="auth_reset_ok" style="margin-bottom:10px;font-size:13px;color:var(--green)"></div>
       <button class="auth-btn" onclick="authResetPassword()">Update Password</button>
     </div>
+  </div>
+</div>
+
+<!-- Trial banner (sticky, above topbar) -->
+<div class="trial-banner" id="trialBanner" data-print="hide"></div>
+
+<!-- Paywall modal -->
+<div class="paywall-overlay" id="paywallOverlay" data-print="hide" onclick="if(event.target===this)trialClosePaywall()">
+  <div class="paywall-modal">
+    <div class="paywall-icon">⭐</div>
+    <div class="paywall-title" id="paywallTitle">Your trial has ended</div>
+    <div class="paywall-sub" id="paywallSub">Subscribe to keep using JP Underwriting Suite for your deals.</div>
+    <div class="paywall-features">
+      <div class="paywall-feature">Unlimited deal underwriting + saving</div>
+      <div class="paywall-feature">AI Research checklist (Anthropic Opus 4.7 + Perplexity)</div>
+      <div class="paywall-feature">Conversational deal chat sidebar</div>
+      <div class="paywall-feature">Per-investor PDF reports + share links</div>
+      <div class="paywall-feature">Auto Investor Deck generator</div>
+      <div class="paywall-feature">Stress-test battery + Conservative Overlay</div>
+    </div>
+    <button class="paywall-cta" onclick="trialOpenCheckout()">Subscribe — Start Plan</button>
+    <button class="paywall-secondary" onclick="trialClosePaywall()">Not yet</button>
   </div>
 </div>
 
@@ -9132,30 +9183,124 @@ function authGuest() {
 }
 
 // ── GitHub OAuth ─────────────────────────────────────────────────────────
-// Replaces the broken password-reset-email flow for any user willing to
-// sign in via GitHub (no SMTP needed).
-async function authOAuthGitHub(){
+async function authOAuthGitHub(){ return _authOAuth('github', 'read:user user:email'); }
+async function authOAuthGoogle(){ return _authOAuth('google', 'email profile'); }
+async function _authOAuth(provider, scopes){
   if(!_sbOk()){ _authShowErr('auth_login_err','Supabase not configured.'); return; }
   try {
     const redirectTo = window.location.origin + window.location.pathname;
-    const { data, error } = await _sbClient().auth.signInWithOAuth({
-      provider: 'github',
-      options: { redirectTo: redirectTo, scopes: 'read:user user:email' }
+    const { error } = await _sbClient().auth.signInWithOAuth({
+      provider: provider,
+      options: { redirectTo: redirectTo, scopes: scopes }
     });
     if(error){
-      // Most common case: provider not enabled in Supabase Auth settings yet
-      var msg = error.message || 'GitHub sign-in failed';
+      var msg = error.message || (provider+' sign-in failed');
       if(/not enabled|unsupported|provider/i.test(msg)){
-        msg = '⚠ GitHub sign-in is being set up. Try again in a minute, or use email/password for now.';
+        msg = '⚠ '+provider.charAt(0).toUpperCase()+provider.slice(1)+' sign-in not configured yet on the backend. Use email/password for now.';
       }
       _authShowErr('auth_login_err', msg);
     }
-    // On success the browser auto-redirects to GitHub; no further code runs here.
   } catch(err){
     _authShowErr('auth_login_err','Error: ' + (err.message || 'unknown'));
   }
 }
 window.authOAuthGitHub = authOAuthGitHub;
+window.authOAuthGoogle = authOAuthGoogle;
+
+// ── 7-day Trial gating ──────────────────────────────────────────────────
+// Computes days-left from auth.user.created_at (preferred) or session.loginTime.
+// Banner shows the count + an "Upgrade" CTA. After day 7, paywall blocks.
+// Subscription state lives in localStorage `jp_subscription_<userId>` for now,
+// flipped to "active" by Stripe webhook (deferred; key not yet provided).
+const TRIAL_DAYS = 7;
+
+function _trialDaysLeft(userCreatedAt){
+  if(!userCreatedAt) return null;
+  const start = new Date(userCreatedAt).getTime();
+  if(isNaN(start)) return null;
+  const elapsed = (Date.now() - start) / 86400000;
+  return Math.max(0, Math.ceil(TRIAL_DAYS - elapsed));
+}
+
+function _subStatus(userId){
+  if(!userId) return 'guest';
+  try { return localStorage.getItem('jp_subscription_'+userId) || 'trialing'; }
+  catch(e){ return 'trialing'; }
+}
+
+async function _trialFetchUserCreatedAt(){
+  const session = _getSession();
+  if(!session) return null;
+  // Prefer Supabase auth.user.created_at — single source of truth across devices
+  if(_sbOk()){
+    try {
+      const { data: { user } } = await _sbClient().auth.getUser();
+      if(user && user.created_at) return user.created_at;
+    } catch(e){}
+  }
+  return session.loginTime || null;
+}
+
+async function trialUpdateBanner(){
+  const session = _getSession();
+  const bar = document.getElementById('trialBanner');
+  if(!bar) return;
+  if(!session){ bar.style.display='none'; return; }
+
+  const subState = _subStatus(session.userId);
+  if(subState === 'active'){ bar.style.display='none'; return; }
+  if(subState === 'past_due' || subState === 'canceled'){
+    bar.className = 'trial-banner trial-expired';
+    bar.style.display = 'flex';
+    bar.innerHTML = '⛔ <strong>Subscription '+subState.replace('_',' ')+'.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Update billing →</a>';
+    return;
+  }
+
+  const createdAt = await _trialFetchUserCreatedAt();
+  const days = _trialDaysLeft(createdAt);
+  if(days === null){ bar.style.display='none'; return; }
+
+  if(days <= 0){
+    bar.className = 'trial-banner trial-expired';
+    bar.innerHTML = '⛔ <strong>Trial expired.</strong> Subscribe to keep using the suite. &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Subscribe →</a>';
+    bar.style.display='flex';
+    setTimeout(trialOpenPaywall, 200);
+  } else if(days <= 2){
+    bar.className = 'trial-banner trial-warn';
+    bar.innerHTML = '⚠ <strong>'+days+' day'+(days===1?'':'s')+' left in your trial.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Upgrade now →</a>';
+    bar.style.display='flex';
+  } else {
+    bar.className = 'trial-banner trial-active';
+    bar.innerHTML = '🎁 <strong>'+days+' days left in your trial.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Upgrade →</a>';
+    bar.style.display='flex';
+  }
+}
+
+function trialOpenPaywall(){
+  const ov = document.getElementById('paywallOverlay');
+  if(ov) ov.classList.add('open');
+}
+function trialClosePaywall(){
+  const ov = document.getElementById('paywallOverlay');
+  if(ov) ov.classList.remove('open');
+}
+function trialOpenCheckout(){
+  // Placeholder: Stripe checkout key not yet provided.
+  // Once Parth pastes a Stripe Price ID + publishable key, this routes to a
+  // real checkout session via a Supabase Edge Function.
+  alert('Stripe checkout will live here.\n\nNext step: paste a Stripe publishable key + a price ID and I wire the checkout flow + webhook.');
+}
+window.trialUpdateBanner = trialUpdateBanner;
+window.trialOpenPaywall = trialOpenPaywall;
+window.trialClosePaywall = trialClosePaywall;
+window.trialOpenCheckout = trialOpenCheckout;
+
+// Refresh banner on every auth-state change
+function _trialHook(){ try { trialUpdateBanner(); } catch(e){} }
+// Initial fire + recurring (every 60s — covers banner aging into the warn / expired states)
+if(document.readyState !== 'loading') setTimeout(_trialHook, 800);
+else document.addEventListener('DOMContentLoaded', function(){ setTimeout(_trialHook, 800); });
+setInterval(_trialHook, 60000);
 
 async function authLogout() {
   _tmConfirm('Sign out? Your projects stay saved locally.','Sign Out', async function(){
@@ -9183,6 +9328,8 @@ function _authUpdateTopbar() {
   }
   // New canonical chip
   if(typeof _userChipUpdate==='function') _userChipUpdate();
+  // Trial banner
+  if(typeof trialUpdateBanner==='function') setTimeout(trialUpdateBanner, 100);
 }
 
 // ── Workspace pill (left side of account cluster) ─────────────────────────
