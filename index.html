@@ -848,6 +848,20 @@ strong { color: #e2e8f0; }
 .ai-progress-bar{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:2px;transition:width .4s ease;width:0%}
 /* END AI CSS */
 
+/* ── Finance Calculators hub (panel13) ─────────────────────────────────── */
+.fc-hub-nav{display:flex;gap:4px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.fc-hub-nav::-webkit-scrollbar{display:none}
+.fc-hub-tab{padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);border-radius:9px;display:flex;align-items:center;gap:7px;white-space:nowrap;transition:.15s;user-select:none;flex-shrink:0;line-height:1}
+.fc-hub-tab:hover{color:var(--text);background:var(--surface3)}
+.fc-hub-tab.active{color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 4px 12px rgba(99,102,241,.25)}
+#fcHubContent{display:flex;flex-direction:column;gap:0}
+#fcHubContent > .panel{display:block!important;padding:0}
+@media (max-width:640px){
+  .fc-hub-nav{padding:6px;gap:2px}
+  .fc-hub-tab{padding:8px 11px;font-size:12px}
+  .fc-tab-lbl{display:none}
+}
+
 /* ── Partners & Waterfall (panel11) ────────────────────────────────────── */
 .pn-grid-top{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
 .pn-cap-pill{background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-weight:600;color:var(--text)}
@@ -1185,12 +1199,9 @@ strong { color: #e2e8f0; }
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Analyze</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="1" onclick="ST(1)">✅ Recommendation</div>
   <div class="tab" data-tab="5" onclick="ST(5)">📊 Dashboard</div>
-  <!-- Phase: Finance Calculators (every financing-structure calc grouped here) -->
+  <!-- Phase: Finance Calculators — single hub with sub-nav inside (Conv / Creative / Morby / Velocity) -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Finance Calculators</div><div class="tab-phase-line"></div></div>
-  <div class="tab" data-tab="2" onclick="ST(2)">🏦 Conventional</div>
-  <div class="tab" data-tab="3" onclick="ST(3)">🎨 Creative Finance</div>
-  <div class="tab" data-tab="4" onclick="ST(4)">⚡ Morby Method</div>
-  <div class="tab" data-tab="10" onclick="ST(10);vbInit();vbCompute()">💰 Velocity</div>
+  <div class="tab" data-tab="13" onclick="ST(13)">💰 Finance Calculators</div>
   <!-- Phase: Capital -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Capital</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="11" onclick="ST(11);partnerInit();partnerCompute()">👥 Partners</div>
@@ -3265,6 +3276,17 @@ strong { color: #e2e8f0; }
   <div id="pn_warn" class="vb-warn" style="display:none"></div>
 </div><!-- end panel11 -->
 
+<!-- ══════════════════════════════════════════════ PANEL 13: FINANCE CALCULATORS HUB -->
+<div class="panel" id="panel13">
+  <div class="fc-hub-nav" id="fcHubNav">
+    <div class="fc-hub-tab active" data-fc="2"  onclick="fcSwitch(2)">🏦 <span class="fc-tab-lbl">Conventional</span></div>
+    <div class="fc-hub-tab"        data-fc="3"  onclick="fcSwitch(3)">🎨 <span class="fc-tab-lbl">Creative Finance</span></div>
+    <div class="fc-hub-tab"        data-fc="4"  onclick="fcSwitch(4)">⚡ <span class="fc-tab-lbl">Morby Method</span></div>
+    <div class="fc-hub-tab"        data-fc="10" onclick="fcSwitch(10)">💰 <span class="fc-tab-lbl">Velocity Banking</span></div>
+  </div>
+  <div id="fcHubContent"></div>
+</div><!-- end panel13 -->
+
 
 <script>
 // ── Utilities ─────────────────────────────────────────────────────────────────
@@ -3280,11 +3302,57 @@ const TAB_IDX = {};
 let CHARTS = {};
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
+// Finance Calculator panels routed through the hub (panel13). Direct ST(2/3/4/10) callers are auto-redirected.
+const FC_HUB_PANELS = [2, 3, 4, 10];
+const FC_HUB_INDEX  = 13;
+let _fcCurrentSub = 2;   // last opened sub-calc — defaults to Conventional
+
+// Move target sub-panel into the hub container and run its calc
+function fcSwitch(panelIdx){
+  // Highlight active sub-tab
+  document.querySelectorAll('#fcHubNav .fc-hub-tab').forEach(t =>
+    t.classList.toggle('active', parseInt(t.dataset.fc) === panelIdx));
+  const target = document.getElementById('panel' + panelIdx);
+  const hubContent = document.getElementById('fcHubContent');
+  if(!target || !hubContent) return;
+  // Move panel under the hub if it's not already there
+  if(target.parentNode !== hubContent){
+    hubContent.innerHTML = '';
+    hubContent.appendChild(target);
+  }
+  // Force visible inside the hub regardless of .panel.active CSS
+  target.style.display = 'block';
+  target.classList.add('fc-in-hub');
+  _fcCurrentSub = panelIdx;
+  // Trigger the relevant calc(s)
+  setTimeout(() => {
+    try{
+      if(panelIdx === 2 && typeof calcConv==='function') calcConv();
+      else if(panelIdx === 3) ['calcFHA','calcHM','calcDSCR','calcSubTo','calcSF','calcLTO'].forEach(fn=>{ try{ if(typeof window[fn]==='function') window[fn](); }catch(e){} });
+      else if(panelIdx === 4){ if(typeof syncCalcFromIntake==='function') syncCalcFromIntake('morby'); if(typeof calcMorby==='function') calcMorby(); }
+      else if(panelIdx === 10){ if(typeof vbInit==='function') vbInit(); if(typeof vbCompute==='function') vbCompute(); }
+    } catch(e){ console.warn('fcSwitch calc error', e); }
+  }, 30);
+}
+
+function fcInit(){
+  // Open the last-viewed sub-calc on hub entry (Conv first time)
+  fcSwitch(_fcCurrentSub || 2);
+}
+
 function ST(i) {
   window.scrollTo({top:0,behavior:'instant'});
-  // Match tab by data-tab attribute (order-independent) and panel by index
+  // FC panels are absorbed into the hub — route through it instead
+  if (FC_HUB_PANELS.indexOf(i) !== -1) {
+    ST(FC_HUB_INDEX);
+    if(typeof fcSwitch==='function') setTimeout(()=>fcSwitch(i), 30);
+    return;
+  }
+  // Match tab by data-tab attribute (order-independent) and panel by id (so reordering doesn't break)
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', parseInt(t.dataset.tab) === i));
-  document.querySelectorAll('.panel').forEach((p,j) => p.classList.toggle('active', j===i));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('panel' + i);
+  if (panel) panel.classList.add('active');
   const panelCalc = {
     1: runRecommendation,
     2: ()=>{ if(typeof calcConv==='function') calcConv(); },
@@ -3292,7 +3360,8 @@ function ST(i) {
     4: ()=>{ syncCalcFromIntake('morby'); calcMorby(); },
     5: ()=>{ updateDash(); seedNCP(); if(typeof buildSnowball==='function') buildSnowball(); },
     7: updateExec,
-    8: buildProjection
+    8: buildProjection,
+    13:()=>{ if(typeof fcInit==='function') fcInit(); }
   };
   if(panelCalc[i]) setTimeout(panelCalc[i], 50);
 }
