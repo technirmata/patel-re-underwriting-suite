@@ -848,6 +848,45 @@ strong { color: #e2e8f0; }
 .ai-progress-bar{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:2px;transition:width .4s ease;width:0%}
 /* END AI CSS */
 
+/* ── AI Deal Chat sidebar (FAB + slide-out) ────────────────────────────── */
+.ai-fab{position:fixed;bottom:20px;right:20px;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 8px 24px rgba(99,102,241,.45);z-index:9990;display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s,opacity .2s}
+.ai-fab:hover{transform:scale(1.06);box-shadow:0 12px 32px rgba(99,102,241,.6)}
+.ai-fab.open{transform:scale(.85);opacity:0;pointer-events:none}
+.ai-chat-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9988;display:none;backdrop-filter:blur(2px)}
+.ai-chat-backdrop.open{display:block}
+.ai-chat{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:100vw;background:var(--surface);border-left:1px solid var(--border);box-shadow:-12px 0 30px rgba(0,0,0,.4);z-index:9989;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}
+.ai-chat.open{transform:translateX(0)}
+.ai-chat-hdr{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface2)}
+.ai-chat-title{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.ai-chat-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:#fff}
+.ai-chat-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.2}
+.ai-chat-sub{font-size:10.5px;color:var(--muted);margin-top:2px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-chat-actions{display:flex;gap:2px;flex-shrink:0}
+.ai-chat-actions button{background:none;border:1px solid transparent;border-radius:6px;color:var(--muted);cursor:pointer;font-size:13px;padding:5px 8px;transition:.15s}
+.ai-chat-actions button:hover{background:var(--surface3);color:var(--text);border-color:var(--border)}
+.ai-chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.ai-chat-msg{display:flex;flex-direction:column;max-width:88%}
+.ai-chat-msg.user{align-self:flex-end;align-items:flex-end}
+.ai-chat-msg.assistant{align-self:flex-start;align-items:flex-start}
+.ai-chat-msg-bubble{padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.55;color:var(--text);word-wrap:break-word;white-space:pre-wrap}
+.ai-chat-msg.user .ai-chat-msg-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.ai-chat-msg.assistant .ai-chat-msg-bubble{background:var(--surface2);border:1px solid var(--border);border-bottom-left-radius:4px}
+.ai-chat-msg-bubble.thinking{color:var(--muted);font-style:italic}
+.ai-chat-msg-bubble.error{background:rgba(239,68,68,.08)!important;border:1px solid rgba(239,68,68,.3)!important;color:#f87171!important}
+.ai-chat-empty{text-align:center;color:var(--muted);padding:30px 14px;font-size:13px;line-height:1.7}
+.ai-chat-empty-icon{font-size:34px;margin-bottom:10px;opacity:.4}
+.ai-chat-input{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;background:var(--surface2);flex-shrink:0}
+.ai-chat-input textarea{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:none;line-height:1.45;max-height:120px;min-height:38px;transition:border-color .15s}
+.ai-chat-input textarea:focus{border-color:var(--accent)}
+.ai-chat-send{width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:16px;font-weight:700;flex-shrink:0;transition:.15s;display:flex;align-items:center;justify-content:center}
+.ai-chat-send:hover:not(:disabled){filter:brightness(1.15);transform:translateY(-1px)}
+.ai-chat-send:disabled{opacity:.4;cursor:not-allowed}
+.ai-chat-footer{padding:5px 12px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);text-align:center;background:var(--surface2);flex-shrink:0}
+@media (max-width:640px){
+  .ai-chat{width:100vw;border-left:none}
+  .ai-fab{bottom:16px;right:16px;width:50px;height:50px;font-size:20px}
+}
+
 /* ── Finance Calculators hub (panel13) ─────────────────────────────────── */
 .fc-hub-nav{display:flex;gap:4px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .fc-hub-nav::-webkit-scrollbar{display:none}
@@ -12567,6 +12606,32 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
   </div>
 </div>
 
+<!-- ── AI Deal Chat sidebar (always-available, slides from right) ── -->
+<button class="ai-fab" id="aiFab" onclick="aiChatToggle()" title="Ask the AI about this deal" data-print="hide">💬</button>
+<div class="ai-chat-backdrop" id="aiChatBackdrop" onclick="aiChatToggle()" data-print="hide"></div>
+<div class="ai-chat" id="aiChat" data-print="hide">
+  <div class="ai-chat-hdr">
+    <div class="ai-chat-title">
+      <span class="ai-chat-av">🤖</span>
+      <div style="flex:1;min-width:0">
+        <div class="ai-chat-name">Deal Assistant</div>
+        <div class="ai-chat-sub" id="aiChatSub">No deal loaded</div>
+      </div>
+    </div>
+    <div class="ai-chat-actions">
+      <button onclick="aiChatExportPdf()" title="Export chat to PDF">📄</button>
+      <button onclick="aiChatReset()" title="Clear chat">🗑</button>
+      <button onclick="aiChatToggle()" title="Close (Esc)">✕</button>
+    </div>
+  </div>
+  <div class="ai-chat-msgs" id="aiChatMsgs"></div>
+  <div class="ai-chat-input">
+    <textarea id="aiChatInput" placeholder="Ask anything about this deal…" rows="1" onkeydown="aiChatKeydown(event)"></textarea>
+    <button class="ai-chat-send" id="aiChatSendBtn" onclick="aiChatSend()" title="Send (Enter)">↑</button>
+  </div>
+  <div class="ai-chat-footer" id="aiChatFooter">Loading provider…</div>
+</div>
+
 <script>
 /* ── Partners & Waterfall (panel11) ─────────────────────────────────────
    - Sponsor / Investor roster
@@ -13538,6 +13603,281 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
       setTimeout(function(){ if(_id('vb_m_bal')) vbInit(); }, 200);
     });
   }
+})();
+</script>
+
+<script>
+/* ── AI Deal Chat (Claude.ai-style sidebar) ─────────────────────────────
+   Floating FAB → slide-out right sidebar with conversational AI.
+   Auto-injects deal context, persists per-project, supports 4 providers.
+   Privacy: redacts API keys from outgoing messages.
+   ──────────────────────────────────────────────────────────────────── */
+(function(){
+  var CHAT_KEY_BASE = 'jp_ai_chat_v1';
+  var st = { open:false, messages:[], sending:false };
+
+  function _id(x){return document.getElementById(x);}
+  function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function _redact(s){
+    return String(s||'')
+      .replace(/sk-ant-[A-Za-z0-9_\-]{20,}/g,'[REDACTED]')
+      .replace(/sk-[A-Za-z0-9_\-]{20,}/g,'[REDACTED]')
+      .replace(/gsk_[A-Za-z0-9_\-]{20,}/g,'[REDACTED]')
+      .replace(/pplx-[A-Za-z0-9_\-]{20,}/g,'[REDACTED]');
+  }
+
+  function _gv(id){ try { return (typeof gvs==='function')?gvs(id):''; } catch(e){return '';} }
+  function _gn(id){ try { return (typeof gv==='function')?gv(id):0; } catch(e){return 0;} }
+
+  function _projKey(){
+    var nm = _gv('projNameInput') || '';
+    return CHAT_KEY_BASE + (nm ? '_'+nm : '_default');
+  }
+  function _save(){ try { localStorage.setItem(_projKey(), JSON.stringify(st.messages)); } catch(e){} }
+  function _load(){
+    try { st.messages = JSON.parse(localStorage.getItem(_projKey()) || '[]'); }
+    catch(e){ st.messages = []; }
+  }
+
+  function _systemPrompt(){
+    var S = window.S || {};
+    var bits = [];
+    var addr = [_gv('prop_address'), _gv('prop_city'), _gv('prop_state'), _gv('prop_zip')].filter(Boolean).join(', ');
+    if(addr) bits.push('Address: '+addr);
+    if(_gv('prop_type'))   bits.push('Asset class: '+_gv('prop_type'));
+    if(_gn('prop_units'))  bits.push('Units: '+_gn('prop_units'));
+    if(_gn('prop_sqft'))   bits.push('Sqft: '+_gn('prop_sqft'));
+    if(_gn('prop_year'))   bits.push('Year built: '+_gn('prop_year'));
+    if(_gv('mkt_tier'))    bits.push('Market tier: '+_gv('mkt_tier'));
+    if(_gv('mkt_class'))   bits.push('Property class: '+_gv('mkt_class'));
+    if(S.price)            bits.push('Asking price: $'+Math.round(S.price).toLocaleString());
+    if(S.grossRent)        bits.push('Gross rent (annual): $'+Math.round(S.grossRent).toLocaleString());
+    if(S.totalExp)         bits.push('Operating expenses (annual): $'+Math.round(S.totalExp).toLocaleString());
+    if(S.noi)              bits.push('NOI: $'+Math.round(S.noi).toLocaleString());
+    if(S.capRate)          bits.push('Cap rate: '+(S.capRate*100).toFixed(2)+'%');
+    if(S.dscr)             bits.push('DSCR: '+S.dscr.toFixed(2));
+    if(S.coc)              bits.push('Cash-on-cash: '+(S.coc*100).toFixed(2)+'%');
+    if(S.irr)              bits.push('IRR (5yr): '+(S.irr*100).toFixed(2)+'%');
+    if(S.em)               bits.push('Equity multiple: '+S.em.toFixed(2)+'x');
+    return 'You are a real estate underwriting assistant inside the JP Underwriting Suite. ' +
+      'Answer questions about THIS specific deal with concrete, candid analysis. ' +
+      'Be direct about risks (especially appraisal-gap risk when in-place rents > market, tax-record mismatch, DSCR shortfall on bigger deals, market-tier disqualifiers, seller-finance lender conflicts). ' +
+      'Never invent numbers — if you don\'t know, say so and suggest where to verify.' +
+      (bits.length ? '\n\nCURRENT DEAL CONTEXT:\n• ' + bits.join('\n• ') : '\n\n(No deal loaded — answer general underwriting questions.)');
+  }
+
+  function _provider(){
+    var p = '';
+    try { p = localStorage.getItem('ai_research_provider') || ''; } catch(e){}
+    if(p && typeof _getAIKey==='function' && _getAIKey(p)) return p;
+    // Auto-pick first configured: perplexity > anthropic > openai > groq
+    var order = ['perplexity','anthropic','openai','groq'];
+    for(var i=0;i<order.length;i++){
+      if(typeof _getAIKey==='function' && _getAIKey(order[i])) return order[i];
+    }
+    return null;
+  }
+
+  function _updateFooter(){
+    var f = _id('aiChatFooter'); if(!f) return;
+    var p = _provider();
+    if(!p){ f.innerHTML = '⚠ No AI key set. <a onclick="openSettings()" style="color:var(--accent);cursor:pointer;text-decoration:underline">Open Settings</a>'; return; }
+    var labels = {perplexity:'Perplexity (web-grounded)', anthropic:'Anthropic Claude', openai:'OpenAI GPT', groq:'Groq Llama'};
+    f.textContent = 'Using ' + (labels[p] || p);
+  }
+
+  function _updateContextSub(){
+    var sub = _id('aiChatSub'); if(!sub) return;
+    var addr = _gv('prop_address') || '';
+    var city = _gv('prop_city') || '';
+    var price = (window.S && window.S.price) || 0;
+    var bits = [];
+    if(addr) bits.push(addr + (city ? ', '+city : ''));
+    if(price) bits.push('$'+Math.round(price).toLocaleString());
+    sub.textContent = bits.length ? bits.join(' · ') : 'No deal loaded';
+  }
+
+  function _renderMsgs(){
+    var box = _id('aiChatMsgs'); if(!box) return;
+    if(!st.messages.length){
+      box.innerHTML = '<div class="ai-chat-empty">'
+        + '<div class="ai-chat-empty-icon">💬</div>'
+        + 'Ask anything about this deal.<br><br>'
+        + '<span style="opacity:.7">Try:</span><br>'
+        + '<em style="opacity:.85">"What\'s a fair cap rate for this submarket?"</em><br>'
+        + '<em style="opacity:.85">"Are these rents at, above, or below market?"</em><br>'
+        + '<em style="opacity:.85">"Which lender programs fit a deal this size?"</em><br>'
+        + '<em style="opacity:.85">"What are the biggest risks here?"</em>'
+        + '</div>';
+      return;
+    }
+    box.innerHTML = '';
+    st.messages.forEach(function(m){
+      var d = document.createElement('div');
+      d.className = 'ai-chat-msg ' + m.role;
+      var bubbleClass = 'ai-chat-msg-bubble' + (m.thinking?' thinking':'') + (m.error?' error':'');
+      d.innerHTML = '<div class="'+bubbleClass+'">'+_e(m.content)+'</div>';
+      box.appendChild(d);
+    });
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function _add(role, content, opts){
+    var m = {role:role, content:content, t:Date.now()};
+    if(opts && opts.thinking) m.thinking = true;
+    if(opts && opts.error) m.error = true;
+    st.messages.push(m);
+    _renderMsgs();
+  }
+
+  window.aiChatToggle = function(){
+    st.open = !st.open;
+    var c=_id('aiChat'), b=_id('aiChatBackdrop'), fab=_id('aiFab');
+    if(c) c.classList.toggle('open', st.open);
+    if(b) b.classList.toggle('open', st.open);
+    if(fab) fab.classList.toggle('open', st.open);
+    if(st.open){
+      _load(); _renderMsgs(); _updateContextSub(); _updateFooter();
+      var inp=_id('aiChatInput'); if(inp) setTimeout(function(){inp.focus();}, 200);
+      document.addEventListener('keydown', _esc);
+    } else {
+      document.removeEventListener('keydown', _esc);
+    }
+  };
+  function _esc(e){ if(e.key==='Escape') window.aiChatToggle(); }
+
+  window.aiChatReset = function(){
+    if(!confirm('Clear chat history for this deal?')) return;
+    st.messages = []; _save(); _renderMsgs();
+  };
+
+  window.aiChatKeydown = function(e){
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); window.aiChatSend(); }
+  };
+
+  window.aiChatSend = async function(){
+    if(st.sending) return;
+    var inp=_id('aiChatInput'); if(!inp) return;
+    var msg = (inp.value||'').trim();
+    if(!msg) return;
+    msg = _redact(msg);
+
+    var p = _provider();
+    if(!p){
+      _add('assistant', '⚠ No AI provider configured. Click ⚙️ Settings to add an API key. Perplexity recommended for deal questions (web-grounded answers).', {error:true});
+      _save(); return;
+    }
+    var apiKey = (typeof _getAIKey==='function')?_getAIKey(p):'';
+    if(!apiKey){
+      _add('assistant', '⚠ No API key for '+p+'. Click ⚙️ Settings to add one.', {error:true});
+      _save(); return;
+    }
+
+    _add('user', msg);
+    inp.value = ''; inp.style.height = 'auto';
+    _save();
+
+    st.sending = true;
+    var sendBtn=_id('aiChatSendBtn'); if(sendBtn) sendBtn.disabled = true;
+    _add('assistant', '…thinking', {thinking:true});
+
+    try {
+      var reply = await _callChat(p, apiKey);
+      st.messages.pop(); // remove thinking placeholder
+      _add('assistant', reply);
+    } catch(e){
+      st.messages.pop();
+      _add('assistant', '⚠ Error: '+(e.message||'unknown'), {error:true});
+    } finally {
+      st.sending = false;
+      if(sendBtn) sendBtn.disabled = false;
+      _save();
+    }
+  };
+
+  async function _callChat(provider, apiKey){
+    var sys = _systemPrompt();
+    var msgs = st.messages.filter(function(m){return !m.thinking && !m.error;}).map(function(m){return {role:m.role, content:m.content};});
+    var url, headers, body;
+    if(provider === 'anthropic'){
+      url = 'https://api.anthropic.com/v1/messages';
+      headers = {'x-api-key':apiKey, 'Content-Type':'application/json', 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true'};
+      body = JSON.stringify({model:'claude-opus-4-7', max_tokens:1500, system:sys, messages:msgs});
+    } else if(provider === 'perplexity'){
+      url = 'https://api.perplexity.ai/chat/completions';
+      headers = {'Authorization':'Bearer '+apiKey, 'Content-Type':'application/json'};
+      body = JSON.stringify({model:'sonar', messages:[{role:'system',content:sys}].concat(msgs), temperature:0.2, max_tokens:1500});
+    } else if(provider === 'openai'){
+      url = 'https://api.openai.com/v1/chat/completions';
+      headers = {'Authorization':'Bearer '+apiKey, 'Content-Type':'application/json'};
+      body = JSON.stringify({model:'gpt-4o-mini', messages:[{role:'system',content:sys}].concat(msgs), temperature:0.3, max_tokens:1500});
+    } else {
+      url = 'https://api.groq.com/openai/v1/chat/completions';
+      headers = {'Authorization':'Bearer '+apiKey, 'Content-Type':'application/json'};
+      body = JSON.stringify({model:'llama-3.3-70b-versatile', messages:[{role:'system',content:sys}].concat(msgs), temperature:0.3, max_tokens:1500});
+    }
+    var res = await fetch(url, {method:'POST', headers:headers, body:body});
+    if(!res.ok){
+      var t = await res.text();
+      throw new Error(res.status+': '+t.slice(0,250));
+    }
+    var d = await res.json();
+    if(provider === 'anthropic') return d.content[0].text;
+    return d.choices[0].message.content;
+  }
+
+  window.aiChatExportPdf = function(){
+    if(!st.messages.length){ alert('Empty chat — nothing to export.'); return; }
+    var addr = _gv('prop_address') || 'Deal';
+    var w = window.open('', '_blank', 'width=900,height=1100');
+    if(!w){ alert('Pop-up blocked — please allow pop-ups.'); return; }
+    var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Deal Chat — '+_e(addr)+'</title><style>'
+      + 'body{font-family:Inter,system-ui,sans-serif;background:#fff;color:#111;padding:30px;max-width:780px;margin:0 auto;line-height:1.5}'
+      + 'h1{font-size:18pt;color:#1b3d6b;margin:0 0 6pt;border-bottom:2px solid #1b3d6b;padding-bottom:6pt}'
+      + '.sub{font-size:11pt;color:#475569;margin-bottom:18pt}'
+      + '.msg{margin-bottom:12pt;padding:10pt 14pt;border-radius:10pt;page-break-inside:avoid}'
+      + '.msg.user{background:#eff6ff;border-left:3px solid #4338ca;margin-left:40pt}'
+      + '.msg.assistant{background:#f1f5f9;border-left:3px solid #047857;margin-right:40pt}'
+      + '.role{font-size:9pt;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin-bottom:5pt}'
+      + '.body{font-size:11pt;white-space:pre-wrap}'
+      + '@page{margin:.6in}'
+      + '</style></head><body>'
+      + '<h1>Deal Chat — '+_e(addr)+'</h1>'
+      + '<div class="sub">Generated '+(new Date()).toLocaleDateString()+' · '+st.messages.filter(function(m){return !m.thinking;}).length+' messages</div>';
+    st.messages.forEach(function(m){
+      if(m.thinking) return;
+      html += '<div class="msg '+m.role+'"><div class="role">'+(m.role==='user'?'You':'Assistant')+'</div><div class="body">'+_e(m.content)+'</div></div>';
+    });
+    html += '</body></html>';
+    w.document.write(html); w.document.close();
+    setTimeout(function(){w.print();}, 600);
+  };
+
+  // Auto-resize input
+  function _autosize(){
+    var inp=_id('aiChatInput'); if(!inp) return;
+    inp.addEventListener('input', function(){
+      inp.style.height = 'auto';
+      inp.style.height = Math.min(inp.scrollHeight, 120) + 'px';
+    });
+  }
+
+  // Init
+  function _init(){
+    _autosize();
+    _load();
+    _updateContextSub();
+    _updateFooter();
+    // Refresh subtitle whenever an Intake field changes
+    document.addEventListener('input', function(e){
+      if(!e.target || !e.target.id) return;
+      if(/^(prop_|mkt_|pur_)/.test(e.target.id)) {
+        setTimeout(function(){ _updateContextSub(); }, 150);
+      }
+    });
+  }
+  if(document.readyState !== 'loading') setTimeout(_init, 500);
+  else document.addEventListener('DOMContentLoaded', function(){setTimeout(_init, 500);});
 })();
 </script>
 
