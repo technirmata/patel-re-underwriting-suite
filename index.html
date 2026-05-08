@@ -8111,7 +8111,7 @@ function openSettings() {
   const keyEl = el('settingsApiKey');
   if(keyEl) {
     keyEl.value = savedKey;
-    keyEl.placeholder = (_aiProvider === 'groq' && !savedKey) ? 'Using built-in default key — paste yours here to override' : 'Paste your API key here';
+    keyEl.placeholder = (_aiProvider === 'groq' && !savedKey) ? 'Paste your free Groq API key here' : 'Paste your API key here';
   }
   const depthEl = el('settingsDepth');
   if(depthEl) depthEl.value = savedDepth;
@@ -8127,7 +8127,9 @@ function saveSettings() {
   const keyEl = el('settingsApiKey');
   const depthEl = el('settingsDepth');
   if(keyEl && keyEl.value.trim()) {
-    localStorage.setItem('ai_research_key_'+_aiProvider, keyEl.value.trim());
+    // Store per-user (so multiple accounts on this device don't collide)
+    if(typeof _setAIKey === 'function') _setAIKey(_aiProvider, keyEl.value.trim());
+    else localStorage.setItem('ai_research_key_'+_aiProvider, keyEl.value.trim());
   }
   localStorage.setItem('ai_research_provider', _aiProvider);
   if(depthEl) localStorage.setItem('ai_research_depth', depthEl.value);
@@ -8145,10 +8147,10 @@ function selectProvider(provider, suppressSave) {
   if(keyWrap) keyWrap.style.display = 'block';
 
   const hints = {
-    groq: '🆓 <strong style="color:#4ade80">FREE — no key needed, works instantly!</strong> Built-in shared key pre-loaded. Get your own free key at <a href="https://console.groq.com/keys" target="_blank" style="color:var(--accent)">console.groq.com</a> for unlimited use. Supports text (Llama 3.3 70B) &amp; image analysis (Llama 4 Scout).',
+    groq: '🆓 <strong style="color:#4ade80">Free tier — 60 seconds to set up.</strong> Get your free key at <a href="https://console.groq.com/keys" target="_blank" style="color:var(--accent)">console.groq.com/keys</a> (no credit card). Supports text (Llama 3.3 70B) &amp; image analysis (Llama 4 Scout).',
     perplexity: 'Get a key at <a href="https://www.perplexity.ai/settings/api" target="_blank" style="color:var(--accent)">perplexity.ai/settings/api</a> — uses sonar model with live web search',
     openai: 'Get a key at <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--accent)">platform.openai.com/api-keys</a> — uses gpt-4o-mini',
-    anthropic: 'Get a key at <a href="https://console.anthropic.com/" target="_blank" style="color:var(--accent)">console.anthropic.com</a> — uses claude-haiku-4-5'
+    anthropic: 'Get a key at <a href="https://console.anthropic.com/" target="_blank" style="color:var(--accent)">console.anthropic.com</a> — uses Claude Opus 4.7 (most capable)'
   };
   const hintEl = el('apiKeyHint');
   if(hintEl) hintEl.innerHTML = hints[provider]||'';
@@ -8156,7 +8158,7 @@ function selectProvider(provider, suppressSave) {
     const keyEl = el('settingsApiKey');
     if(keyEl) {
       keyEl.value = localStorage.getItem('ai_research_key_'+provider)||'';
-      keyEl.placeholder = (provider === 'groq' && !keyEl.value) ? 'Using built-in default key — paste yours here to override' : 'Paste your API key here';
+      keyEl.placeholder = (provider === 'groq' && !keyEl.value) ? 'Paste your free Groq API key here' : 'Paste your API key here';
     }
   }
 }
@@ -8444,14 +8446,28 @@ function autoFillFromResearch(r) {
 const SUPABASE_URL  = 'https://ykcvmlhpfnruucsgcxhd.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_SgpxMN1uNPrunOvI2YspEQ_uyZJ1yK0';
 // ── Default Groq key — works out of the box, users can override in ⚙️ Settings ─
-const DEFAULT_GROQ_KEY = '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';
-// ──────────────────────────────────────────────────────────────────────────────
-// Helper: get active AI key — user's custom key takes priority, falls back to default for Groq
+// Embedded default Groq key removed (was revoked, returning HTTP 401). Users now must add their own key.
+// (1) Free Groq key takes 60 sec to generate at https://console.groq.com/keys (no credit card).
+// (2) Keys are stored per signed-in user so multiple accounts on one device don't collide.
 function _getAIKey(provider) {
-  const custom = localStorage.getItem('ai_research_key_' + provider) || '';
-  if (custom) return custom;
-  if (provider === 'groq') return DEFAULT_GROQ_KEY;
-  return '';
+  if (!provider) return '';
+  const session = (typeof _getSession === 'function') ? _getSession() : null;
+  const uid = (session && session.userId) ? session.userId : 'guest';
+  // Per-user storage with legacy fallback (so users who added a key before this change don't lose it)
+  const perUser = localStorage.getItem('ai_research_key_' + provider + '_u_' + uid) || '';
+  if (perUser) return perUser;
+  const legacy = localStorage.getItem('ai_research_key_' + provider) || '';
+  if (legacy && uid !== 'guest') {
+    // One-time migration: copy legacy key into per-user slot for the signed-in user
+    try { localStorage.setItem('ai_research_key_' + provider + '_u_' + uid, legacy); } catch(e){}
+  }
+  return legacy;
+}
+function _setAIKey(provider, key) {
+  const session = (typeof _getSession === 'function') ? _getSession() : null;
+  const uid = (session && session.userId) ? session.userId : 'guest';
+  if (key) localStorage.setItem('ai_research_key_' + provider + '_u_' + uid, key);
+  else localStorage.removeItem('ai_research_key_' + provider + '_u_' + uid);
 }
 
 const JP_SESSION_KEY = 'jp_auth_session';
@@ -13630,8 +13646,11 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
   function _gn(id){ try { return (typeof gv==='function')?gv(id):0; } catch(e){return 0;} }
 
   function _projKey(){
-    var nm = _gv('projNameInput') || '';
-    return CHAT_KEY_BASE + (nm ? '_'+nm : '_default');
+    // Per-user × per-project — so multiple accounts on one device, and multiple deals per account, don't collide
+    var sess = (typeof _getSession==='function') ? _getSession() : null;
+    var uid = (sess && sess.userId) ? sess.userId : 'guest';
+    var nm  = _gv('projNameInput') || 'default';
+    return CHAT_KEY_BASE + '_u_' + uid + '_p_' + nm;
   }
   function _save(){ try { localStorage.setItem(_projKey(), JSON.stringify(st.messages)); } catch(e){} }
   function _load(){
@@ -13670,8 +13689,9 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
     var p = '';
     try { p = localStorage.getItem('ai_research_provider') || ''; } catch(e){}
     if(p && typeof _getAIKey==='function' && _getAIKey(p)) return p;
-    // Auto-pick first configured: perplexity > anthropic > openai > groq
-    var order = ['perplexity','anthropic','openai','groq'];
+    // Auto-pick first configured (no Groq fallback now that the embedded key is gone):
+    // Anthropic Opus 4.7 (smartest) > Perplexity (web-grounded) > OpenAI > Groq
+    var order = ['anthropic','perplexity','openai','groq'];
     for(var i=0;i<order.length;i++){
       if(typeof _getAIKey==='function' && _getAIKey(order[i])) return order[i];
     }
@@ -13681,8 +13701,8 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
   function _updateFooter(){
     var f = _id('aiChatFooter'); if(!f) return;
     var p = _provider();
-    if(!p){ f.innerHTML = '⚠ No AI key set. <a onclick="openSettings()" style="color:var(--accent);cursor:pointer;text-decoration:underline">Open Settings</a>'; return; }
-    var labels = {perplexity:'Perplexity (web-grounded)', anthropic:'Anthropic Claude', openai:'OpenAI GPT', groq:'Groq Llama'};
+    if(!p){ f.innerHTML = '⚠ No AI key set. <a onclick="openSettings()" style="color:var(--accent);cursor:pointer;text-decoration:underline">Open Settings</a> to add one.'; return; }
+    var labels = {perplexity:'Perplexity Sonar (web-grounded)', anthropic:'Claude Opus 4.7', openai:'OpenAI GPT-4o-mini', groq:'Groq Llama 3.3 70B'};
     f.textContent = 'Using ' + (labels[p] || p);
   }
 
