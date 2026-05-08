@@ -852,7 +852,10 @@ strong { color: #e2e8f0; }
 .pn-cap-pill{background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-weight:600;color:var(--text)}
 .pn-cap-pill.good{border-color:rgba(16,185,129,.4);color:#34d399}
 .pn-cap-pill.bad{border-color:rgba(239,68,68,.4);color:#f87171}
-.pn-row{display:grid;grid-template-columns:1.4fr .9fr 1.1fr 70px 1fr 30px;gap:6px;align-items:center;padding:7px 8px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;font-size:12px}
+.pn-row{display:grid;grid-template-columns:1.4fr .9fr 1.1fr 80px 1fr 30px;gap:6px;align-items:center;padding:7px 8px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;font-size:12px}
+.pn-pct-input{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--accent);font-size:12px;font-weight:700;outline:none;width:100%;text-align:center}
+.pn-pct-input:focus{border-color:var(--accent)}
+.pn-pct-input::after{content:'%'}
 .pn-row input,.pn-row select{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;width:100%;min-width:0}
 .pn-row input:focus,.pn-row select:focus{border-color:var(--accent)}
 .pn-row .pn-pct{color:var(--accent);font-weight:700;text-align:center}
@@ -1195,8 +1198,8 @@ strong { color: #e2e8f0; }
   <!-- Divider: Capital -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Capital</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="11" onclick="ST(11);partnerInit();partnerCompute()">👥 Partners</div>
-  <!-- Divider: Tools -->
-  <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Tools</div><div class="tab-phase-line"></div></div>
+  <!-- Divider: Calculators -->
+  <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Calculators</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="10" onclick="ST(10);vbInit();vbCompute()">💰 Velocity</div>
 </div>
 
@@ -12891,9 +12894,17 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
     var s = _stateGet();
     var inv = (s.investors||[]).find(function(x){return x.id===id;});
     if(!inv) return;
-    if(field==='capital' || field==='gpShare') value = parseFloat(value)||0;
-    inv[field] = value;
-    if(field==='type' && value==='gp' && !inv.gpShare) inv.gpShare = 1;
+    if(field==='pct'){
+      // % of total equity needed → compute $ contribution
+      var pct = parseFloat(value)||0;
+      var deal = _dealBasics();
+      var basis = deal.equityNeeded > 0 ? deal.equityNeeded : (s.investors||[]).reduce(function(a,b){return a+(+b.capital||0);},0);
+      inv.capital = Math.round(basis * pct/100);
+    } else {
+      if(field==='capital' || field==='gpShare') value = parseFloat(value)||0;
+      inv[field] = value;
+      if(field==='type' && value==='gp' && !inv.gpShare) inv.gpShare = 1;
+    }
     _stateSet(s);
     partnerCompute();
   };
@@ -12908,21 +12919,24 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
     var hdr = document.createElement('div');
     hdr.className='pn-row';
     hdr.style.cssText='background:transparent;border:none;padding:2px 8px;color:var(--muted);font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:0';
-    hdr.innerHTML='<div>Name</div><div>Type</div><div>Capital ($)</div><div>%</div><div>Email</div><div></div>';
+    hdr.innerHTML='<div>Name</div><div>Type</div><div>Capital ($)</div><div title="Edit either $ or % — they sync. % is of total equity needed.">% of Raise</div><div>Email</div><div></div>';
     box.appendChild(hdr);
+    var deal = _dealBasics();
+    var equityNeeded = deal.equityNeeded || 0;
     var totalCap = s.investors.reduce(function(a,b){return a+(+b.capital||0);},0);
+    var basis = equityNeeded > 0 ? equityNeeded : totalCap;   // % is of equity needed (preferred); fall back to total raised
     s.investors.forEach(function(inv){
       var row = document.createElement('div');
       row.className='pn-row';
-      var pct = totalCap>0 ? ((inv.capital||0)/totalCap*100).toFixed(1) : '0';
+      var pct = basis>0 ? ((inv.capital||0)/basis*100).toFixed(2) : '0';
       row.innerHTML =
          '<input value="'+(inv.name||'').replace(/"/g,'&quot;')+'" oninput="partnerUpdateInvestor(\''+inv.id+'\',\'name\',this.value)">'
         +'<select onchange="partnerUpdateInvestor(\''+inv.id+'\',\'type\',this.value)">'
           +'<option value="lp"'+(inv.type==='lp'?' selected':'')+'>LP</option>'
           +'<option value="gp"'+(inv.type==='gp'?' selected':'')+'>GP / Co-GP</option>'
         +'</select>'
-        +'<input type="number" step="1000" value="'+(+inv.capital||0)+'" oninput="partnerUpdateInvestor(\''+inv.id+'\',\'capital\',this.value)">'
-        +'<div class="pn-pct">'+pct+'%</div>'
+        +'<input type="number" step="1000" value="'+(+inv.capital||0)+'" oninput="partnerUpdateInvestor(\''+inv.id+'\',\'capital\',this.value)" title="Direct $ contribution — edit and the % updates">'
+        +'<input class="pn-pct-input" type="number" step="0.5" value="'+pct+'" oninput="partnerUpdateInvestor(\''+inv.id+'\',\'pct\',this.value)" title="% of total equity needed — edit and the $ amount updates">'
         +'<input value="'+(inv.email||'').replace(/"/g,'&quot;')+'" placeholder="email" oninput="partnerUpdateInvestor(\''+inv.id+'\',\'email\',this.value)">'
         +'<button class="pn-row-rm" title="Remove" onclick="partnerRemoveInvestor(\''+inv.id+'\')">×</button>';
       box.appendChild(row);
@@ -13109,6 +13123,56 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
       setTimeout(function(){ if(_id('pn_roster')) { partnerInit(); partnerCompute(); _applyInvestorFilter(); } }, 250);
     });
   }
+})();
+</script>
+
+<script>
+/* ── Auto-calc + bidirectional intake↔calculator sync ───────────────────
+   Treats calculators as part of the intake — any number change triggers
+   the relevant calc; any shared field stays in sync across both surfaces.
+   ──────────────────────────────────────────────────────────────────── */
+(function(){
+  function _deb(fn, ms){var t;return function(){var args=arguments;clearTimeout(t);t=setTimeout(function(){fn.apply(null,args);}, ms||200);};}
+  function _attachAuto(panelId, calcFn){
+    var p = document.getElementById(panelId); if(!p) return;
+    var run = _deb(function(e){
+      if(e && e.target && e.target.tagName==='BUTTON') return;
+      try { calcFn(); } catch(err){ console.warn('autocalc '+panelId, err); }
+      try { if(typeof R==='function') R(); } catch(err){}
+    }, 220);
+    p.addEventListener('input', run);
+    p.addEventListener('change', run);
+  }
+  function _bidirSync(idA, idB, recomputeA, recomputeB){
+    var a = document.getElementById(idA), b = document.getElementById(idB);
+    if(!a || !b) return;
+    var lock = false;
+    a.addEventListener('input', function(){
+      if(lock) return; lock = true;
+      if(b.value !== a.value){ b.value = a.value; try{recomputeB && recomputeB();}catch(e){} }
+      lock = false;
+    });
+    b.addEventListener('input', function(){
+      if(lock) return; lock = true;
+      if(a.value !== b.value){ a.value = b.value; try{recomputeA && recomputeA();}catch(e){} }
+      lock = false;
+    });
+  }
+  function _init(){
+    _attachAuto('panel2', function(){ if(typeof calcConv==='function') calcConv(); });
+    _attachAuto('panel3', function(){
+      ['calcFHA','calcHM','calcDSCR','calcSubTo','calcSF','calcLTO'].forEach(function(fn){
+        try{ if(typeof window[fn]==='function') window[fn](); }catch(e){}
+      });
+    });
+    _attachAuto('panel4', function(){ if(typeof calcMorby==='function') calcMorby(); });
+    _bidirSync('mkt_rent_growth', 'pn_rent_g',
+      function(){ if(typeof R==='function') R(); if(typeof onRentEscPct==='function') onRentEscPct(); },
+      function(){ if(typeof partnerCompute==='function') partnerCompute(); }
+    );
+  }
+  if(document.readyState !== 'loading') setTimeout(_init, 400);
+  else document.addEventListener('DOMContentLoaded', function(){ setTimeout(_init, 400); });
 })();
 </script>
 
