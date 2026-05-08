@@ -1186,7 +1186,7 @@ strong { color: #e2e8f0; }
       <button class="auth-guest" onclick="authGuest()">→ Try without an account</button>
     </div>
 
-    <!-- FORGOT PASSWORD PANEL -->
+    <!-- FORGOT PASSWORD PANEL — entry: enter email to receive reset link -->
     <div class="auth-body" id="authPanel_forgot" style="display:none">
       <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Enter your account email and we'll send a password reset link.</div>
       <div class="auth-field">
@@ -1197,8 +1197,30 @@ strong { color: #e2e8f0; }
       <div class="auth-err" id="auth_forgot_err" style="margin-bottom:10px;font-size:13px"></div>
       <div class="auth-err" id="auth_forgot_ok" style="margin-bottom:10px;font-size:13px;color:var(--green)"></div>
       <button class="auth-btn" onclick="authForgotPassword()">Send Reset Link</button>
+      <div style="margin-top:14px;padding:10px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);border-radius:8px;font-size:11.5px;color:#fbbf24;line-height:1.5">
+        ⚠ <strong>If the email doesn't arrive in 1–2 minutes:</strong> check spam, then ask the project owner to set up custom SMTP in Supabase. The default email service is rate-limited.
+      </div>
       <div class="auth-divider"><span>or</span></div>
       <button class="auth-guest" onclick="authSwitchTab('login')">← Back to Sign In</button>
+    </div>
+
+    <!-- SET NEW PASSWORD PANEL — shown after user clicks the recovery email link -->
+    <div class="auth-body" id="authPanel_reset" style="display:none">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Set a new password. Min 6 characters.</div>
+      <div class="auth-field">
+        <label>New Password</label>
+        <input type="password" id="auth_reset_pass" placeholder="Enter a new password" autocomplete="new-password" oninput="authCheckStrength(this.value)">
+        <div class="auth-strength" id="auth_strength_bar_reset"></div>
+        <div class="auth-err" id="auth_reset_pass_err"></div>
+      </div>
+      <div class="auth-field">
+        <label>Confirm New Password</label>
+        <input type="password" id="auth_reset_pass2" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')authResetPassword()">
+        <div class="auth-err" id="auth_reset_pass2_err"></div>
+      </div>
+      <div class="auth-err" id="auth_reset_err" style="margin-bottom:10px;font-size:13px"></div>
+      <div class="auth-err" id="auth_reset_ok" style="margin-bottom:10px;font-size:13px;color:var(--green)"></div>
+      <button class="auth-btn" onclick="authResetPassword()">Update Password</button>
     </div>
   </div>
 </div>
@@ -8668,8 +8690,14 @@ function _sbClient() {
         _clearSession();
         _authUpdateTopbar();
       } else if(event === 'PASSWORD_RECOVERY') {
-        document.getElementById('authOverlay').style.display = 'flex';
-        authSwitchTab('forgot');
+        // User just clicked the email recovery link — show the "set new password" panel
+        const ov = document.getElementById('authOverlay');
+        if(ov) ov.style.display = 'flex';
+        authSwitchTab('reset');
+        setTimeout(function(){
+          const f = document.getElementById('auth_reset_pass');
+          if(f) f.focus();
+        }, 200);
       }
     });
   }
@@ -8733,7 +8761,7 @@ function _authMarkErr(inputId, errId, msg) {
 }
 
 function authSwitchTab(tab) {
-  ['login','register','forgot'].forEach(t => {
+  ['login','register','forgot','reset'].forEach(t => {
     const tabBtn = document.getElementById('authTab_' + t);
     const panel  = document.getElementById('authPanel_' + t);
     if(tabBtn) tabBtn.classList.toggle('active', t === tab);
@@ -8742,7 +8770,41 @@ function authSwitchTab(tab) {
   _authClearErrs('auth_login_user','auth_login_pass','auth_login_user_err','auth_login_pass_err','auth_login_err',
                  'auth_reg_user','auth_reg_email','auth_reg_pass','auth_reg_pass2',
                  'auth_reg_user_err','auth_reg_email_err','auth_reg_pass_err','auth_reg_pass2_err','auth_reg_err',
-                 'auth_forgot_email','auth_forgot_email_err','auth_forgot_err','auth_forgot_ok');
+                 'auth_forgot_email','auth_forgot_email_err','auth_forgot_err','auth_forgot_ok',
+                 'auth_reset_pass','auth_reset_pass2','auth_reset_pass_err','auth_reset_pass2_err','auth_reset_err','auth_reset_ok');
+}
+
+// ── Set new password (after user clicks the recovery email link) ──────────
+async function authResetPassword(){
+  const p1El = document.getElementById('auth_reset_pass');
+  const p2El = document.getElementById('auth_reset_pass2');
+  const errBox = document.getElementById('auth_reset_err');
+  const okBox  = document.getElementById('auth_reset_ok');
+  _authClearErrs('auth_reset_pass','auth_reset_pass2','auth_reset_pass_err','auth_reset_pass2_err','auth_reset_err','auth_reset_ok');
+  const p1 = p1El ? p1El.value : '';
+  const p2 = p2El ? p2El.value : '';
+  if(!p1 || p1.length < 6){ _authMarkErr('auth_reset_pass','auth_reset_pass_err','Password must be at least 6 characters'); return; }
+  if(p1 !== p2){ _authMarkErr('auth_reset_pass2','auth_reset_pass2_err','Passwords do not match'); return; }
+  if(!_sbOk()){ _authShowErr('auth_reset_err','Supabase not configured.'); return; }
+  const btn = document.querySelector('#authPanel_reset .auth-btn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Updating…'; }
+  try {
+    const { data, error } = await _sbClient().auth.updateUser({ password: p1 });
+    if(error){ _authShowErr('auth_reset_err', error.message || 'Could not update password.'); return; }
+    if(okBox){ okBox.textContent = '✅ Password updated. Signing you in…'; okBox.classList.add('show'); }
+    // updateUser keeps the existing session, so user is already signed in via the recovery token
+    setTimeout(function(){
+      _authDismiss();
+      _authUpdateTopbar();
+      if(typeof showProjToast==='function') showProjToast('🔐 Password updated successfully');
+      // Clean any leftover recovery hash from URL
+      try { history.replaceState(null,'', location.pathname + location.search); } catch(e){}
+    }, 800);
+  } catch(err){
+    _authShowErr('auth_reset_err', 'Error: ' + (err.message || 'unknown'));
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = 'Update Password'; }
+  }
 }
 
 function authCheckStrength(pass) {
