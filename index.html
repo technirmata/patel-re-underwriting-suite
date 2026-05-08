@@ -824,6 +824,30 @@ strong { color: #e2e8f0; }
 .ai-progress-bar{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:2px;transition:width .4s ease;width:0%}
 /* END AI CSS */
 
+/* ── Velocity Banking Calculator (panel10) ─────────────────────────────── */
+.vb-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px}
+.vb-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.vb-result-card{background:linear-gradient(135deg,var(--surface),var(--surface2))}
+.vb-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vb-stat{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.vb-stat-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.vb-stat-val{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.vb-stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.vb-stat-velocity{border-color:rgba(99,102,241,.45);background:rgba(99,102,241,.06)}
+.vb-stat-velocity .vb-stat-val{color:var(--accent)}
+.vb-stat-savings{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.05)}
+.vb-stat-savings .vb-stat-val{color:#10b981}
+.vb-warn{margin-top:12px;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.5;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);color:#fbbf24}
+.vb-warn.bad{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.3);color:#fca5a5}
+.vb-disclaimer{background:rgba(245,158,11,.04);border-color:rgba(245,158,11,.25)}
+@media (max-width:760px){
+  .vb-grid{grid-template-columns:1fr}
+  .vb-stat-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:480px){
+  .vb-stat-grid{grid-template-columns:1fr}
+}
+
 /* ────────────────────────────────────────────────────────────────────────
    PRINT THEME — ink-saving light mode
    Active for: Cmd+P direct, printExecPDF popup (inherits this stylesheet),
@@ -1095,6 +1119,9 @@ strong { color: #e2e8f0; }
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Pitch</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="9" onclick="ST(9);refreshPitchDeckPreview()">🎯 Pitch Deck</div>
   <div class="tab" data-tab="7" onclick="ST(7);updateExec()">📄 Exec Report</div>
+  <!-- Divider: Tools -->
+  <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Tools</div><div class="tab-phase-line"></div></div>
+  <div class="tab" data-tab="10" onclick="ST(10);vbInit();vbCompute()">💰 Velocity</div>
 </div>
 
 <!-- ══════════════════════════════════════════════ PANEL 0: INTAKE & SCREEN -->
@@ -2957,6 +2984,107 @@ strong { color: #e2e8f0; }
   </div>
 </div>
 </div><!-- end panel9 -->
+
+<!-- ══════════════════════════════════════════════ PANEL 10: VELOCITY BANKING -->
+<div class="panel" id="panel10">
+  <div class="vb-hdr">
+    <div>
+      <h2 style="margin:0;font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.2px">💰 Velocity Banking Calculator</h2>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:3px">Compare standard mortgage payoff against the LOC-chunking strategy. Pre-fills from the deal in Intake when available.</div>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="vbResetDefaults();vbCompute()" style="flex-shrink:0">↺ Reset</button>
+  </div>
+
+  <div class="vb-grid">
+    <!-- LEFT: Inputs -->
+    <div class="card">
+      <div class="card-title">📊 Inputs</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Mortgage</div>
+          <div class="field"><label>Balance ($)</label><input type="number" id="vb_m_bal" step="1000" oninput="vbCompute()"></div>
+          <div class="field"><label>Annual rate (%)</label><input type="number" id="vb_m_apr" step="0.05" oninput="vbCompute()"></div>
+          <div class="field"><label>Base monthly payment ($)</label><input type="number" id="vb_m_pmt" step="10" oninput="vbCompute()"></div>
+          <div class="field"><label>Term remaining (months)</label><input type="number" id="vb_m_n" step="1" oninput="vbCompute()" placeholder="auto"></div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#34d399;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">LOC / HELOC</div>
+          <div class="field"><label>Credit limit ($)</label><input type="number" id="vb_l_lim" step="1000" oninput="vbCompute()"></div>
+          <div class="field"><label>Annual rate (%)</label><input type="number" id="vb_l_apr" step="0.05" oninput="vbCompute()"></div>
+          <div class="field"><label>Min payment (% of balance)</label><input type="number" id="vb_l_min" step="0.1" oninput="vbCompute()"></div>
+          <div class="field"><label>Chunk size ($)</label><input type="number" id="vb_chunk" step="500" oninput="vbCompute()" placeholder="auto"></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+        <div style="font-size:10px;font-weight:700;color:#fbbf24;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Monthly cash flow</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="field"><label>Income ($)</label><input type="number" id="vb_income" step="100" oninput="vbCompute()"></div>
+          <div class="field"><label>Expenses incl. mortgage ($)</label><input type="number" id="vb_expense" step="100" oninput="vbCompute()"></div>
+        </div>
+        <div id="vb_cashflow_note" style="font-size:11.5px;color:var(--muted);margin-top:4px"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Results -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card vb-result-card">
+        <div class="card-title">⚖ Comparison</div>
+        <div class="vb-stat-grid">
+          <div class="vb-stat">
+            <div class="vb-stat-label">Standard payoff</div>
+            <div class="vb-stat-val" id="vb_std_months">—</div>
+            <div class="vb-stat-sub" id="vb_std_interest">$0 interest</div>
+          </div>
+          <div class="vb-stat vb-stat-velocity">
+            <div class="vb-stat-label">Velocity payoff</div>
+            <div class="vb-stat-val" id="vb_vel_months">—</div>
+            <div class="vb-stat-sub" id="vb_vel_interest">$0 interest</div>
+          </div>
+          <div class="vb-stat vb-stat-savings">
+            <div class="vb-stat-label">Months saved</div>
+            <div class="vb-stat-val" id="vb_saved_months">—</div>
+            <div class="vb-stat-sub" id="vb_saved_pct">—</div>
+          </div>
+          <div class="vb-stat vb-stat-savings">
+            <div class="vb-stat-label">Interest saved</div>
+            <div class="vb-stat-val" id="vb_saved_interest">$0</div>
+            <div class="vb-stat-sub" id="vb_chunks_count">0 chunks</div>
+          </div>
+        </div>
+        <div id="vb_warn" class="vb-warn" style="display:none"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📉 Balance over time</div>
+        <div style="position:relative;height:240px"><canvas id="vb_chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Disclaimer -->
+  <div class="card vb-disclaimer">
+    <div class="card-title" style="color:#fbbf24">⚠ About this strategy</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6">
+      Velocity banking uses a line of credit (typically a HELOC) to make principal "chunks" against a higher-interest mortgage,
+      then aggressively pays down the LOC using monthly cash flow. The math here is faithful to that model.
+      <strong style="color:#fbbf24">Important caveats:</strong> HELOCs are usually variable-rate — if the LOC rate climbs above the mortgage rate, the strategy can lose money.
+      Most independent analyses show real-world savings are modest vs. simply applying the same monthly surplus directly to the mortgage as extra principal.
+      Use the Mortgage Extra Payment comparison row below before committing to a HELOC strategy.
+    </div>
+  </div>
+
+  <!-- Sanity check vs simple extra-principal -->
+  <div class="card">
+    <div class="card-title">🧪 Sanity check — vs. just paying extra principal</div>
+    <div id="vb_sanity_box" style="font-size:13px;color:var(--text2);line-height:1.7"></div>
+  </div>
+
+  <!-- Chunk events log -->
+  <div class="card">
+    <div class="card-title">📜 Velocity simulation log</div>
+    <div id="vb_log" style="font-size:11.5px;color:var(--text2);max-height:240px;overflow-y:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:10px"></div>
+  </div>
+</div><!-- end panel10 -->
 
 
 <script>
@@ -12162,6 +12290,279 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
     <button id="tmOwnerSwitchBtn" style="display:none" onclick="_tmSwitchToOwner()"></button>
   </div>
 </div>
+
+<script>
+/* ── Velocity Banking Calculator (panel10) ──────────────────────────────
+   Standard amort vs LOC-chunking simulation, plus an extra-principal
+   "sanity check" baseline and a Chart.js balance-over-time chart.
+   Prefills from the deal in Intake when available, else uses sensible defaults.
+   ──────────────────────────────────────────────────────────────────── */
+(function(){
+  function _id(x){return document.getElementById(x);}
+  function _num(x,d){var v=parseFloat(x);return (isFinite(v))?v:(d||0);}
+  function _money(n){var s=(n<0?'-':'')+'$'+Math.abs(Math.round(n)).toLocaleString();return s;}
+
+  function _calcMonthlyPaymentFromTerm(P,annualRate,termMonths){
+    var r=annualRate/12;
+    if(r===0) return P/termMonths;
+    return P*r/(1-Math.pow(1+r,-termMonths));
+  }
+
+  // Standard mortgage amortization. Returns {months, totalInterest, balanceSeries[]}
+  function _standardAmort(P, monthlyPmt, annualRate, capMonths){
+    capMonths = capMonths || 720;
+    var r = annualRate/12;
+    var bal = P;
+    var totalInt = 0;
+    var months = 0;
+    var series = [bal];
+    while(bal > 0.005 && months < capMonths){
+      var intM = bal * r;
+      var princM = monthlyPmt - intM;
+      if(princM <= 0){return {months:Infinity, totalInterest:Infinity, balanceSeries:series, halted:'negative_amort'};}
+      if(princM > bal) princM = bal;
+      bal -= princM;
+      totalInt += intM;
+      months++;
+      series.push(Math.max(bal, 0));
+    }
+    return {months:months, totalInterest:totalInt, balanceSeries:series, halted: months>=capMonths?'cap':null};
+  }
+
+  // Velocity simulation. Returns rich result object.
+  function _velocitySim(P, mAPR, mPmt, locLim, lAPR, locMinPct, chunk, surplus, capMonths){
+    capMonths = capMonths || 720;
+    var mR = mAPR/12, lR = lAPR/12;
+    var mB = P, lB = 0;
+    var mInt = 0, lInt = 0;
+    var months = 0, chunks = 0;
+    var log = [];
+    var balSeries = [P];   // mortgage + LOC combined
+    while((mB > 0.005 || lB > 0.005) && months < capMonths){
+      // 1) Apply normal mortgage payment
+      if(mB > 0){
+        var intM = mB * mR;
+        var princM = mPmt - intM;
+        if(princM <= 0){ return {months:Infinity, totalInterest:Infinity, log:log, balanceSeries:balSeries, halted:'negative_amort_mortgage'}; }
+        if(princM > mB){ princM = mB; }
+        mB -= princM;
+        mInt += intM;
+      }
+      // 2) Trigger chunk when LOC is fully paid down and mortgage still has balance
+      if(mB > 0.005 && lB < 0.5 && surplus > 0){
+        var c = Math.min(chunk, mB, locLim);
+        if(c > 0){
+          mB -= c;
+          lB += c;
+          chunks++;
+          if(log.length < 80) log.push('Mo '+(months+1)+': chunk '+_money(c)+' → mortgage. Mtg='+_money(mB)+', LOC='+_money(lB));
+        }
+      }
+      // 3) LOC interest + paydown using surplus + min payment
+      if(lB > 0){
+        var intL = lB * lR;
+        lB += intL;
+        lInt += intL;
+        var minPay = lB * (locMinPct/100);
+        var pay = Math.max(surplus, minPay);
+        if(pay > lB) pay = lB;
+        lB -= pay;
+      }
+      months++;
+      balSeries.push(Math.max(mB, 0) + Math.max(lB, 0));
+      if(months > 12 && chunks === 0 && mB > P * 0.95){
+        // Velocity is doing nothing useful — bail out, fall back to standard
+        return {months:Infinity, totalInterest:Infinity, log:log, balanceSeries:balSeries, halted:'no_progress'};
+      }
+    }
+    return {
+      months:months, mortgageInterest:mInt, locInterest:lInt,
+      totalInterest:mInt+lInt, chunks:chunks, log:log,
+      balanceSeries:balSeries, halted: months>=capMonths?'cap':null
+    };
+  }
+
+  // Public: reset to defaults (or prefill from intake)
+  window.vbResetDefaults = function(){
+    var s = (typeof S !== 'undefined') ? S : {};
+    var price = (typeof gv === 'function' && s.price) ? s.price : 0;
+    var down  = (s.down>0) ? s.down : (price ? price*0.20 : 0);
+    var bal   = price ? Math.max(price - down, 0) : 250000;
+    var rate  = (typeof gv === 'function' && gv('mkt_rate')) ? gv('mkt_rate') : 7.0;
+    var termY = (typeof gv === 'function' && gv('amort_term')) ? gv('amort_term') : 30;
+    var pmt   = _calcMonthlyPaymentFromTerm(bal, rate/100, termY*12);
+    var grossRent = (typeof gv === 'function' && s.grossRent>0) ? s.grossRent/12 : 0;
+    var totalExp  = (typeof gv === 'function' && s.totalExp>0)  ? s.totalExp/12  : 0;
+    var income = grossRent || 10000;
+    var expense = (totalExp + pmt) || 7500;
+
+    if(_id('vb_m_bal'))   _id('vb_m_bal').value   = Math.round(bal);
+    if(_id('vb_m_apr'))   _id('vb_m_apr').value   = (+rate).toFixed(2);
+    if(_id('vb_m_pmt'))   _id('vb_m_pmt').value   = Math.round(pmt);
+    if(_id('vb_m_n'))     _id('vb_m_n').value     = '';
+    if(_id('vb_l_lim'))   _id('vb_l_lim').value   = 50000;
+    if(_id('vb_l_apr'))   _id('vb_l_apr').value   = 9.0;
+    if(_id('vb_l_min'))   _id('vb_l_min').value   = 2.0;
+    if(_id('vb_chunk'))   _id('vb_chunk').value   = '';   // auto
+    if(_id('vb_income'))  _id('vb_income').value  = Math.round(income);
+    if(_id('vb_expense')) _id('vb_expense').value = Math.round(expense);
+  };
+
+  // Public: init only fills if empty (so user edits are preserved)
+  window.vbInit = function(){
+    var needsSeed = !_id('vb_m_bal') || !_id('vb_m_bal').value;
+    if(needsSeed) vbResetDefaults();
+  };
+
+  // Public: main compute
+  window.vbCompute = function(){
+    var bal   = _num(_id('vb_m_bal') && _id('vb_m_bal').value, 0);
+    var aprPct= _num(_id('vb_m_apr') && _id('vb_m_apr').value, 7);
+    var pmt   = _num(_id('vb_m_pmt') && _id('vb_m_pmt').value, 0);
+    var lim   = _num(_id('vb_l_lim') && _id('vb_l_lim').value, 0);
+    var lAPRP = _num(_id('vb_l_apr') && _id('vb_l_apr').value, 9);
+    var lMin  = _num(_id('vb_l_min') && _id('vb_l_min').value, 2);
+    var chunk = _num(_id('vb_chunk') && _id('vb_chunk').value, 0);
+    var inc   = _num(_id('vb_income') && _id('vb_income').value, 0);
+    var exp   = _num(_id('vb_expense') && _id('vb_expense').value, 0);
+    var surplus = inc - exp;
+
+    // Auto-chunk: 6 × surplus, clamped to [2000, locLim]
+    if(!chunk || chunk < 1) chunk = Math.max(2000, Math.min(lim, surplus*6));
+
+    var noteEl = _id('vb_cashflow_note');
+    if(noteEl){
+      noteEl.textContent = surplus>0
+        ? 'Net surplus: '+_money(surplus)+' / month available for paydown.'
+        : (surplus===0?'Break-even — velocity needs a positive surplus.'
+                      :'Negative surplus — velocity strategy will fail.');
+      noteEl.style.color = surplus>0 ? '#34d399' : '#f87171';
+    }
+
+    var stdPmt = pmt > 0 ? pmt : _calcMonthlyPaymentFromTerm(bal, aprPct/100, 360);
+    var std = _standardAmort(bal, stdPmt, aprPct/100);
+    var vel = (surplus>0 && lim>0) ? _velocitySim(bal, aprPct/100, stdPmt, lim, lAPRP/100, lMin, chunk, surplus) : null;
+    var extraPmt = stdPmt + Math.max(0, surplus);
+    var ext = _standardAmort(bal, extraPmt, aprPct/100);
+
+    // Update stat tiles
+    var stdM = std.months===Infinity ? '—' : std.months;
+    _id('vb_std_months').textContent = stdM + (typeof stdM==='number'?' mo':'');
+    _id('vb_std_interest').textContent = (std.totalInterest===Infinity ? '—' : _money(std.totalInterest)) + ' interest';
+
+    if(vel && vel.months !== Infinity){
+      _id('vb_vel_months').textContent = vel.months + ' mo';
+      _id('vb_vel_interest').textContent = _money(vel.totalInterest) + ' interest';
+      var saved = std.months - vel.months;
+      var savedInt = std.totalInterest - vel.totalInterest;
+      _id('vb_saved_months').textContent = (saved>0?saved:0) + ' mo';
+      _id('vb_saved_pct').textContent = std.months ? ((saved/std.months*100).toFixed(1)+'% faster') : '—';
+      _id('vb_saved_interest').textContent = _money(Math.max(0, savedInt));
+      _id('vb_chunks_count').textContent = vel.chunks + ' chunk' + (vel.chunks===1?'':'s');
+    } else {
+      _id('vb_vel_months').textContent = '—';
+      _id('vb_vel_interest').textContent = '—';
+      _id('vb_saved_months').textContent = '—';
+      _id('vb_saved_pct').textContent = '—';
+      _id('vb_saved_interest').textContent = '—';
+      _id('vb_chunks_count').textContent = '—';
+    }
+
+    // Warnings
+    var warns = [];
+    if(surplus <= 0)        warns.push({lvl:'bad',  msg:'You need positive monthly surplus (income − expense) for velocity banking. Otherwise the LOC just compounds and the strategy fails.'});
+    if(lAPRP >= aprPct)     warns.push({lvl:'warn', msg:'Your LOC rate ('+lAPRP+'%) is ≥ mortgage rate ('+aprPct+'%). Velocity costs more than just paying the mortgage normally.'});
+    if(vel && vel.halted==='no_progress') warns.push({lvl:'warn', msg:'Velocity made little progress in 12 months — chunk size or surplus is too small. Try a larger chunk or extra principal payments instead.'});
+    var w = _id('vb_warn');
+    if(warns.length){
+      w.style.display='block';
+      w.className='vb-warn'+(warns[0].lvl==='bad'?' bad':'');
+      w.innerHTML = warns.map(function(x){return '• '+x.msg;}).join('<br>');
+    } else w.style.display='none';
+
+    // Sanity check: extra-principal vs velocity
+    var sb = _id('vb_sanity_box');
+    if(sb){
+      var html = '';
+      var extM = ext.months===Infinity ? '—' : ext.months;
+      var extI = ext.totalInterest===Infinity ? '—' : _money(ext.totalInterest);
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">';
+      html += '<div><strong style="color:#a78bfa">Extra principal only</strong> '
+            + '<span style="color:var(--muted);font-size:11px">— pay '+_money(stdPmt)+'/mo + surplus '+_money(Math.max(0,surplus))+'/mo</span><br>'
+            + '<span style="font-size:18px;font-weight:800;color:var(--text)">'+extM+' months</span> · '+extI+' interest</div>';
+      if(vel && vel.months!==Infinity){
+        var dM = ext.months - vel.months;
+        var dI = ext.totalInterest - vel.totalInterest;
+        var verdict;
+        if(dI > 500){
+          verdict = '<span style="color:#10b981;font-weight:700">Velocity beats extra-principal by '+_money(dI)+'.</span> The HELOC strategy is worth considering — but remember HELOC rates are variable.';
+        } else if(dI < -500){
+          verdict = '<span style="color:#f87171;font-weight:700">Just paying extra principal beats velocity by '+_money(Math.abs(dI))+'.</span> Skip the HELOC complexity.';
+        } else {
+          verdict = '<span style="color:#fbbf24;font-weight:700">It\'s essentially a wash ('+_money(Math.abs(dI))+' difference).</span> Extra-principal is simpler with no HELOC rate risk.';
+        }
+        html += '<div>'+verdict+'</div>';
+      } else {
+        html += '<div style="color:var(--muted)">Velocity needs surplus + LOC limit to compute.</div>';
+      }
+      html += '</div>';
+      sb.innerHTML = html;
+    }
+
+    // Log
+    var lg = _id('vb_log');
+    if(lg){
+      if(vel && vel.log && vel.log.length){
+        lg.innerHTML = vel.log.join('<br>') + (vel.chunks > 80 ? '<br>… ('+(vel.chunks-80)+' more chunks)' : '');
+      } else if(vel && !vel.chunks){
+        lg.innerHTML = '<em style="color:var(--muted)">No chunks fired — surplus or LOC limit insufficient.</em>';
+      } else {
+        lg.innerHTML = '<em style="color:var(--muted)">Velocity simulation unavailable — fix the warnings above.</em>';
+      }
+    }
+
+    // Chart
+    _vbDrawChart(std.balanceSeries, vel && vel.balanceSeries, ext.balanceSeries);
+  };
+
+  // Chart instance singleton
+  var _vbChart = null;
+  function _vbDrawChart(stdSeries, velSeries, extSeries){
+    var c = _id('vb_chart'); if(!c || typeof Chart === 'undefined') return;
+    if(_vbChart){ try{ _vbChart.destroy(); }catch(e){} _vbChart = null; }
+    var maxLen = Math.max(stdSeries.length, (velSeries||[]).length, (extSeries||[]).length);
+    var labels = []; for(var i=0;i<maxLen;i++) labels.push(i);
+    var datasets = [];
+    datasets.push({label:'Standard payoff', data:stdSeries, borderColor:'#94a3b8', backgroundColor:'rgba(148,163,184,.08)', tension:.2, pointRadius:0, borderWidth:2, fill:false});
+    if(extSeries) datasets.push({label:'Extra principal', data:extSeries, borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,.1)', tension:.2, pointRadius:0, borderWidth:2, borderDash:[4,4], fill:false});
+    if(velSeries) datasets.push({label:'Velocity (mortgage+LOC)', data:velSeries, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,.12)', tension:.2, pointRadius:0, borderWidth:2.5, fill:true});
+    _vbChart = new Chart(c, {
+      type:'line',
+      data:{labels:labels, datasets:datasets},
+      options:{
+        responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{
+          legend:{labels:{color:'#cbd5e1', boxWidth:14, font:{size:11}}},
+          tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': $'+Math.round(ctx.parsed.y).toLocaleString();}}}
+        },
+        scales:{
+          x:{ticks:{color:'#64748b', maxTicksLimit:10, callback:function(v){return v+' mo';}}, grid:{color:'rgba(255,255,255,.04)'}},
+          y:{ticks:{color:'#64748b', callback:function(v){return '$'+(v/1000).toFixed(0)+'k';}}, grid:{color:'rgba(255,255,255,.05)'}}
+        }
+      }
+    });
+  }
+
+  // Auto-init on DOM ready (for direct ?tab=10 deep-links etc.)
+  if(document.readyState !== 'loading'){
+    setTimeout(function(){ if(_id('vb_m_bal')) vbInit(); }, 200);
+  } else {
+    document.addEventListener('DOMContentLoaded', function(){
+      setTimeout(function(){ if(_id('vb_m_bal')) vbInit(); }, 200);
+    });
+  }
+})();
+</script>
 
 </body>
 </html>
