@@ -887,6 +887,48 @@ strong { color: #e2e8f0; }
   .ai-fab{bottom:16px;right:16px;width:50px;height:50px;font-size:20px}
 }
 
+/* ── AI Research checklist (panel14) ───────────────────────────────────── */
+.ri-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.ri-empty{text-align:center;padding:32px 16px;color:var(--muted)}
+.ri-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;transition:.15s;overflow:hidden}
+.ri-item:hover{border-color:rgba(99,102,241,.35)}
+.ri-item-row{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;user-select:none}
+.ri-item-row:hover{background:rgba(99,102,241,.04)}
+.ri-status{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;background:var(--surface3);border:1px solid var(--border)}
+.ri-status.s-pending{background:var(--surface3);color:var(--muted)}
+.ri-status.s-loading{background:rgba(99,102,241,.15);color:var(--accent);animation:spin 1s linear infinite}
+.ri-status.s-verified{background:rgba(16,185,129,.18);color:#10b981;border-color:rgba(16,185,129,.4)}
+.ri-status.s-flag{background:rgba(245,158,11,.18);color:#f59e0b;border-color:rgba(245,158,11,.4)}
+.ri-status.s-killer{background:rgba(239,68,68,.18);color:#ef4444;border-color:rgba(239,68,68,.4)}
+.ri-status.s-unknown{background:var(--surface3);color:var(--muted)}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.ri-item-meta{flex:1;min-width:0}
+.ri-item-title{font-size:13px;font-weight:600;color:var(--text);line-height:1.35}
+.ri-item-rationale{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ri-item-prio{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:99px;letter-spacing:.05em;text-transform:uppercase;flex-shrink:0}
+.ri-item-prio.high{background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+.ri-item-prio.medium{background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.ri-item-prio.low{background:rgba(148,163,184,.12);color:var(--muted);border:1px solid rgba(148,163,184,.25)}
+.ri-item-actions{display:flex;gap:3px;flex-shrink:0;opacity:.5;transition:opacity .15s}
+.ri-item:hover .ri-item-actions, .ri-item.expanded .ri-item-actions{opacity:1}
+.ri-item-actions button{background:none;border:1px solid transparent;border-radius:6px;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 7px;transition:.15s;line-height:1}
+.ri-item-actions button:hover{background:var(--surface3);color:var(--text);border-color:var(--border)}
+.ri-item-detail{padding:10px 14px 12px;border-top:1px solid var(--border);background:var(--surface3);display:none;font-size:12px;color:var(--text2);line-height:1.6}
+.ri-item.expanded .ri-item-detail{display:block}
+.ri-item-detail p{margin:0 0 8px}
+.ri-item-detail .ri-finding-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.ri-item-detail .ri-source{font-size:11px;color:var(--accent);text-decoration:none;display:inline-block;background:rgba(99,102,241,.1);padding:2px 7px;border-radius:5px;margin:2px 4px 2px 0}
+.ri-item-detail .ri-source:hover{background:rgba(99,102,241,.2)}
+.ri-mem-row{display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;cursor:pointer;transition:.15s}
+.ri-mem-row:hover{border-color:rgba(99,102,241,.4);background:rgba(99,102,241,.04)}
+.ri-mem-icon{width:30px;height:30px;border-radius:50%;background:rgba(99,102,241,.12);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.ri-mem-info{flex:1;min-width:0;font-size:12px}
+.ri-mem-name{font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ri-mem-sub{color:var(--muted);font-size:10.5px;margin-top:1px}
+.ri-progress{height:3px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-top:8px;display:none}
+.ri-progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .3s ease}
+.ri-progress.active{display:block}
+
 /* ── Finance Calculators hub (panel13) ─────────────────────────────────── */
 .fc-hub-nav{display:flex;gap:4px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .fc-hub-nav::-webkit-scrollbar{display:none}
@@ -1234,6 +1276,9 @@ strong { color: #e2e8f0; }
 <div class="tabs">
   <!-- Phase: Intake (the deal as input) -->
   <div class="tab active" data-tab="0" onclick="ST(0)">📋 Deal Intake</div>
+  <!-- Phase: AI Research (deal-specific checklist + web-grounded due diligence) -->
+  <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Research</div><div class="tab-phase-line"></div></div>
+  <div class="tab" data-tab="14" onclick="ST(14);riAutoOpen()">🔍 AI Research</div>
   <!-- Phase: Analyze (compare structures + KPIs) -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Analyze</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="1" onclick="ST(1)">✅ Recommendation</div>
@@ -3315,6 +3360,60 @@ strong { color: #e2e8f0; }
   <div id="pn_warn" class="vb-warn" style="display:none"></div>
 </div><!-- end panel11 -->
 
+<!-- ══════════════════════════════════════════════ PANEL 14: AI RESEARCH (deal-specific checklist) -->
+<div class="panel" id="panel14">
+  <div class="ri-hdr">
+    <div style="flex:1;min-width:0">
+      <h2 style="margin:0;font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.2px">🔍 AI Research — Deal-Specific Checklist</h2>
+      <div id="riSub" style="font-size:11.5px;color:var(--muted);margin-top:3px">Generates a custom due-diligence checklist based on this deal's asset class, size, and market. Researches each item with web-grounded sources.</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-shrink:0;align-items:center;flex-wrap:wrap">
+      <select id="ri_asset_class" class="wm-role-select" style="font-size:12px;padding:7px 10px" onchange="riOnAssetClassChange()" title="Asset class — auto-detected from Intake; override here if needed">
+        <option value="auto">⚙ Auto-detect from Intake</option>
+        <option value="multifamily_small_5_to_49">Multifamily — small (5-49 units)</option>
+        <option value="multifamily_syndication_50plus">Multifamily — syndication (50+ units)</option>
+        <option value="sfr_1_to_4">SFR / 1-4 units</option>
+        <option value="mixed_use">Mixed-use</option>
+        <option value="retail_office_industrial">Retail / Office / Industrial</option>
+        <option value="self_storage">Self-storage</option>
+        <option value="mhp">Mobile Home Park</option>
+        <option value="land_development">Land / development site</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="riGenerateChecklist()" id="riGenBtn">⚡ Generate Custom Checklist</button>
+    </div>
+  </div>
+
+  <!-- Memory Bank -->
+  <div class="card" id="riMemoryCard" style="margin-bottom:14px">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>📚 Memory Bank</span>
+      <span id="riMemoryCount" style="font-size:11px;color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0">0 saved checklists</span>
+    </div>
+    <div id="riMemoryList" style="font-size:12.5px;color:var(--text2)"></div>
+  </div>
+
+  <!-- Generated Checklist -->
+  <div class="card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <span id="riChecklistTitle">📋 Checklist</span>
+      <div style="display:flex;gap:6px" id="riChecklistActions">
+        <button class="btn btn-outline btn-sm" id="riResearchAllBtn" onclick="riResearchAll()" style="display:none;font-size:11px">🔬 Research All</button>
+        <button class="btn btn-outline btn-sm" id="riSaveBtn" onclick="riSaveToMemory()" style="display:none;font-size:11px">💾 Save to Memory</button>
+      </div>
+    </div>
+    <div id="riChecklist">
+      <div class="ri-empty">
+        <div style="font-size:32px;opacity:.3">🔍</div>
+        <div style="font-weight:600;margin-top:8px;color:var(--text)">No checklist yet</div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.6">Click <strong>⚡ Generate Custom Checklist</strong> to have AI build one for this specific deal.<br>Memory of past deals improves the recommendation over time.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status / errors -->
+  <div id="riWarn" class="vb-warn" style="display:none"></div>
+</div><!-- end panel14 -->
+
 <!-- ══════════════════════════════════════════════ PANEL 13: FINANCE CALCULATORS HUB -->
 <div class="panel" id="panel13">
   <div class="fc-hub-nav" id="fcHubNav">
@@ -3400,7 +3499,8 @@ function ST(i) {
     5: ()=>{ updateDash(); seedNCP(); if(typeof buildSnowball==='function') buildSnowball(); },
     7: updateExec,
     8: buildProjection,
-    13:()=>{ if(typeof fcInit==='function') fcInit(); }
+    13:()=>{ if(typeof fcInit==='function') fcInit(); },
+    14:()=>{ if(typeof riAutoOpen==='function') riAutoOpen(); }
   };
   if(panelCalc[i]) setTimeout(panelCalc[i], 50);
 }
@@ -13898,6 +13998,450 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
   }
   if(document.readyState !== 'loading') setTimeout(_init, 500);
   else document.addEventListener('DOMContentLoaded', function(){setTimeout(_init, 500);});
+})();
+</script>
+
+<script>
+/* ── AI Research Checklist (panel14) ────────────────────────────────────
+   Deal-specific checklist generated by AI, tailored by asset class +
+   deal size + market tier + the user's history of past checklists.
+   Phase 1 (synthesis): Anthropic Opus 4.7 generates the item list.
+   Phase 2 (research):  Perplexity Sonar (web-grounded) researches each item.
+   Memory: per-user localStorage; similar past checklists fed as patterns.
+   ──────────────────────────────────────────────────────────────────── */
+(function(){
+  var MEM_KEY_BASE = 'jp_checklist_memory_v1';
+  var SEED = {
+    "universal_preamble": [
+      {"id":"u1","item":"Tax record vs seller-reported","killer":"tax_mismatch"},
+      {"id":"u2","item":"Title chain + 24-month liens","killer":"hidden_lien"},
+      {"id":"u3","item":"Survey + zoning compliance","killer":"nonconforming_use"},
+      {"id":"u4","item":"Phase I ESA","killer":"environmental"},
+      {"id":"u5","item":"Insurance binder + flood zone","killer":"insurance_premium"},
+      {"id":"u6","item":"KP credit / liquidity / experience","killer":"kp_gating"},
+      {"id":"u7","item":"Market tier + lender appetite","killer":"market_tier"}
+    ],
+    "asset_classes": {
+      "multifamily_small_5_to_49": ["T-12 + T-3 reconcile to bank statements","Rent roll vs leases (100% sample)","In-place rents vs market","County tax record reconcile","Reassessment-on-sale risk model","Vacancy + economic occupancy floor (5% min)","DSCR @ 1.20-1.25x stress","LTV cap by market tier","PCA + replacement reserves ($200-300/unit/yr)","Crime + Section 8 concentration","KP / sponsor stack","Seller-finance / 2nd lien compatibility","Utility bill audit + RUBS"],
+      "multifamily_syndication_50plus": ["Lease audit 25-100% sample","T-12 + T-3 + T-1 trend","Rent comp set 5-10 props","Property tax reassessment model","Insurance re-quote (fresh binder)","Agency DSCR 1.25x + Debt Yield ≥ 8-10%","LTV ceiling 65-80% by exec","KP stack — NW ≥ loan, liq ≥ 9-10%","Sponsor track record (3+ similar)","Phase I ESA + radon + lead/asbestos","Crime + submarket fundamentals","Capex/reno plan with vendor bids","Utility/RUBS legality by state","Loss-to-lease + concessions","Seller / 2nd-lien lender consent"],
+      "sfr_1_to_4": ["Per-property rent vs Rentometer/Zillow","Tenant pay history (12mo, NSFs)","County tax + owner-occ exemption check","HOA dues + special assessments","DSCR per property + portfolio","LTV cap (75% cash-out / 80% purchase)","Blanket loan release-price (120% allocated)","Inspection per door (or 25% sample)","Flood zone per property (FEMA AE)","Section 8 / rent stabilization exposure","Borrower FICO ≥ 660-700","Geographic concentration","Property mgmt agreement terms","Title — chain + tax sale risk"],
+      "mixed_use": ["Income split — residential vs commercial %","Retail tenant credit + lease term","WALT + rollover schedule","TI/LC reserves ($20-50/sf)","Use-type vs zoning compliance","Blended cap rate (risk-weighted)","Residential rent comps + concessions","Retail co-tenancy clauses","Parking ratio compliance","DSCR 1.20-1.30 mixed-use","LTV 75-80% with premium pricing","Tax record + parcel split check","Phase I — dry-clean / restaurant grease","Insurance — CGL + tenant certs","KP mixed-use experience"],
+      "retail_office_industrial": ["Estoppels at 100%","Lease abstract — economic + non-economic","WALT + rollover bucketing","Tenant credit (rated vs local)","Sales/sf + OCR for retail","TI/LC + capital reserves","Submarket vacancy 5yr","DSCR ≥ 1.25x + DY ≥ 9-10%","Tax record + reassessment + appeals","Phase I (industrial = always Phase II)","Building systems age + dock/clear height","Zoning + permitted use match","Market tier + lender appetite","KP recourse / guaranty","Seller / sub-debt lender consent"],
+      "self_storage": ["Unit-mix-by-size rent roll","Physical vs economic occupancy","Break-even occupancy (60-72%)","3-5 mi competitive set","ECRI history (existing customer rate increases)","Ancillary income (5-10% of revenue)","Tax — FF&E vs RE separation","New supply pipeline (3 mi)","DSCR ≥ 1.25 + DY ≥ 9%","LTV 70-75% (CMBS)","Zoning CUP (no expansion right?)","Climate-control % of NRA","Phase I — petroleum history","Software + delinquency / auctions","Sponsor self-storage experience"],
+      "mhp": ["Lot rent + utility billback","Park-owned home % (under 25%)","Lonnie dealer concentration","Water source — city vs well","Sewer — city vs septic / lagoon","Legal-nonconforming permit status","Pad density / setback compliance","Tax — per-pad + POH separate","Comp lot rents (5+ within 30mi)","RUBS / submetering legal by state","Homeowner % (60%+ preferred)","DSCR 1.25 + agency requires 50+ pads","LTV 70-80% (utility-dependent)","Capex — roads + utilities (PCA)","KP MHP experience"],
+      "land_development": ["Title chain (60yr) + CC&Rs","Zoning + entitlement status","Entitlement timeline + opposition risk","Density / FAR / setback rights","Phase I + II if brownfield","Geotech + soils + groundwater","Wetlands / species / archaeology","Floodplain + stormwater","Utilities — will-serve + capacity","Off-site impact fees + traffic","Tax — ag rollback / Greenbelt","Comp land sales ($/buildable, $/sf FAR)","Construction lender appetite + LTC","Sponsor / GC track record","Market study — absorption + comps","Seller financing / take-down structure"]
+    },
+    "killer_taxonomy":["tax_mismatch","tax_reassessment","appraisal_gap","dscr_shortfall","ltv_ceiling","kp_gating","market_tier","sub_debt","environmental","insurance_premium","phantom_rent","deferred_capex","submarket_risk"]
+  };
+
+  var st = { items: [], assetClass: 'auto', generating: false, busyItems: {} };
+
+  function _id(x){return document.getElementById(x);}
+  function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function _gv(id){ try { return (typeof gvs==='function')?gvs(id):''; } catch(e){return '';} }
+  function _gn(id){ try { return (typeof gv==='function')?gv(id):0; } catch(e){return 0;} }
+
+  function _memKey(){
+    var sess = (typeof _getSession==='function')?_getSession():null;
+    var uid = (sess && sess.userId)?sess.userId:'guest';
+    return MEM_KEY_BASE + '_u_' + uid;
+  }
+  function _memLoad(){
+    try { return JSON.parse(localStorage.getItem(_memKey())||'[]'); }
+    catch(e){ return []; }
+  }
+  function _memSave(arr){
+    try { localStorage.setItem(_memKey(), JSON.stringify(arr.slice(0,50))); } catch(e){}
+  }
+
+  function _detectAssetClass(){
+    var t = (_gv('prop_type')||'').toLowerCase();
+    var u = _gn('prop_units')||0;
+    if(/land|lot|development|raw/.test(t)) return 'land_development';
+    if(/storage/.test(t)) return 'self_storage';
+    if(/mhp|mobile|manufactured/.test(t)) return 'mhp';
+    if(/mixed/.test(t)) return 'mixed_use';
+    if(/retail|office|industrial|commercial|nnn|warehouse/.test(t)) return 'retail_office_industrial';
+    if(u >= 50) return 'multifamily_syndication_50plus';
+    if(u >= 5)  return 'multifamily_small_5_to_49';
+    return 'sfr_1_to_4';
+  }
+
+  function _activeAssetClass(){
+    var sel = _id('ri_asset_class');
+    var v = sel ? sel.value : 'auto';
+    return (v === 'auto') ? _detectAssetClass() : v;
+  }
+
+  function _dealCtx(){
+    var S = window.S || {};
+    var bits = {};
+    bits.address = [_gv('prop_address'),_gv('prop_city'),_gv('prop_state'),_gv('prop_zip')].filter(Boolean).join(', ');
+    bits.assetClass = _activeAssetClass();
+    bits.units = _gn('prop_units')||null;
+    bits.sqft = _gn('prop_sqft')||null;
+    bits.yearBuilt = _gn('prop_year')||null;
+    bits.marketTier = _gv('mkt_tier')||null;
+    bits.propClass = _gv('mkt_class')||null;
+    bits.askingPrice = S.price||null;
+    bits.grossRent = S.grossRent||null;
+    bits.totalExp = S.totalExp||null;
+    bits.noi = S.noi||null;
+    bits.capRate = S.capRate||null;
+    return bits;
+  }
+
+  function _findSimilar(targetClass, units, tier){
+    var mem = _memLoad();
+    var matches = mem.filter(function(c){return c.assetClass === targetClass;});
+    // Score by size proximity + market tier match
+    matches.forEach(function(c){
+      var s = 0;
+      if(c.marketTier === tier) s += 5;
+      if(units && c.units){
+        var ratio = Math.min(units, c.units) / Math.max(units, c.units);
+        s += ratio * 5;
+      }
+      c._score = s;
+    });
+    matches.sort(function(a,b){return b._score - a._score;});
+    return matches.slice(0,5);
+  }
+
+  function _renderMemoryBank(){
+    var box = _id('riMemoryList');
+    var cnt = _id('riMemoryCount');
+    var mem = _memLoad();
+    if(cnt) cnt.textContent = mem.length + ' saved checklist' + (mem.length===1?'':'s');
+    if(!box) return;
+    if(!mem.length){
+      box.innerHTML = '<div style="color:var(--muted);padding:8px 4px;font-size:12px">No past checklists yet. The first one you save becomes the seed for future deal-specific checklists.</div>';
+      return;
+    }
+    var html = '';
+    mem.slice(0,8).forEach(function(c){
+      var dt = new Date(c.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      var subBits = [];
+      if(c.assetClass) subBits.push(c.assetClass.replace(/_/g,' '));
+      if(c.units) subBits.push(c.units+' units');
+      if(c.marketTier) subBits.push('Tier '+c.marketTier);
+      subBits.push(dt);
+      html += '<div class="ri-mem-row" onclick="riLoadFromMemory(\''+_e(c.id)+'\')">'
+        + '<div class="ri-mem-icon">📋</div>'
+        + '<div class="ri-mem-info">'
+          + '<div class="ri-mem-name">'+_e(c.dealName||c.address||'Untitled deal')+'</div>'
+          + '<div class="ri-mem-sub">'+_e(subBits.join(' · '))+' · '+(c.items||[]).length+' items</div>'
+        + '</div>'
+        + '<button class="ri-item-actions" style="opacity:1;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:5px" onclick="event.stopPropagation();riDeleteMemory(\''+_e(c.id)+'\')" title="Delete">🗑</button>'
+        + '</div>';
+    });
+    if(mem.length > 8) html += '<div style="color:var(--muted);padding:6px 4px;font-size:11px">… '+(mem.length-8)+' older checklists</div>';
+    box.innerHTML = html;
+  }
+
+  window.riAutoOpen = function(){
+    _renderMemoryBank();
+    _updateSubLine();
+  };
+  window.riOnAssetClassChange = function(){ _updateSubLine(); };
+
+  function _updateSubLine(){
+    var sub = _id('riSub');
+    var d = _dealCtx();
+    var labels = {
+      multifamily_small_5_to_49:'Multifamily 5-49u',
+      multifamily_syndication_50plus:'Multifamily 50+u',
+      sfr_1_to_4:'SFR 1-4u',
+      mixed_use:'Mixed-use',
+      retail_office_industrial:'Commercial',
+      self_storage:'Self-storage',
+      mhp:'Mobile Home Park',
+      land_development:'Land/Development'
+    };
+    if(sub){
+      var bits = [];
+      bits.push('Asset class: <strong style="color:var(--accent)">'+(labels[d.assetClass]||d.assetClass)+'</strong>');
+      if(d.units) bits.push(d.units+' units');
+      if(d.askingPrice) bits.push('$'+Math.round(d.askingPrice).toLocaleString());
+      if(d.marketTier) bits.push('Tier '+d.marketTier);
+      var similar = _findSimilar(d.assetClass, d.units, d.marketTier);
+      if(similar.length) bits.push('<span style="color:#34d399">'+similar.length+' similar in memory</span>');
+      sub.innerHTML = bits.join(' · ');
+    }
+  }
+
+  function _showWarn(msg, level){
+    var w = _id('riWarn');
+    if(!w) return;
+    w.style.display='block';
+    w.className = 'vb-warn'+(level==='error'?' bad':'');
+    w.innerHTML = msg;
+  }
+  function _clearWarn(){ var w=_id('riWarn'); if(w){w.style.display='none';w.innerHTML='';} }
+
+  function _provider(){
+    var p = '';
+    try { p = localStorage.getItem('ai_research_provider') || ''; } catch(e){}
+    if(p && typeof _getAIKey==='function' && _getAIKey(p)) return p;
+    var order = ['anthropic','perplexity','openai','groq'];
+    for(var i=0;i<order.length;i++){
+      if(typeof _getAIKey==='function' && _getAIKey(order[i])) return order[i];
+    }
+    return null;
+  }
+
+  async function _aiSynthesis(prompt){
+    // Synthesis = Anthropic preferred (best reasoning). Fallback chain.
+    var order = ['anthropic','openai','perplexity','groq'];
+    var prov = order.find(function(p){return typeof _getAIKey==='function' && _getAIKey(p);});
+    if(!prov) throw new Error('No AI provider configured. Open ⚙️ Settings.');
+    var apiKey = _getAIKey(prov);
+    return await _aiCall(prov, apiKey, prompt, 'synthesis');
+  }
+  async function _aiResearch(prompt){
+    // Web research = Perplexity preferred (sonar is web-grounded).
+    var order = ['perplexity','anthropic','openai','groq'];
+    var prov = order.find(function(p){return typeof _getAIKey==='function' && _getAIKey(p);});
+    if(!prov) throw new Error('No AI provider configured. Open ⚙️ Settings.');
+    var apiKey = _getAIKey(prov);
+    return await _aiCall(prov, apiKey, prompt, 'research');
+  }
+
+  async function _aiCall(provider, apiKey, prompt, mode){
+    var system = (mode==='synthesis')
+      ? 'You are an expert CRE underwriter. Generate concrete, actionable due-diligence checklists tailored to the specific deal. Output strict JSON only — no markdown, no commentary.'
+      : 'You are an expert CRE underwriter conducting due-diligence research on a specific deal. Be concise, candid, and source-backed. When you don\'t know, say "Unable to verify without [source]" — never invent numbers. Output strict JSON only.';
+    var url, headers, body;
+    if(provider === 'anthropic'){
+      url='https://api.anthropic.com/v1/messages';
+      headers={'x-api-key':apiKey,'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+      body=JSON.stringify({model:'claude-opus-4-7',max_tokens:3000,system:system,messages:[{role:'user',content:prompt}]});
+    } else if(provider === 'perplexity'){
+      url='https://api.perplexity.ai/chat/completions';
+      headers={'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'};
+      body=JSON.stringify({model:'sonar',messages:[{role:'system',content:system},{role:'user',content:prompt}],temperature:0.1,max_tokens:3000});
+    } else if(provider === 'openai'){
+      url='https://api.openai.com/v1/chat/completions';
+      headers={'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'};
+      body=JSON.stringify({model:'gpt-4o-mini',messages:[{role:'system',content:system},{role:'user',content:prompt}],temperature:0.1,max_tokens:3000,response_format:{type:'json_object'}});
+    } else {
+      url='https://api.groq.com/openai/v1/chat/completions';
+      headers={'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'};
+      body=JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'system',content:system},{role:'user',content:prompt}],temperature:0.1,max_tokens:3000});
+    }
+    var res = await fetch(url, {method:'POST', headers:headers, body:body});
+    if(!res.ok){ var t=await res.text(); throw new Error(res.status+': '+t.slice(0,250)); }
+    var d = await res.json();
+    return (provider === 'anthropic') ? d.content[0].text : d.choices[0].message.content;
+  }
+
+  function _extractJson(text){
+    if(!text) return null;
+    // Try to find a JSON object or array
+    var m = text.match(/```json\s*([\s\S]+?)\s*```/) || text.match(/```\s*([\s\S]+?)\s*```/);
+    if(m) text = m[1];
+    var s = text.indexOf('{'); var sa = text.indexOf('[');
+    if(sa !== -1 && (s === -1 || sa < s)){
+      try { return JSON.parse(text.substring(sa)); } catch(e){}
+    }
+    if(s !== -1){
+      try { return JSON.parse(text.substring(s)); } catch(e){}
+    }
+    try { return JSON.parse(text); } catch(e){}
+    return null;
+  }
+
+  window.riGenerateChecklist = async function(){
+    if(st.generating) return;
+    _clearWarn();
+    var btn = _id('riGenBtn'); if(btn) btn.disabled = true;
+    if(btn) btn.textContent = '⏳ Generating…';
+    st.generating = true;
+
+    var ctx = _dealCtx();
+    var seedClass = SEED.asset_classes[ctx.assetClass] || [];
+    var universal = SEED.universal_preamble.map(function(x){return x.item;});
+    var similar = _findSimilar(ctx.assetClass, ctx.units, ctx.marketTier);
+    var memorySection = '';
+    if(similar.length){
+      memorySection = '\n\nPRIOR CHECKLISTS for this user on similar deals (use as patterns; the user has a track record of caring about these items):\n';
+      similar.slice(0,3).forEach(function(c, i){
+        var top = (c.items||[]).slice(0,8).map(function(it){return '  - '+it.title+(it.status?' ('+it.status+')':'');}).join('\n');
+        memorySection += '['+(i+1)+'] '+(c.dealName||c.address||'Past deal')+' ('+(c.units||'?')+' units, '+(c.marketTier||'?')+'-tier):\n'+top+'\n';
+      });
+    }
+
+    var prompt = 'Generate a deal-specific due-diligence checklist for THIS deal. Tailor it: drop items that don\'t apply, add items the deal\'s specifics raise, mark which are highest-priority killers vs medium vs low.\n\n'
+      + 'DEAL CONTEXT:\n' + JSON.stringify(ctx, null, 2) + '\n\n'
+      + 'UNIVERSAL ITEMS (apply to every deal):\n - ' + universal.join('\n - ')
+      + '\n\nASSET-CLASS BASELINE for "'+ctx.assetClass+'":\n - ' + seedClass.join('\n - ')
+      + memorySection
+      + '\n\nKILLER TAXONOMY (use one of these for each item\'s "category" field):\n' + SEED.killer_taxonomy.join(', ')
+      + '\n\nReturn STRICT JSON of this shape (no markdown, no extra text):\n'
+      + '{"items":[{"id":"i1","title":"...","rationale":"why this matters for THIS deal in 1 sentence","category":"<from taxonomy>","priority":"high|medium|low","applyToField":"<intake_field_id_if_applicable_else_null>"}]}\n'
+      + 'Aim for 12-18 items. Mix universal + asset-class items. Adapt language to the deal\'s actual context.';
+
+    try {
+      var raw = await _aiSynthesis(prompt);
+      var parsed = _extractJson(raw);
+      if(!parsed || !parsed.items || !Array.isArray(parsed.items)) throw new Error('Could not parse generated checklist. Raw: '+raw.slice(0,200));
+      st.items = parsed.items.map(function(it,i){
+        return Object.assign({status:'pending', finding:null, sources:null, id: it.id||('i'+(i+1))}, it);
+      });
+      _renderChecklist();
+      _id('riResearchAllBtn').style.display='inline-flex';
+      _id('riSaveBtn').style.display='inline-flex';
+    } catch(e){
+      _showWarn('⚠ Generation failed: ' + _e(e.message||'unknown error') + ' &nbsp; <a onclick="openSettings()" style="color:var(--accent);cursor:pointer;text-decoration:underline">Open Settings</a> if no AI key is configured.', 'error');
+    } finally {
+      st.generating = false;
+      if(btn){ btn.disabled=false; btn.textContent='⚡ Generate Custom Checklist'; }
+    }
+  };
+
+  function _renderChecklist(){
+    var box = _id('riChecklist'); if(!box) return;
+    if(!st.items || !st.items.length){
+      box.innerHTML = '<div class="ri-empty"><div style="font-size:32px;opacity:.3">🔍</div><div style="font-weight:600;margin-top:8px;color:var(--text)">No checklist yet</div><div style="font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.6">Click <strong>⚡ Generate Custom Checklist</strong> to have AI build one for this specific deal.</div></div>';
+      return;
+    }
+    var html = '';
+    st.items.forEach(function(it, idx){
+      var statusClass = 's-'+(it.status||'pending');
+      var statusIcon = {pending:'⏳',loading:'⏳',verified:'✓',flag:'⚠',killer:'✕',unknown:'?'}[it.status]||'⏳';
+      html += '<div class="ri-item" id="ri_item_'+idx+'">'
+        + '<div class="ri-item-row" onclick="riToggleItem('+idx+')">'
+          + '<div class="ri-status '+statusClass+'">'+statusIcon+'</div>'
+          + '<div class="ri-item-meta">'
+            + '<div class="ri-item-title">'+_e(it.title)+'</div>'
+            + (it.rationale?'<div class="ri-item-rationale">'+_e(it.rationale)+'</div>':'')
+          + '</div>'
+          + '<div class="ri-item-prio '+(it.priority||'medium')+'">'+_e(it.priority||'med')+'</div>'
+          + '<div class="ri-item-actions" onclick="event.stopPropagation()">'
+            + '<button onclick="riResearchItem('+idx+')" title="Research with AI">↻</button>'
+            + '<button onclick="riAskItem('+idx+')" title="Ask in chat">💬</button>'
+            + (it.applyToField?'<button onclick="riApplyItem('+idx+')" title="Apply to Intake">↑</button>':'')
+          + '</div>'
+        + '</div>'
+        + '<div class="ri-item-detail">'
+          + (it.finding ? '<div class="ri-finding-label">AI Finding</div><p>'+_e(it.finding).replace(/\n/g,'<br>')+'</p>' : '<p style="color:var(--muted);font-style:italic">Not yet researched. Click ↻ to research this item, or use 🔬 Research All.</p>')
+          + (it.sources && it.sources.length ? '<div class="ri-finding-label" style="margin-top:8px">Sources</div>'+it.sources.map(function(s){return '<a class="ri-source" href="'+_e(s)+'" target="_blank" rel="noopener">'+_e(s.replace(/^https?:\/\//,'').slice(0,50))+'</a>';}).join(' ') : '')
+        + '</div>'
+        + '</div>';
+    });
+    box.innerHTML = html;
+  }
+
+  window.riToggleItem = function(idx){
+    var el = _id('ri_item_'+idx); if(!el) return;
+    el.classList.toggle('expanded');
+  };
+
+  window.riResearchItem = async function(idx){
+    var it = st.items[idx]; if(!it) return;
+    if(st.busyItems[idx]) return;
+    st.busyItems[idx] = true;
+    it.status = 'loading'; _renderChecklist();
+    var ctx = _dealCtx();
+    var prompt = 'Research this single due-diligence item for the following deal. Be concise and source-backed.\n\n'
+      + 'DEAL: ' + JSON.stringify(ctx) + '\n\n'
+      + 'ITEM: ' + it.title + '\nRATIONALE: ' + (it.rationale||'') + '\nKILLER CATEGORY: ' + (it.category||'')
+      + '\n\nReturn STRICT JSON (no markdown):\n'
+      + '{"status":"verified|flag|killer|unknown","finding":"2-4 sentence finding","sources":["url1","url2"],"applyToField":"<intake field id or null>","applyValue":"<value to set or null>"}'
+      + '\n\nGuidance: status=verified (no concerns), flag (issue worth checking), killer (likely to break the deal), unknown (cannot verify without external info).';
+    try {
+      var raw = await _aiResearch(prompt);
+      var parsed = _extractJson(raw);
+      if(!parsed) throw new Error('Could not parse research result');
+      it.status = parsed.status || 'unknown';
+      it.finding = parsed.finding || raw.slice(0,500);
+      it.sources = Array.isArray(parsed.sources) ? parsed.sources : [];
+      if(parsed.applyToField) it.applyToField = parsed.applyToField;
+      if(parsed.applyValue !== undefined) it.applyValue = parsed.applyValue;
+    } catch(e){
+      it.status = 'unknown';
+      it.finding = '⚠ Research failed: '+(e.message||'unknown');
+    } finally {
+      st.busyItems[idx] = false;
+      _renderChecklist();
+      // Auto-expand the item we just researched
+      setTimeout(function(){ var el=_id('ri_item_'+idx); if(el && !el.classList.contains('expanded')) el.classList.add('expanded'); }, 50);
+    }
+  };
+
+  window.riResearchAll = async function(){
+    if(!st.items || !st.items.length) return;
+    var btn = _id('riResearchAllBtn'); if(btn){ btn.disabled=true; btn.textContent='⏳ Researching…'; }
+    // Sequential to avoid rate limits
+    for(var i=0;i<st.items.length;i++){
+      if(st.items[i].status === 'pending' || st.items[i].status === 'loading'){
+        try { await window.riResearchItem(i); } catch(e){}
+      }
+    }
+    if(btn){ btn.disabled=false; btn.textContent='🔬 Research All'; }
+  };
+
+  window.riAskItem = function(idx){
+    var it = st.items[idx]; if(!it) return;
+    var inp = _id('aiChatInput');
+    if(!inp || typeof aiChatToggle !== 'function'){ alert('Chat sidebar unavailable'); return; }
+    if(_id('aiChat') && !_id('aiChat').classList.contains('open')) aiChatToggle();
+    var question = 'Tell me more about this checklist item: "' + it.title + '". '
+      + (it.rationale?'Context: '+it.rationale+'. ':'')
+      + (it.finding?'AI\'s prior finding: '+it.finding+'. ':'')
+      + 'How concerned should I be on this specific deal?';
+    setTimeout(function(){ inp.value = question; inp.focus(); }, 250);
+  };
+
+  window.riApplyItem = function(idx){
+    var it = st.items[idx]; if(!it || !it.applyToField) return;
+    var target = _id(it.applyToField);
+    if(!target){ alert('Field "'+it.applyToField+'" not found in Intake.'); return; }
+    if(it.applyValue !== undefined && it.applyValue !== null && it.applyValue !== '') target.value = it.applyValue;
+    target.dispatchEvent(new Event('input', {bubbles:true}));
+    if(typeof showProjToast === 'function') showProjToast('✓ Applied to '+it.applyToField);
+  };
+
+  window.riSaveToMemory = function(){
+    if(!st.items || !st.items.length) return;
+    var ctx = _dealCtx();
+    var entry = {
+      id: 'cl_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+      date: new Date().toISOString(),
+      dealName: _gv('projNameInput') || ctx.address || 'Untitled',
+      address: ctx.address,
+      assetClass: ctx.assetClass,
+      units: ctx.units,
+      marketTier: ctx.marketTier,
+      items: st.items.map(function(it){return {title:it.title, rationale:it.rationale, category:it.category, priority:it.priority, status:it.status, finding:it.finding};})
+    };
+    var mem = _memLoad();
+    mem.unshift(entry);
+    _memSave(mem);
+    _renderMemoryBank();
+    if(typeof showProjToast==='function') showProjToast('💾 Saved to memory — future generations will use this as a pattern.');
+  };
+
+  window.riLoadFromMemory = function(id){
+    var mem = _memLoad();
+    var c = mem.find(function(x){return x.id===id;}); if(!c) return;
+    st.items = (c.items||[]).map(function(it,i){return Object.assign({id:'i'+(i+1)}, it);});
+    _renderChecklist();
+    _id('riResearchAllBtn').style.display='inline-flex';
+    _id('riSaveBtn').style.display='inline-flex';
+    if(typeof showProjToast==='function') showProjToast('📋 Loaded checklist from memory ('+st.items.length+' items)');
+  };
+
+  window.riDeleteMemory = function(id){
+    if(!confirm('Delete this saved checklist from memory?')) return;
+    var mem = _memLoad().filter(function(x){return x.id!==id;});
+    _memSave(mem);
+    _renderMemoryBank();
+  };
+
+  // Init
+  if(document.readyState !== 'loading') setTimeout(function(){ if(_id('riChecklist')) riAutoOpen(); }, 600);
+  else document.addEventListener('DOMContentLoaded', function(){ setTimeout(function(){ if(_id('riChecklist')) riAutoOpen(); }, 600); });
 })();
 </script>
 
