@@ -847,6 +847,56 @@ strong { color: #e2e8f0; }
 .ai-progress-bar{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:2px;transition:width .4s ease;width:0%}
 /* END AI CSS */
 
+/* ── Partners & Waterfall (panel11) ────────────────────────────────────── */
+.pn-grid-top{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.pn-cap-pill{background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-weight:600;color:var(--text)}
+.pn-cap-pill.good{border-color:rgba(16,185,129,.4);color:#34d399}
+.pn-cap-pill.bad{border-color:rgba(239,68,68,.4);color:#f87171}
+.pn-row{display:grid;grid-template-columns:1.4fr .9fr 1.1fr 70px 1fr 30px;gap:6px;align-items:center;padding:7px 8px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;font-size:12px}
+.pn-row input,.pn-row select{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;width:100%;min-width:0}
+.pn-row input:focus,.pn-row select:focus{border-color:var(--accent)}
+.pn-row .pn-pct{color:var(--accent);font-weight:700;text-align:center}
+.pn-row .pn-type-gp{background:rgba(99,102,241,.15);color:#a5b4fc;border:1px solid rgba(99,102,241,.35);padding:3px 8px;border-radius:99px;font-weight:700;font-size:10px;text-align:center;text-transform:uppercase;letter-spacing:.05em}
+.pn-row .pn-type-lp{background:rgba(52,211,153,.13);color:#34d399;border:1px solid rgba(52,211,153,.3);padding:3px 8px;border-radius:99px;font-weight:700;font-size:10px;text-align:center;text-transform:uppercase;letter-spacing:.05em}
+.pn-row-rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px;border-radius:5px}
+.pn-row-rm:hover{color:#f87171;background:rgba(239,68,68,.08)}
+.pn-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.pn-inv-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:8px;transition:.15s}
+.pn-inv-card:hover{border-color:rgba(99,102,241,.4)}
+.pn-inv-card.gp{border-color:rgba(99,102,241,.4);background:linear-gradient(180deg,rgba(99,102,241,.06),var(--surface2))}
+.pn-inv-hdr{display:flex;align-items:center;gap:9px}
+.pn-inv-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.pn-inv-card.gp .pn-inv-av{background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+.pn-inv-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;font-weight:700;color:var(--text)}
+.pn-inv-pct{font-size:11px;font-weight:700;color:var(--accent);background:rgba(99,102,241,.12);padding:2px 8px;border-radius:99px}
+.pn-inv-cap{font-size:12px;color:var(--muted);margin-top:-4px}
+.pn-inv-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px}
+.pn-inv-stat{background:var(--surface3);border:1px solid var(--border);border-radius:7px;padding:7px 10px}
+.pn-inv-stat-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pn-inv-stat-val{font-size:15px;font-weight:800;color:var(--text);margin-top:1px}
+.pn-inv-stat.good .pn-inv-stat-val{color:#10b981}
+.pn-inv-stat.muted .pn-inv-stat-val{color:var(--muted)}
+.pn-inv-yearly{font-size:10.5px;color:var(--muted);background:var(--surface3);border:1px solid var(--border);border-radius:7px;padding:7px 9px;line-height:1.55;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;max-height:120px;overflow-y:auto}
+.pn-inv-actions{display:flex;gap:5px;margin-top:4px}
+.pn-inv-actions button{flex:1;background:var(--surface3);border:1px solid var(--border);color:var(--text2);font-size:10.5px;font-weight:600;padding:5px 8px;border-radius:6px;cursor:pointer;transition:.15s}
+.pn-inv-actions button:hover{border-color:var(--accent);color:var(--accent)}
+.pn-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.pn-table th{background:var(--surface3);color:var(--muted);text-align:right;padding:7px 9px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;position:sticky;top:0;border-bottom:1px solid var(--border)}
+.pn-table th:first-child{text-align:left}
+.pn-table td{padding:6px 9px;text-align:right;border-bottom:1px solid var(--border);color:var(--text)}
+.pn-table td:first-child{text-align:left;color:var(--muted);font-weight:600}
+.pn-table tr.refi-row td{background:rgba(245,158,11,.08);color:#fbbf24}
+.pn-table tr.sale-row td{background:rgba(16,185,129,.08);color:#34d399;font-weight:700}
+@media (max-width:760px){
+  .pn-grid-top{grid-template-columns:1fr}
+  .pn-row{grid-template-columns:1.2fr .9fr 1fr 65px 30px;gap:4px;font-size:11.5px}
+  .pn-row > :nth-child(5){display:none} /* hide email on narrow */
+}
+@media (max-width:420px){
+  .pn-row{grid-template-columns:1.2fr .9fr 65px 30px}
+  .pn-row > :nth-child(3){display:none} /* hide capital input col on tiny */
+}
+
 /* ── Velocity Banking Calculator (panel10) ─────────────────────────────── */
 .vb-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px}
 .vb-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
@@ -1142,6 +1192,9 @@ strong { color: #e2e8f0; }
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Pitch</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="9" onclick="ST(9);refreshPitchDeckPreview()">🎯 Pitch Deck</div>
   <div class="tab" data-tab="7" onclick="ST(7);updateExec()">📄 Exec Report</div>
+  <!-- Divider: Capital -->
+  <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Capital</div><div class="tab-phase-line"></div></div>
+  <div class="tab" data-tab="11" onclick="ST(11);partnerInit();partnerCompute()">👥 Partners</div>
   <!-- Divider: Tools -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Tools</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="10" onclick="ST(10);vbInit();vbCompute()">💰 Velocity</div>
@@ -3108,6 +3161,112 @@ strong { color: #e2e8f0; }
     <div id="vb_log" style="font-size:11.5px;color:var(--text2);max-height:240px;overflow-y:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:10px"></div>
   </div>
 </div><!-- end panel10 -->
+
+<!-- ══════════════════════════════════════════════ PANEL 11: PARTNERS / WATERFALL -->
+<div class="panel" id="panel11">
+  <div class="vb-hdr">
+    <div>
+      <h2 style="margin:0;font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.2px">👥 Partners &amp; Waterfall</h2>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:3px">Capital stack, distribution waterfall, sponsor fees. Each investor's IRR / equity multiple / year-by-year returns shown per their share.</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-shrink:0">
+      <button class="btn btn-outline btn-sm" onclick="partnerResetDefaults();partnerCompute()" title="Reset to defaults">↺ Reset</button>
+    </div>
+  </div>
+
+  <!-- ROW 1: Roster + Waterfall config -->
+  <div class="pn-grid-top">
+    <!-- Investor Roster -->
+    <div class="card">
+      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>📇 Investor Roster</span>
+        <button class="btn btn-primary btn-sm" onclick="partnerAddInvestor()" style="font-size:11px">+ Add Investor</button>
+      </div>
+      <div id="pn_capital_summary" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:11px"></div>
+      <div id="pn_roster"></div>
+    </div>
+
+    <!-- Waterfall + Fees -->
+    <div class="card">
+      <div class="card-title">⚖ Waterfall &amp; Fees</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;font-size:11.5px">
+        <label style="color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-size:10px">Template:</label>
+        <select id="pn_template" onchange="partnerApplyTemplate(this.value)" class="wm-role-select" style="flex:1">
+          <option value="custom">Custom</option>
+          <option value="blank-7030" selected>Blank/Nighthawk no-pref 70/30</option>
+          <option value="blank-8020">Blank/Nighthawk no-pref 80/20</option>
+          <option value="std-8pref-8020">Standard 8% pref + 80/20</option>
+          <option value="std-8pref-7030">Standard 8% pref + 70/30</option>
+          <option value="hurdle-tiered">Tiered: 8% pref → 80/20 → 70/30 @12% IRR → 60/40 @18% IRR</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field"><label>Preferred return % (annual)</label><input type="number" step="0.5" id="pn_pref" oninput="partnerCompute()"></div>
+        <div class="field"><label>GP catch-up</label>
+          <select id="pn_catchup" onchange="partnerCompute()" class="wm-role-select">
+            <option value="0">No catch-up</option>
+            <option value="50">50% catch-up to GP</option>
+            <option value="100">100% catch-up to GP</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field"><label>Tier 1 split (LP / GP)</label>
+          <div style="display:flex;gap:4px"><input type="number" id="pn_t1_lp" step="1" oninput="partnerCompute()" style="flex:1"><span style="color:var(--muted);align-self:center">/</span><input type="number" id="pn_t1_gp" step="1" oninput="partnerCompute()" style="flex:1"></div>
+        </div>
+        <div class="field"><label>Tier 2 split @ IRR hurdle %</label>
+          <div style="display:flex;gap:4px"><input type="number" id="pn_t2_lp" step="1" oninput="partnerCompute()" style="flex:1" placeholder="LP%"><input type="number" id="pn_t2_gp" step="1" oninput="partnerCompute()" style="flex:1" placeholder="GP%"><input type="number" id="pn_t2_irr" step="0.5" oninput="partnerCompute()" style="flex:1" placeholder="IRR%"></div>
+        </div>
+      </div>
+      <div style="margin-top:6px">
+        <div class="field"><label>Tier 3 split @ IRR hurdle %</label>
+          <div style="display:flex;gap:4px"><input type="number" id="pn_t3_lp" step="1" oninput="partnerCompute()" style="flex:1" placeholder="LP%"><input type="number" id="pn_t3_gp" step="1" oninput="partnerCompute()" style="flex:1" placeholder="GP%"><input type="number" id="pn_t3_irr" step="0.5" oninput="partnerCompute()" style="flex:1" placeholder="IRR%"></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Sponsor (GP) Fees</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="field"><label>Acquisition fee (% of price)</label><input type="number" step="0.1" id="pn_fee_acq" oninput="partnerCompute()"></div>
+          <div class="field"><label>Asset Mgmt fee (% gross rents)</label><input type="number" step="0.1" id="pn_fee_am" oninput="partnerCompute()"></div>
+          <div class="field"><label>Refi / Capital Tx fee (% cash-out)</label><input type="number" step="0.1" id="pn_fee_capx" oninput="partnerCompute()"></div>
+          <div class="field"><label>Disposition fee (% sale price)</label><input type="number" step="0.1" id="pn_fee_disp" oninput="partnerCompute()"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 2: Hold / Refi / Exit config -->
+  <div class="card">
+    <div class="card-title">📅 Hold, Refi, Exit</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+      <div class="field"><label>Hold period (years)</label><input type="number" step="1" id="pn_hold" oninput="partnerCompute()"></div>
+      <div class="field"><label>Refi at year (0=none)</label><input type="number" step="1" id="pn_refi_year" oninput="partnerCompute()"></div>
+      <div class="field"><label>Refi new LTV (%)</label><input type="number" step="1" id="pn_refi_ltv" oninput="partnerCompute()"></div>
+      <div class="field"><label>Refi closing costs (%)</label><input type="number" step="0.1" id="pn_refi_cc" oninput="partnerCompute()"></div>
+      <div class="field"><label>Exit cap rate (%)</label><input type="number" step="0.1" id="pn_exit_cap" oninput="partnerCompute()"></div>
+      <div class="field"><label>Annual rent growth (%)</label><input type="number" step="0.1" id="pn_rent_g" oninput="partnerCompute()"></div>
+      <div class="field"><label>Annual expense growth (%)</label><input type="number" step="0.1" id="pn_exp_g" oninput="partnerCompute()"></div>
+    </div>
+  </div>
+
+  <!-- ROW 3: Per-investor cards -->
+  <div class="card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>👤 Per-Investor Returns</span>
+      <span id="pn_overall_summary" style="font-size:11.5px;color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0"></span>
+    </div>
+    <div id="pn_investor_cards" class="pn-card-grid"></div>
+  </div>
+
+  <!-- ROW 4: Year-by-year combined waterfall -->
+  <div class="card">
+    <div class="card-title">📊 Distribution Waterfall (year-by-year, combined)</div>
+    <div style="overflow-x:auto"><table id="pn_waterfall_table" class="pn-table"></table></div>
+  </div>
+
+  <!-- ROW 5: Warnings -->
+  <div id="pn_warn" class="vb-warn" style="display:none"></div>
+</div><!-- end panel11 -->
 
 
 <script>
@@ -12315,7 +12474,646 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
 </div>
 
 <script>
-/* ── Velocity Banking Calculator (panel10) ──────────────────────────────
+/* ── Partners & Waterfall (panel11) ─────────────────────────────────────
+   - Sponsor / Investor roster
+   - Configurable waterfall: pref → catch-up → tiered splits w/ IRR hurdles
+   - Sponsor fees: acquisition / asset-mgmt / capital-tx (refi) / disposition
+   - Refi event: full recapitalization + cash-out distributed per waterfall
+   - Sale event at end of hold: net proceeds distributed per waterfall
+   - Per-investor metrics: $ returned, equity multiple, IRR, AAR, CoC by year
+   - PDF export per investor + URL share filter (?investor=<id>)
+   ──────────────────────────────────────────────────────────────────── */
+(function(){
+  var PN_KEY = 'jp_partners_v1';
+
+  function _id(x){return document.getElementById(x);}
+  function _num(x,d){var v=parseFloat(x);return isFinite(v)?v:(d||0);}
+  function _$(n){return (n<0?'-':'')+'$'+Math.abs(Math.round(n)).toLocaleString();}
+  function _pct(n,d){if(!isFinite(n))return '—';return (n*100).toFixed(d||1)+'%';}
+  function _uid(p){return (p||'inv')+'_'+Math.random().toString(36).slice(2,8);}
+
+  function _defaultState(){
+    return {
+      investors: [],
+      pref: 0, catchup: 0,
+      t1: {lp:80, gp:20},
+      t2: {lp:70, gp:30, irr:12},
+      t3: {lp:60, gp:40, irr:18},
+      fees: {acq:2, am:1.5, capx:1, disp:1},
+      hold: 5,
+      refiYear: 0, refiLtv: 75, refiCc: 1,
+      exitCap: 6, rentG: 3, expG: 2.5
+    };
+  }
+
+  function _stateGet(){
+    try { return Object.assign(_defaultState(), JSON.parse(localStorage.getItem(PN_KEY)||'{}')); }
+    catch(e){ return _defaultState(); }
+  }
+  function _stateSet(s){ localStorage.setItem(PN_KEY, JSON.stringify(s)); }
+
+  // ── Waterfall templates ────────────────────────────────────────────────
+  var TEMPLATES = {
+    'blank-7030':       {pref:0,  catchup:0,   t1:{lp:70,gp:30}, t2:{lp:0,gp:0,irr:0}, t3:{lp:0,gp:0,irr:0}},
+    'blank-8020':       {pref:0,  catchup:0,   t1:{lp:80,gp:20}, t2:{lp:0,gp:0,irr:0}, t3:{lp:0,gp:0,irr:0}},
+    'std-8pref-8020':   {pref:8,  catchup:0,   t1:{lp:80,gp:20}, t2:{lp:0,gp:0,irr:0}, t3:{lp:0,gp:0,irr:0}},
+    'std-8pref-7030':   {pref:8,  catchup:0,   t1:{lp:70,gp:30}, t2:{lp:0,gp:0,irr:0}, t3:{lp:0,gp:0,irr:0}},
+    'hurdle-tiered':    {pref:8,  catchup:50,  t1:{lp:80,gp:20}, t2:{lp:70,gp:30,irr:12}, t3:{lp:60,gp:40,irr:18}}
+  };
+
+  window.partnerApplyTemplate = function(key){
+    if(!TEMPLATES[key]) return;
+    var s = _stateGet();
+    Object.assign(s, JSON.parse(JSON.stringify(TEMPLATES[key])));
+    _stateSet(s);
+    _writeStateToInputs(s);
+    partnerCompute();
+  };
+
+  // ── Read deal basics from intake/finance ─────────────────────────────
+  function _dealBasics(){
+    var S = (typeof window.S !== 'undefined') ? window.S : {};
+    var price   = (S.price>0) ? S.price : (typeof gv==='function' ? gv('pur_price') : 0) || 0;
+    var down    = (S.down>0)  ? S.down  : (price ? price*0.20 : 0);
+    var loan    = Math.max(price - down, 0);
+    var rate    = (typeof gv==='function' ? gv('mkt_rate') : 7) || 7;  // %
+    var termY   = (typeof gv==='function' ? gv('amort_term') : 30) || 30;
+    var rentY   = (S.grossRent>0) ? S.grossRent : 0;   // annual
+    var expY    = (S.totalExp>0)  ? S.totalExp  : 0;   // annual
+    var monthlyR = rate/100/12;
+    var n = termY*12;
+    var monthlyPI = (monthlyR > 0) ? loan*monthlyR/(1-Math.pow(1+monthlyR,-n)) : (loan/n);
+    var closingCosts = (S.close>0) ? S.close : (price ? price*0.03 : 0);
+    var equityNeeded = down + closingCosts;
+    return {price:price, down:down, loan:loan, rate:rate/100, termY:termY, monthlyPI:monthlyPI,
+            year1Rent:rentY, year1Exp:expY, equityNeeded:equityNeeded};
+  }
+
+  // IRR via Newton-Raphson then bisection fallback
+  function _irr(cf){
+    if(!cf || cf.length<2) return null;
+    var hasPos=false, hasNeg=false;
+    for(var i=0;i<cf.length;i++){if(cf[i]>0)hasPos=true;if(cf[i]<0)hasNeg=true;}
+    if(!hasPos || !hasNeg) return null;
+    var r=0.1;
+    for(var iter=0;iter<60;iter++){
+      var npv=0, dnpv=0;
+      for(var t=0;t<cf.length;t++){
+        var f=Math.pow(1+r,t);
+        npv  += cf[t]/f;
+        dnpv -= t*cf[t]/(f*(1+r));
+      }
+      if(!isFinite(dnpv) || Math.abs(dnpv)<1e-12) break;
+      var nr = r - npv/dnpv;
+      if(!isFinite(nr)) break;
+      if(Math.abs(nr-r)<1e-7) return nr;
+      r = Math.max(-0.95, Math.min(50, nr));
+    }
+    // Bisection fallback
+    var lo=-0.99, hi=10;
+    function npvAt(rr){var s=0;for(var t=0;t<cf.length;t++)s+=cf[t]/Math.pow(1+rr,t);return s;}
+    var fl=npvAt(lo), fh=npvAt(hi);
+    if(fl*fh > 0) return r;
+    for(var b=0;b<80;b++){var mid=(lo+hi)/2, fm=npvAt(mid); if(fm*fl<0){hi=mid;fh=fm;}else{lo=mid;fl=fm;}}
+    return (lo+hi)/2;
+  }
+
+  // ── Distribute one cash event through the waterfall ──────────────────
+  // invs: array of {id, type, capital, basis (remaining), cf[], gpShare}
+  // ev: amount to distribute
+  // ctx: {yearIdx, allowReturnOfCapital, lpIRRSoFar, prefAccrued: [...], state}
+  function _waterfall(ev, invs, ctx){
+    if(ev <= 0) return {pref:0, returnCap:0, lpSplit:0, gpSplit:0};
+    var s = ctx.state;
+    var prefRate = (s.pref||0)/100;
+
+    // Step 1: pay accrued unpaid pref, pro rata to basis
+    // prefAccrued[i] is updated externally each year
+    var totalPrefDue = 0;
+    invs.forEach(function(_,i){ totalPrefDue += Math.max(0, ctx.prefAccrued[i] || 0); });
+    var prefPaid = 0;
+    if(totalPrefDue > 0){
+      var pay = Math.min(ev, totalPrefDue);
+      invs.forEach(function(inv,i){
+        var due = Math.max(0, ctx.prefAccrued[i]||0);
+        if(due<=0) return;
+        var part = pay * (due/totalPrefDue);
+        ctx.prefAccrued[i] = due - part;
+        inv.cf[ctx.yearIdx] += part;
+        ctx.cumLpDist += inv.type==='lp' ? part : 0;
+        ctx.cumGpDist += inv.type==='gp' ? part : 0;
+      });
+      ev -= pay; prefPaid = pay;
+    }
+    if(ev <= 0) return {pref:prefPaid, returnCap:0, lpSplit:0, gpSplit:0};
+
+    // Step 2: return of capital (only when allowReturnOfCapital — refi/sale events)
+    var rocPaid = 0;
+    if(ctx.allowReturnOfCapital){
+      var totalBasis = 0;
+      invs.forEach(function(inv){ totalBasis += Math.max(0, inv.basis||0); });
+      if(totalBasis > 0){
+        var roc = Math.min(ev, totalBasis);
+        invs.forEach(function(inv,i){
+          if(inv.basis<=0) return;
+          var part = roc * (inv.basis/totalBasis);
+          inv.basis -= part;
+          inv.cf[ctx.yearIdx] += part;
+          ctx.cumLpDist += inv.type==='lp' ? part : 0;
+          ctx.cumGpDist += inv.type==='gp' ? part : 0;
+        });
+        ev -= roc; rocPaid = roc;
+      }
+    }
+    if(ev <= 0) return {pref:prefPaid, returnCap:rocPaid, lpSplit:0, gpSplit:0};
+
+    // Step 3: catch-up (give GPs % of post-pref distributions until cumulative LP/GP ratio = target)
+    // catchup = 0/50/100. Target ratio: GP gets t1.gp/100 of (cumLp + cumGp) cumulatively above pref/RoC.
+    var catchupPaid = 0;
+    if(s.catchup > 0){
+      var targetGpFrac = (s.t1.gp||0)/100;
+      var cumDistAbovePref = ctx.cumLpDist + ctx.cumGpDist;  // this includes pref+RoC; close enough for catch-up sizing
+      var desiredGp = cumDistAbovePref * targetGpFrac;
+      var shortfall = Math.max(0, desiredGp - ctx.cumGpDist);
+      var catchAmt = Math.min(ev, shortfall * (s.catchup/100));
+      if(catchAmt > 0){
+        var gps = invs.filter(function(x){return x.type==='gp';});
+        var sumGS = gps.reduce(function(a,b){return a+(b.gpShare||1);},0) || 1;
+        gps.forEach(function(g){
+          var part = catchAmt * (g.gpShare||1)/sumGS;
+          g.cf[ctx.yearIdx] += part;
+        });
+        ctx.cumGpDist += catchAmt;
+        ev -= catchAmt; catchupPaid = catchAmt;
+      }
+    }
+    if(ev <= 0) return {pref:prefPaid, returnCap:rocPaid, catchup:catchupPaid, lpSplit:0, gpSplit:0};
+
+    // Step 4: tier split — choose tier based on LP IRR so far
+    var tier = s.t1;
+    if(s.t3.irr > 0 && ctx.lpIRRSoFar*100 >= s.t3.irr) tier = s.t3;
+    else if(s.t2.irr > 0 && ctx.lpIRRSoFar*100 >= s.t2.irr) tier = s.t2;
+    var lpFrac = (tier.lp||0)/100, gpFrac = (tier.gp||0)/100;
+    var sumFrac = lpFrac + gpFrac || 1;
+    lpFrac/=sumFrac; gpFrac/=sumFrac;
+    var lpAmt = ev * lpFrac;
+    var gpAmt = ev * gpFrac;
+
+    // Distribute lpAmt pro rata to LPs by capital
+    var lps = invs.filter(function(x){return x.type==='lp';});
+    var sumLpCap = lps.reduce(function(a,b){return a+(b.capital||0);},0);
+    if(sumLpCap > 0){
+      lps.forEach(function(l){
+        var part = lpAmt * (l.capital/sumLpCap);
+        l.cf[ctx.yearIdx] += part;
+      });
+    } else {
+      // No LPs: GPs get LP share too
+      gpAmt += lpAmt;
+    }
+    ctx.cumLpDist += lpAmt;
+
+    // Distribute gpAmt pro rata to GPs by gpShare
+    var gps2 = invs.filter(function(x){return x.type==='gp';});
+    var sumGS2 = gps2.reduce(function(a,b){return a+(b.gpShare||1);},0);
+    if(sumGS2 > 0){
+      gps2.forEach(function(g){
+        var part = gpAmt * (g.gpShare||1)/sumGS2;
+        g.cf[ctx.yearIdx] += part;
+      });
+    }
+    ctx.cumGpDist += gpAmt;
+
+    return {pref:prefPaid, returnCap:rocPaid, catchup:catchupPaid, lpSplit:lpAmt, gpSplit:gpAmt, tier:tier};
+  }
+
+  // ── Pay direct GP fee (acquisition / asset-mgmt / capital-tx / disposition) ─
+  // GP fees go pro rata to GPs by gpShare. They appear as positive cf to GPs.
+  function _payGpFee(amt, invs, yearIdx){
+    if(amt<=0) return;
+    var gps = invs.filter(function(x){return x.type==='gp';});
+    var sumGS = gps.reduce(function(a,b){return a+(b.gpShare||1);},0);
+    if(sumGS<=0) return;
+    gps.forEach(function(g){
+      var part = amt * (g.gpShare||1)/sumGS;
+      g.cf[yearIdx] += part;
+    });
+  }
+
+  // ── Main compute ─────────────────────────────────────────────────────
+  window.partnerCompute = function(){
+    var s = _readStateFromInputs();   // sync UI to state
+    _stateSet(s);
+    _writeStateToInputs(s);
+    var deal = _dealBasics();
+    var hold = Math.max(1, Math.min(30, s.hold||5));
+
+    var roster = _id('pn_roster'); if(!roster) return;
+    var capSummary = _id('pn_capital_summary'); if(capSummary) capSummary.innerHTML='';
+    var cards = _id('pn_investor_cards'); if(cards) cards.innerHTML='';
+    var wfTable = _id('pn_waterfall_table'); if(wfTable) wfTable.innerHTML='';
+    var warn = _id('pn_warn'); if(warn){warn.style.display='none';warn.innerHTML='';}
+
+    _renderRoster(s);
+
+    // Capital summary
+    var totalCap = (s.investors||[]).reduce(function(a,b){return a+(+b.capital||0);},0);
+    var lpCap = (s.investors||[]).filter(function(x){return x.type==='lp';}).reduce(function(a,b){return a+(+b.capital||0);},0);
+    var gpCap = totalCap - lpCap;
+    var ratioLp = totalCap ? lpCap/totalCap*100 : 0;
+    var ratioGp = totalCap ? gpCap/totalCap*100 : 0;
+    var needed = deal.equityNeeded;
+    var diff = totalCap - needed;
+    if(capSummary){
+      capSummary.innerHTML =
+        '<span class="pn-cap-pill">Total raised: <strong>'+_$(totalCap)+'</strong></span>'
+       +'<span class="pn-cap-pill">LP <strong>'+ratioLp.toFixed(1)+'%</strong> · GP <strong>'+ratioGp.toFixed(1)+'%</strong></span>'
+       +'<span class="pn-cap-pill '+(Math.abs(diff)<needed*0.05?'good':'bad')+'">Need: '+_$(needed)+' · '+(diff>=0?'over':'short')+' '+_$(Math.abs(diff))+'</span>';
+    }
+
+    if(!s.investors || s.investors.length===0){
+      if(cards) cards.innerHTML = '<div class="wm-empty"><div class="wm-empty-icon">👥</div><div class="wm-empty-title">No investors yet</div><div class="wm-empty-sub">Click <strong>+ Add Investor</strong> to start modeling the capital stack.</div></div>';
+      return;
+    }
+
+    // Validate fields
+    var warnings = [];
+    if(deal.year1Rent <= 0) warnings.push('No gross rent in Intake — fill the Deal Intake tab first.');
+    if(s.t1.lp + s.t1.gp !== 100) warnings.push('Tier 1 split should sum to 100% (currently '+(s.t1.lp+s.t1.gp)+'%).');
+    if(totalCap <= 0) warnings.push('Add at least one investor with capital > $0.');
+    if(s.refiYear > 0 && s.refiYear >= hold) warnings.push('Refi year ('+s.refiYear+') must be before sale year ('+hold+').');
+    if(warn && warnings.length){
+      warn.style.display='block'; warn.className='vb-warn';
+      warn.innerHTML = warnings.map(function(x){return '• '+x;}).join('<br>');
+    }
+    if(deal.year1Rent <= 0 || totalCap <= 0) return;
+
+    // Initialize per-investor cf array
+    var invs = (s.investors||[]).map(function(x){
+      return {id:x.id, name:x.name, type:x.type, email:x.email||'',
+              capital:+x.capital||0, basis:+x.capital||0,
+              gpShare:+x.gpShare || (x.type==='gp'?1:0),
+              cf: new Array(hold+1).fill(0)};
+    });
+    invs.forEach(function(inv){ inv.cf[0] = -inv.capital; });
+
+    // Year 0: Acquisition fee (paid to GPs from initial equity raise; modeled as positive cf to GPs)
+    var acqFee = deal.price * (s.fees.acq||0)/100;
+    if(acqFee > 0) _payGpFee(acqFee, invs, 0);
+
+    var loanBalance = deal.loan;
+    var monthlyPI = deal.monthlyPI;
+    var prefAccrued = invs.map(function(){return 0;});  // unpaid pref carried forward
+    var ctx = {state:s, prefAccrued:prefAccrued, cumLpDist:0, cumGpDist:0, lpIRRSoFar:0};
+    var wfRows = [];
+
+    // Helper: compute YEAR-T cumulative LP IRR (used to gate tier)
+    function _lpIRRTo(yearT){
+      var lpCfs = new Array(yearT+1).fill(0);
+      invs.forEach(function(inv){ if(inv.type==='lp'){ for(var t=0;t<=yearT;t++) lpCfs[t]+=inv.cf[t]; } });
+      var ir = _irr(lpCfs);
+      return (ir==null) ? 0 : ir;
+    }
+
+    for(var y=1; y<=hold; y++){
+      // Accrue pref on remaining basis
+      invs.forEach(function(inv,i){ prefAccrued[i] += inv.basis * (s.pref||0)/100; });
+
+      // Compute year metrics
+      var rent = deal.year1Rent * Math.pow(1 + (s.rentG||0)/100, y-1);
+      var exp  = deal.year1Exp  * Math.pow(1 + (s.expG||0)/100,  y-1);
+      var noi  = rent - exp;
+      var amFee = rent * (s.fees.am||0)/100;
+      // Amortize loan over the year (12 months)
+      var monthlyR = deal.rate/12;
+      for(var m=0;m<12;m++){
+        var intM = loanBalance*monthlyR;
+        var princM = monthlyPI - intM;
+        if(princM<0) princM = 0;
+        if(princM>loanBalance) princM = loanBalance;
+        loanBalance -= princM;
+      }
+      var debtService = monthlyPI*12;
+      var available = noi - debtService - amFee;
+
+      // Pay AM fee to GPs as direct fee income
+      _payGpFee(amFee, invs, y);
+
+      // Distribute operating cashflow via waterfall
+      ctx.yearIdx = y; ctx.allowReturnOfCapital = false;
+      var op = _waterfall(Math.max(0, available), invs, ctx);
+
+      // Refi event at end of year y
+      var refi = null;
+      if(s.refiYear === y){
+        var propValue = noi / ((s.exitCap||6)/100);
+        var newLoan = propValue * (s.refiLtv||75)/100;
+        var refiCC  = newLoan * (s.refiCc||1)/100;
+        var cashOut = Math.max(0, newLoan - loanBalance - refiCC);
+        if(cashOut > 0){
+          var capxFee = cashOut * (s.fees.capx||0)/100;
+          _payGpFee(capxFee, invs, y);
+          var netCashOut = cashOut - capxFee;
+          ctx.yearIdx = y; ctx.allowReturnOfCapital = true;
+          ctx.lpIRRSoFar = _lpIRRTo(y);
+          refi = _waterfall(netCashOut, invs, ctx);
+          refi.cashOut = netCashOut;
+        }
+        loanBalance = newLoan;
+        // Recompute monthlyPI for new loan over remaining term
+        var remMonths = (deal.termY*12) - y*12;
+        if(remMonths>0){
+          monthlyPI = (monthlyR>0) ? newLoan*monthlyR/(1-Math.pow(1+monthlyR,-remMonths)) : newLoan/remMonths;
+        }
+      }
+
+      ctx.lpIRRSoFar = _lpIRRTo(y);
+
+      wfRows.push({
+        year:y, noi:noi, debt:debtService, am:amFee, op:op, refi:refi,
+        loanEnd:loanBalance
+      });
+    }
+
+    // Final sale at end of hold year
+    var saleY = hold;
+    var rentFinal = deal.year1Rent * Math.pow(1 + (s.rentG||0)/100, saleY);  // forward NOI
+    var expFinal  = deal.year1Exp  * Math.pow(1 + (s.expG||0)/100,  saleY);
+    var saleNOI = rentFinal - expFinal;
+    var saleProceeds = saleNOI / ((s.exitCap||6)/100);
+    var dispFee = saleProceeds * (s.fees.disp||0)/100;
+    var netSale = Math.max(0, saleProceeds - loanBalance - dispFee);
+    if(dispFee > 0) _payGpFee(dispFee, invs, hold);
+    ctx.yearIdx = hold; ctx.allowReturnOfCapital = true; ctx.lpIRRSoFar = _lpIRRTo(hold);
+    var sale = _waterfall(netSale, invs, ctx);
+    wfRows.push({year:hold, sale:{proceeds:saleProceeds, payoff:loanBalance, dispFee:dispFee, net:netSale, dist:sale}});
+
+    // Compute per-investor metrics
+    invs.forEach(function(inv){
+      inv.totalIn = -inv.cf[0];
+      inv.totalOut = 0;
+      for(var t=1;t<inv.cf.length;t++) inv.totalOut += inv.cf[t];
+      inv.em = inv.totalIn>0 ? inv.totalOut/inv.totalIn : 0;
+      var ir = _irr(inv.cf);
+      inv.irr = (ir==null) ? null : ir;
+      inv.aar = (inv.em - 1) / hold;
+    });
+
+    _renderInvCards(invs, hold);
+    _renderWaterfallTable(wfRows, invs, hold);
+
+    // Header summary
+    var lpInvs = invs.filter(function(x){return x.type==='lp';});
+    var gpInvs = invs.filter(function(x){return x.type==='gp';});
+    var avgLpIrr = lpInvs.length ? (lpInvs.reduce(function(a,b){return a+(b.irr||0);},0)/lpInvs.length) : 0;
+    var avgGpIrr = gpInvs.length ? (gpInvs.reduce(function(a,b){return a+(b.irr||0);},0)/gpInvs.length) : 0;
+    var sumOut = invs.reduce(function(a,b){return a+(b.totalOut||0);},0);
+    var sumIn  = invs.reduce(function(a,b){return a+(b.totalIn||0);},0);
+    var os = _id('pn_overall_summary');
+    if(os) os.innerHTML = hold+'-yr hold · LP avg IRR <strong style="color:#10b981">'+_pct(avgLpIrr)+'</strong> · GP avg IRR <strong style="color:var(--accent)">'+_pct(avgGpIrr)+'</strong> · Total returned '+_$(sumOut)+' on '+_$(sumIn);
+  };
+
+  // ── Roster CRUD ─────────────────────────────────────────────────────
+  window.partnerAddInvestor = function(){
+    var s = _stateGet();
+    var n = (s.investors||[]).length;
+    s.investors.push({id:_uid('inv'), name:'Investor '+(n+1), type:'lp', capital:50000, email:'', gpShare:0});
+    _stateSet(s);
+    partnerCompute();
+  };
+  window.partnerRemoveInvestor = function(id){
+    var s = _stateGet();
+    s.investors = (s.investors||[]).filter(function(x){return x.id!==id;});
+    _stateSet(s);
+    partnerCompute();
+  };
+  window.partnerUpdateInvestor = function(id, field, value){
+    var s = _stateGet();
+    var inv = (s.investors||[]).find(function(x){return x.id===id;});
+    if(!inv) return;
+    if(field==='capital' || field==='gpShare') value = parseFloat(value)||0;
+    inv[field] = value;
+    if(field==='type' && value==='gp' && !inv.gpShare) inv.gpShare = 1;
+    _stateSet(s);
+    partnerCompute();
+  };
+
+  function _renderRoster(s){
+    var box = _id('pn_roster'); if(!box) return;
+    box.innerHTML = '';
+    if(!s.investors || !s.investors.length){
+      box.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:14px 4px">No investors yet — click <strong>+ Add Investor</strong>.</div>';
+      return;
+    }
+    var hdr = document.createElement('div');
+    hdr.className='pn-row';
+    hdr.style.cssText='background:transparent;border:none;padding:2px 8px;color:var(--muted);font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:0';
+    hdr.innerHTML='<div>Name</div><div>Type</div><div>Capital ($)</div><div>%</div><div>Email</div><div></div>';
+    box.appendChild(hdr);
+    var totalCap = s.investors.reduce(function(a,b){return a+(+b.capital||0);},0);
+    s.investors.forEach(function(inv){
+      var row = document.createElement('div');
+      row.className='pn-row';
+      var pct = totalCap>0 ? ((inv.capital||0)/totalCap*100).toFixed(1) : '0';
+      row.innerHTML =
+         '<input value="'+(inv.name||'').replace(/"/g,'&quot;')+'" oninput="partnerUpdateInvestor(\''+inv.id+'\',\'name\',this.value)">'
+        +'<select onchange="partnerUpdateInvestor(\''+inv.id+'\',\'type\',this.value)">'
+          +'<option value="lp"'+(inv.type==='lp'?' selected':'')+'>LP</option>'
+          +'<option value="gp"'+(inv.type==='gp'?' selected':'')+'>GP / Co-GP</option>'
+        +'</select>'
+        +'<input type="number" step="1000" value="'+(+inv.capital||0)+'" oninput="partnerUpdateInvestor(\''+inv.id+'\',\'capital\',this.value)">'
+        +'<div class="pn-pct">'+pct+'%</div>'
+        +'<input value="'+(inv.email||'').replace(/"/g,'&quot;')+'" placeholder="email" oninput="partnerUpdateInvestor(\''+inv.id+'\',\'email\',this.value)">'
+        +'<button class="pn-row-rm" title="Remove" onclick="partnerRemoveInvestor(\''+inv.id+'\')">×</button>';
+      box.appendChild(row);
+    });
+  }
+
+  function _renderInvCards(invs, hold){
+    var box = _id('pn_investor_cards'); if(!box) return;
+    box.innerHTML='';
+    invs.forEach(function(inv){
+      var card = document.createElement('div');
+      card.className = 'pn-inv-card' + (inv.type==='gp'?' gp':'');
+      var pct = invs.reduce(function(a,b){return a+b.totalIn;},0);
+      pct = pct ? (inv.totalIn/pct*100).toFixed(1) : '0';
+      var yearLines = [];
+      for(var t=1;t<=hold;t++){
+        var v = inv.cf[t];
+        var coc = inv.totalIn>0 ? (v/inv.totalIn*100).toFixed(1)+'%' : '—';
+        yearLines.push('Y'+t+': '+_$(v)+'  ('+coc+' CoC)');
+      }
+      card.innerHTML =
+        '<div class="pn-inv-hdr">'
+          +'<div class="pn-inv-av">'+(inv.name||'?').charAt(0).toUpperCase()+'</div>'
+          +'<div class="pn-inv-name">'+(inv.name||'(unnamed)')+'</div>'
+          +'<div class="pn-inv-pct">'+pct+'%</div>'
+        +'</div>'
+        +'<div class="pn-inv-cap">'+(inv.type==='gp'?'Co-GP':'LP')+' · '+_$(inv.totalIn)+' invested · '+(inv.email||'no email')+'</div>'
+        +'<div class="pn-inv-stats">'
+          +'<div class="pn-inv-stat good"><div class="pn-inv-stat-label">IRR</div><div class="pn-inv-stat-val">'+_pct(inv.irr,1)+'</div></div>'
+          +'<div class="pn-inv-stat good"><div class="pn-inv-stat-label">Equity Multiple</div><div class="pn-inv-stat-val">'+(isFinite(inv.em)?inv.em.toFixed(2)+'x':'—')+'</div></div>'
+          +'<div class="pn-inv-stat"><div class="pn-inv-stat-label">Total $ Returned</div><div class="pn-inv-stat-val">'+_$(inv.totalOut)+'</div></div>'
+          +'<div class="pn-inv-stat"><div class="pn-inv-stat-label">Avg Annual Return</div><div class="pn-inv-stat-val">'+_pct(inv.aar,1)+'</div></div>'
+        +'</div>'
+        +'<div class="pn-inv-yearly">'+yearLines.join('<br>')+'</div>'
+        +'<div class="pn-inv-actions">'
+          +'<button onclick="partnerInvestorPdf(\''+inv.id+'\')">📄 PDF</button>'
+          +'<button onclick="partnerInvestorShare(\''+inv.id+'\')">🔗 Share link</button>'
+        +'</div>';
+      box.appendChild(card);
+    });
+  }
+
+  function _renderWaterfallTable(rows, invs, hold){
+    var t = _id('pn_waterfall_table'); if(!t) return;
+    var html = '<thead><tr><th>Year</th><th>NOI</th><th>Debt Service</th><th>AM Fee (GP)</th><th>Op Distribution</th><th>Refi Cash-out</th><th>Sale Net</th><th>Loan Bal (EOY)</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      if(r.sale){
+        var s = r.sale;
+        html += '<tr class="sale-row">'
+              +'<td>Y'+r.year+' SALE</td>'
+              +'<td colspan="3">Proceeds '+_$(s.proceeds)+' − Loan '+_$(s.payoff)+' − Disp '+_$(s.dispFee)+'</td>'
+              +'<td>—</td><td>—</td><td>'+_$(s.net)+'</td><td>—</td>'
+              +'</tr>';
+        return;
+      }
+      var refiCell = r.refi ? '<span style="color:#fbbf24">'+_$(r.refi.cashOut)+'</span>' : '—';
+      var rowClass = r.refi ? ' class="refi-row"' : '';
+      html += '<tr'+rowClass+'>'
+            +'<td>Y'+r.year+'</td>'
+            +'<td>'+_$(r.noi)+'</td>'
+            +'<td>'+_$(r.debt)+'</td>'
+            +'<td>'+_$(r.am)+'</td>'
+            +'<td>'+_$((r.op?(r.op.pref+r.op.lpSplit+r.op.gpSplit):0))+'</td>'
+            +'<td>'+refiCell+'</td>'
+            +'<td>—</td>'
+            +'<td>'+_$(r.loanEnd)+'</td>'
+            +'</tr>';
+    });
+    html += '</tbody>';
+    t.innerHTML = html;
+  }
+
+  // ── PDF + Share per investor ────────────────────────────────────────
+  window.partnerInvestorPdf = function(invId){
+    var s = _stateGet();
+    var inv = (s.investors||[]).find(function(x){return x.id===invId;}); if(!inv) return;
+    var card = document.querySelector('.pn-inv-card'); // first card; we'll rebuild for the target investor
+    // Re-run compute to get fresh data
+    partnerCompute();
+    var allCards = document.querySelectorAll('#pn_investor_cards .pn-inv-card');
+    var idx = (s.investors||[]).findIndex(function(x){return x.id===invId;});
+    var target = allCards[idx]; if(!target) return;
+    var w = window.open('', '_blank', 'width=900,height=1100');
+    if(!w){ alert('Pop-up blocked — please allow pop-ups.'); return; }
+    var appCSS = Array.from(document.querySelectorAll('style')).map(function(x){return x.textContent;}).join('\n');
+    var dealName = (typeof gv==='function' && gv('prop_address')) || 'Deal';
+    w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+inv.name+' — Investor Report</title><style>'+appCSS+'</style><style>'
+      +'@page{margin:.6in .6in;size:letter}'
+      +'body{background:#fff!important;color:#111!important;padding:24px;font-family:Inter,system-ui,sans-serif}'
+      +'.hdr{border-bottom:2px solid #1b3d6b;padding-bottom:12px;margin-bottom:18px}'
+      +'.hdr h1{margin:0;font-size:20pt;color:#1b3d6b}'
+      +'.hdr-sub{font-size:11pt;color:#475569;margin-top:4px}'
+      +'.pn-inv-card{box-shadow:none!important;page-break-inside:avoid}'
+      +'</style></head><body>'
+      +'<div class="hdr"><h1>'+inv.name+' — Investor Returns</h1>'
+        +'<div class="hdr-sub">'+(dealName||'Deal')+' · '+s.hold+'-year hold · Generated '+new Date().toLocaleDateString()+'</div></div>'
+      +target.outerHTML
+      +'<div style="margin-top:18px;font-size:10pt;color:#64748b">Capital: '+_$(inv.totalIn||inv.capital)+' · Type: '+(inv.type==='gp'?'General Partner':'Limited Partner')+(inv.email?' · '+inv.email:'')+'</div>'
+      +'</body></html>');
+    w.document.close();
+    setTimeout(function(){w.print();}, 600);
+  };
+
+  window.partnerInvestorShare = function(invId){
+    var url = location.origin + location.pathname + '?investor=' + encodeURIComponent(invId) + location.hash;
+    function _copy(){var ta=document.createElement('textarea');ta.value=url;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){if(typeof showProjToast==='function')showProjToast('🔗 Investor link copied!');}).catch(_copy);
+    } else { _copy(); if(typeof showProjToast==='function')showProjToast('🔗 Investor link copied!'); }
+  };
+
+  // Apply ?investor=X URL filter — show only that card
+  function _applyInvestorFilter(){
+    var m = location.search.match(/[?&]investor=([^&]+)/);
+    if(!m) return;
+    var id = decodeURIComponent(m[1]);
+    var box = _id('pn_investor_cards'); if(!box) return;
+    var cards = box.querySelectorAll('.pn-inv-card');
+    var s = _stateGet();
+    (s.investors||[]).forEach(function(inv,i){
+      if(inv.id !== id && cards[i]) cards[i].style.display = 'none';
+    });
+    if(typeof ST === 'function') ST(11);
+    var n = _id('pn_overall_summary');
+    if(n) n.innerHTML = '<span style="color:var(--accent);font-weight:700">Investor view — only your card is shown.</span>';
+  }
+
+  // ── Sync UI inputs ↔ state ──────────────────────────────────────────
+  function _readStateFromInputs(){
+    var s = _stateGet();
+    var v = function(id, k, def){var e=_id(id);return e&&e.value!==''?(parseFloat(e.value)||def||0):(s[k]!=null?s[k]:(def||0));};
+    s.pref = v('pn_pref','pref',0);
+    var c = _id('pn_catchup'); s.catchup = c ? +c.value||0 : (s.catchup||0);
+    s.t1 = {lp: v('pn_t1_lp', 't1lp', 80), gp: v('pn_t1_gp', 't1gp', 20)};
+    s.t2 = {lp: v('pn_t2_lp', 't2lp', 0), gp: v('pn_t2_gp', 't2gp', 0), irr: v('pn_t2_irr','t2irr',0)};
+    s.t3 = {lp: v('pn_t3_lp', 't3lp', 0), gp: v('pn_t3_gp', 't3gp', 0), irr: v('pn_t3_irr','t3irr',0)};
+    s.fees = {acq: v('pn_fee_acq','feeAcq',2), am: v('pn_fee_am','feeAm',1.5), capx: v('pn_fee_capx','feeCapx',1), disp: v('pn_fee_disp','feeDisp',1)};
+    s.hold = v('pn_hold','hold',5);
+    s.refiYear = v('pn_refi_year','refiYear',0);
+    s.refiLtv = v('pn_refi_ltv','refiLtv',75);
+    s.refiCc  = v('pn_refi_cc','refiCc',1);
+    s.exitCap = v('pn_exit_cap','exitCap',6);
+    s.rentG   = v('pn_rent_g','rentG',3);
+    s.expG    = v('pn_exp_g','expG',2.5);
+    return s;
+  }
+
+  function _writeStateToInputs(s){
+    var set = function(id,val){var e=_id(id);if(e && document.activeElement!==e) e.value = val;};
+    set('pn_pref', s.pref); set('pn_t1_lp', s.t1.lp); set('pn_t1_gp', s.t1.gp);
+    set('pn_t2_lp', s.t2.lp); set('pn_t2_gp', s.t2.gp); set('pn_t2_irr', s.t2.irr);
+    set('pn_t3_lp', s.t3.lp); set('pn_t3_gp', s.t3.gp); set('pn_t3_irr', s.t3.irr);
+    set('pn_fee_acq', s.fees.acq); set('pn_fee_am', s.fees.am); set('pn_fee_capx', s.fees.capx); set('pn_fee_disp', s.fees.disp);
+    set('pn_hold', s.hold); set('pn_refi_year', s.refiYear); set('pn_refi_ltv', s.refiLtv); set('pn_refi_cc', s.refiCc);
+    set('pn_exit_cap', s.exitCap); set('pn_rent_g', s.rentG); set('pn_exp_g', s.expG);
+    var c=_id('pn_catchup'); if(c && document.activeElement!==c) c.value = s.catchup||0;
+  }
+
+  window.partnerResetDefaults = function(){
+    var s = _defaultState();
+    Object.assign(s, TEMPLATES['blank-7030']);
+    var deal = _dealBasics();
+    var totalEquityNeeded = Math.max(50000, deal.equityNeeded || 0);
+    s.investors = [
+      {id:_uid('inv'), name:'You (Sponsor)', type:'gp', capital:Math.round(totalEquityNeeded*0.05), email:'', gpShare:1},
+      {id:_uid('inv'), name:'LP 1',          type:'lp', capital:Math.round(totalEquityNeeded*0.95), email:'', gpShare:0}
+    ];
+    _stateSet(s);
+    _writeStateToInputs(s);
+  };
+
+  window.partnerInit = function(){
+    var s = _stateGet();
+    if(!s.investors || !s.investors.length) partnerResetDefaults();
+    else _writeStateToInputs(s);
+    setTimeout(_applyInvestorFilter, 100);
+  };
+
+  // Init on DOMContentLoaded so URL-filter applies if user lands on ?investor=X
+  if(document.readyState !== 'loading'){
+    setTimeout(function(){ if(_id('pn_roster')) { partnerInit(); partnerCompute(); _applyInvestorFilter(); } }, 250);
+  } else {
+    document.addEventListener('DOMContentLoaded', function(){
+      setTimeout(function(){ if(_id('pn_roster')) { partnerInit(); partnerCompute(); _applyInvestorFilter(); } }, 250);
+    });
+  }
+})();
+</script>
+
+
+<script>
    Standard amort vs LOC-chunking simulation, plus an extra-principal
    "sanity check" baseline and a Chart.js balance-over-time chart.
    Prefills from the deal in Intake when available, else uses sensible defaults.
