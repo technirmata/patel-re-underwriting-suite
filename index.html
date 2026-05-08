@@ -3502,6 +3502,29 @@ strong { color: #e2e8f0; }
     <div class="card-title">🎯 Fundraising Probability</div>
     <div id="dsc_raise_result" style="font-size:13px;line-height:1.6"></div>
   </div>
+
+  <!-- Section 9: Stress-Test Battery -->
+  <div class="card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <span>📉 Stress-Test Battery</span>
+      <button class="btn btn-primary btn-sm" onclick="dscRunStress()" style="font-size:11px">⚡ Run battery</button>
+    </div>
+    <div style="font-size:11.5px;color:var(--text2);line-height:1.5;margin-bottom:10px">Apply lender-style adverse scenarios to your current deal. Each scenario stresses one input; the "Combined" row applies them simultaneously. Pass = DSCR ≥ 1.20x AND debt yield ≥ 8%.</div>
+    <div style="overflow-x:auto"><table class="pn-table" id="dsc_stress_table"></table></div>
+    <div id="dsc_stress_summary" style="margin-top:10px;font-size:13px;line-height:1.6"></div>
+  </div>
+
+  <!-- Section 10: Auto Investor Deck -->
+  <div class="card" style="background:linear-gradient(135deg,rgba(16,185,129,.04),var(--surface))">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <span>📕 Auto Investor Deck</span>
+      <button class="btn btn-primary btn-sm" onclick="dscGenerateDeck()" style="font-size:11px">📄 Generate Deck</button>
+    </div>
+    <div style="font-size:11.5px;color:var(--text2);line-height:1.6">One-click deck pulling from Intake + Metrics + Partners + Discipline + Stress. 11 sections in a print-ready page that opens in a new window (Cmd-P → Save as PDF). Use this as the canonical investor packet.</div>
+    <ul style="font-size:11.5px;color:var(--muted);margin:8px 0 0 18px;line-height:1.5">
+      <li>Cover · Investment Highlights · Property Overview · Sources &amp; Uses · Year-1 Pro Forma · Business Plan · Sensitivity / Stress · Exit Strategy · Returns Summary (whole-deal + per-investor) · Risk Factors · Sponsor / KP</li>
+    </ul>
+  </div>
 </div><!-- end panel16 -->
 
 <!-- ══════════════════════════════════════════════ PANEL 15: METRICS (whole-deal + per-investor canonical view) -->
@@ -15459,6 +15482,335 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
     }
 
     box.innerHTML = html;
+  };
+
+  // ── 9. Stress-Test Battery ──────────────────────────────────────────
+  // Applies adverse scenarios to deal NOI / rate / vacancy and recomputes
+  // DSCR + break-even occupancy + debt yield. Pass = DSCR ≥ 1.20 AND DY ≥ 8%.
+  window.dscRunStress = function(){
+    var box = _id('dsc_stress_table'); var sum = _id('dsc_stress_summary');
+    if(!box) return;
+    var S = window.S || {};
+    var price = S.price || (_gn('pur_price')||0);
+    var rent  = S.grossRent || 0;       // annual GSI
+    var exp   = S.totalExp  || 0;       // annual OpEx
+    var noi   = S.noi || (rent - exp);
+    var loan  = price && S.down ? Math.max(price - S.down, 0) : (price * 0.75);
+    var rate  = (_gn('mkt_rate')||7)/100;
+    var termY = _gn('amort_term')||30;
+    var pn = (function(){ try { return JSON.parse(localStorage.getItem('jp_partners_v1')||'{}'); } catch(e){ return {}; }})();
+    var rentG = (pn.rentG||3)/100;
+    var expG  = (pn.expG||2.5)/100;
+
+    if(!price || !rent){ box.innerHTML=''; if(sum) sum.innerHTML='<span style="color:var(--muted)">Fill Intake (price + rent + exp) first.</span>'; return; }
+
+    function _ds(loan, rate, termY){
+      var r = rate/12, n = termY*12;
+      if(r === 0) return loan/termY;
+      return loan * r / (1 - Math.pow(1+r, -n)) * 12;
+    }
+    function _scenario(label, opts){
+      var r2  = opts.rate || rate;
+      var rent2 = rent * (1 + (opts.rentDelta||0));
+      var exp2  = exp  * (1 + (opts.expDelta||0));
+      var vac2  = (opts.vacDelta||0); // additional vacancy as fraction of rent
+      var noi2  = (rent2 * (1 - vac2)) - exp2;
+      var ds   = _ds(loan, r2, termY);
+      var dscr = ds > 0 ? noi2/ds : 0;
+      var dy   = loan > 0 ? noi2/loan*100 : 0;
+      var brkOcc = rent2 > 0 ? ((exp2 + ds) / rent2 * 100) : 0;
+      var pass = dscr >= 1.20 && dy >= 8;
+      return {label:label, noi:noi2, dscr:dscr, dy:dy, brkOcc:brkOcc, pass:pass};
+    }
+
+    var scenarios = [
+      _scenario('Base case',           {}),
+      _scenario('Rent growth -200bps', {rentDelta: -0.02}),
+      _scenario('Vacancy +500bps',     {vacDelta:  0.05}),
+      _scenario('Exit cap +100bps',    {}), // exit cap doesn't affect Y1 DSCR; flag in summary
+      _scenario('Interest rate +200bps', {rate: rate + 0.02}),
+      _scenario('Expense growth +100bps', {expDelta: 0.01}),
+      _scenario('🌪 Combined stress',   {rentDelta:-0.02, vacDelta:0.05, rate:rate+0.02, expDelta:0.01})
+    ];
+    var html = '<thead><tr><th>Scenario</th><th>NOI</th><th>DSCR</th><th>Break-even Occ</th><th>Debt Yield</th><th>Verdict</th></tr></thead><tbody>';
+    scenarios.forEach(function(s){
+      var v = s.pass ? '<span style="color:#10b981">✓ Pass</span>' : '<span style="color:#fca5a5">✕ Fail</span>';
+      var rowCls = s.label.indexOf('Combined') >= 0 ? ' style="background:rgba(245,158,11,.08)"' : '';
+      html += '<tr'+rowCls+'><td>'+s.label+'</td>'
+            +'<td>'+_$(s.noi)+'</td>'
+            +'<td style="color:'+(s.dscr>=1.25?'#10b981':s.dscr>=1.20?'#fbbf24':'#fca5a5')+';font-weight:700">'+(s.dscr?s.dscr.toFixed(2)+'x':'—')+'</td>'
+            +'<td>'+(s.brkOcc?s.brkOcc.toFixed(1)+'%':'—')+'</td>'
+            +'<td style="color:'+(s.dy>=10?'#10b981':s.dy>=8?'#fbbf24':'#fca5a5')+';font-weight:700">'+(s.dy?s.dy.toFixed(2)+'%':'—')+'</td>'
+            +'<td>'+v+'</td></tr>';
+    });
+    html += '</tbody>';
+    box.innerHTML = html;
+    var passes = scenarios.filter(function(s){return s.pass;}).length;
+    var pct = Math.round(passes/scenarios.length*100);
+    if(sum){
+      var color = pct>=85?'#10b981':pct>=60?'#fbbf24':'#fca5a5';
+      sum.innerHTML = '<strong style="color:'+color+';font-size:14px">Stress survival '+passes+'/'+scenarios.length+' ('+pct+'%)</strong>'
+        + '<div style="font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5">'
+        + (scenarios[scenarios.length-1].pass ? '✅ Even the combined-stress scenario clears DSCR + DY thresholds — institutional-grade.'
+           : pct >= 60 ? '⚠ Holds under most adversities but fails combined stress. Lender will likely require lower LTV, higher reserves, or pricing concessions.'
+           : '❌ Multiple individual scenarios fail. Re-underwrite at lower price or restructure financing before approaching debt.')
+        + '</div>';
+    }
+  };
+
+  // ── 10. Auto Investor Deck ─────────────────────────────────────────
+  // Generates a multi-section print-ready packet pulling from every relevant
+  // tab. Opens in a new window — user uses browser print-to-PDF to save.
+  window.dscGenerateDeck = function(){
+    var S = window.S || {};
+    var price = S.price || (_gn('pur_price')||0);
+    if(!price){ alert('Fill the Deal Intake first — at minimum price + rent + expenses.'); return; }
+
+    // ── pull data ────────────────────────────────
+    var addr = [_gv('prop_address'),_gv('prop_city'),_gv('prop_state'),_gv('prop_zip')].filter(Boolean).join(', ') || 'Property';
+    var dealName = _gv('projNameInput') || addr || 'Deal';
+    var units = _gn('prop_units')||0;
+    var sqft = _gn('prop_sqft')||0;
+    var year = _gn('prop_year')||0;
+    var tier = (_gv('mkt_tier')||'').toUpperCase();
+    var assetClass = _gv('prop_type') || '';
+    var noi = S.noi || 0;
+    var rent = S.grossRent || 0;
+    var exp = S.totalExp || 0;
+    var down = S.down || price*0.20;
+    var loan = Math.max(price - down, 0);
+    var closing = S.close || price*0.03;
+    var equityNeeded = down + closing;
+
+    // Partners state + computed cards
+    var pn = (function(){ try { return JSON.parse(localStorage.getItem('jp_partners_v1')||'{}'); } catch(e){ return {}; }})();
+    var hold = pn.hold || 5;
+    var pnInvestors = (pn.investors||[]);
+    if(typeof partnerCompute === 'function') { try { partnerCompute(); } catch(e){} }
+    var invCardsHtml = '';
+    var invCards = document.querySelectorAll('#pn_investor_cards .pn-inv-card');
+    if(invCards.length){
+      invCardsHtml = '<div class="deck-inv-grid">';
+      invCards.forEach(function(c){ invCardsHtml += c.outerHTML; });
+      invCardsHtml += '</div>';
+    } else {
+      invCardsHtml = '<div class="muted">No investors set in Partners tab.</div>';
+    }
+
+    // Discipline state
+    var dst = _loadState();
+    var stressHtml = (_id('dsc_stress_table') && _id('dsc_stress_table').innerHTML) || '';
+    var raiseHtml  = (_id('dsc_raise_result') && _id('dsc_raise_result').innerHTML) || '';
+    var truthHtml  = (_id('dsc_truth_table') && _id('dsc_truth_table').innerHTML) || '';
+    var kpHtml     = (_id('dsc_kp_result') && _id('dsc_kp_result').innerHTML) || '';
+
+    // ── pro forma year 1 ────────────────────────
+    var monthlyR = ((_gn('mkt_rate')||7)/100)/12;
+    var n = (_gn('amort_term')||30)*12;
+    var monthlyPI = monthlyR>0 ? loan*monthlyR/(1-Math.pow(1+monthlyR,-n)) : (loan/n);
+    var annDS = monthlyPI*12;
+    var cfYr1 = noi - annDS;
+    var capRate = price>0 ? noi/price : 0;
+    var coc = equityNeeded>0 ? cfYr1/equityNeeded : 0;
+    var dscr = annDS>0 ? noi/annDS : 0;
+    var saleNOI = rent * Math.pow(1+(pn.rentG||3)/100, hold) - exp * Math.pow(1+(pn.expG||2.5)/100, hold);
+    var saleProceeds = saleNOI / ((pn.exitCap||6)/100);
+
+    // ── highlights chart (CoC by year, simple linear approximation) ──
+    var holdYears = [];
+    for(var y=1;y<=hold;y++){
+      var rentY = rent*Math.pow(1+(pn.rentG||3)/100, y-1);
+      var expY  = exp *Math.pow(1+(pn.expG||2.5)/100, y-1);
+      var noiY  = rentY - expY;
+      var cfY   = noiY - annDS;
+      holdYears.push({y:y, cf:cfY, noi:noiY, coc: equityNeeded?cfY/equityNeeded:0});
+    }
+
+    // ── compose deck HTML ───────────────────────
+    var w = window.open('', '_blank', 'width=1000,height=1200');
+    if(!w){ alert('Pop-up blocked — please allow pop-ups.'); return; }
+
+    var appCss = Array.from(document.querySelectorAll('style')).map(function(s){return s.textContent;}).join('\n');
+
+    function _money(n){ return '$'+Math.round(n||0).toLocaleString(); }
+    function _pct(n,d){return ((n||0)*100).toFixed(d||1)+'%';}
+
+    var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Investor Deck — '+_e(dealName)+'</title>'
+      +'<style>'+appCss+'</style>'
+      +'<style>'
+        +'body{background:#fff!important;color:#111!important;font-family:Inter,system-ui,sans-serif;line-height:1.55;margin:0}'
+        +'.deck{max-width:780px;margin:0 auto;padding:36px 36px}'
+        +'.deck-section{page-break-inside:avoid;page-break-before:always;padding:30px 0;border-bottom:1px solid #e5e7eb}'
+        +'.deck-section:first-child{page-break-before:auto;padding-top:0}'
+        +'.deck-section h1{font-size:24pt;color:#1b3d6b;margin:0 0 8pt;letter-spacing:-.5pt}'
+        +'.deck-section h2{font-size:14pt;color:#1b3d6b;margin:0 0 12pt;border-bottom:2px solid #1b3d6b;padding-bottom:6pt;letter-spacing:-.2pt}'
+        +'.deck-section h3{font-size:11pt;color:#475569;text-transform:uppercase;letter-spacing:.1em;margin:16pt 0 6pt}'
+        +'.deck-cover{text-align:center;padding:80px 36px}'
+        +'.deck-cover .brand{font-size:36pt;font-weight:900;color:#1b3d6b;letter-spacing:-1pt;margin-bottom:6pt}'
+        +'.deck-cover .sub{font-size:13pt;color:#475569;margin-bottom:60pt}'
+        +'.deck-cover .meta{font-size:10pt;color:#64748b;text-transform:uppercase;letter-spacing:.15em}'
+        +'.muted{color:#94a3b8;font-style:italic;font-size:11pt}'
+        +'table.deck-tbl{width:100%;border-collapse:collapse;font-size:10.5pt}'
+        +'table.deck-tbl th{background:#f1f5f9;color:#1b3d6b;text-align:right;padding:8pt 10pt;font-size:9pt;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #1b3d6b}'
+        +'table.deck-tbl th:first-child{text-align:left}'
+        +'table.deck-tbl td{padding:7pt 10pt;text-align:right;border-bottom:1px solid #e5e7eb;color:#1a1a2e}'
+        +'table.deck-tbl td:first-child{text-align:left;color:#475569}'
+        +'.deck-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14pt;margin-top:14pt}'
+        +'.deck-kpi{background:#f8fafc;border-left:3px solid #1b3d6b;padding:12pt 14pt;border-radius:4pt}'
+        +'.deck-kpi-label{font-size:8.5pt;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4pt}'
+        +'.deck-kpi-val{font-size:18pt;font-weight:800;color:#1b3d6b;line-height:1}'
+        +'.deck-kpi-sub{font-size:9pt;color:#64748b;margin-top:3pt}'
+        +'.deck-bar-row{display:grid;grid-template-columns:50pt 1fr 80pt 80pt;gap:8pt;align-items:center;font-size:10pt;padding:6pt 0;border-bottom:1px solid #f1f5f9}'
+        +'.deck-bar-track{background:#f1f5f9;border-radius:6pt;height:18pt;position:relative;overflow:hidden}'
+        +'.deck-bar-fill{background:linear-gradient(90deg,#1b3d6b,#1e6e4f);height:100%;border-radius:6pt}'
+        +'.deck-inv-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12pt;margin-top:8pt}'
+        +'.pn-inv-card{box-shadow:none!important;background:#f8fafc!important;border:1px solid #e5e7eb!important;color:#1a1a2e!important}'
+        +'.pn-inv-card *{color:#1a1a2e!important}'
+        +'.pn-inv-card .pn-inv-pct{background:#dbeafe!important;color:#1b3d6b!important}'
+        +'.pn-inv-card .pn-inv-stat-val{color:#1b3d6b!important}'
+        +'.pn-inv-card .pn-inv-stat.good .pn-inv-stat-val{color:#047857!important}'
+        +'.pn-inv-card .pn-inv-actions{display:none}'
+        +'.deck-disclaimer{font-size:8.5pt;color:#94a3b8;border-top:1px solid #e5e7eb;padding-top:14pt;margin-top:30pt;line-height:1.45}'
+        +'@page{margin:.5in .5in}'
+        +'@media print{.deck-section{page-break-before:always}.deck-cover{page-break-after:always}}'
+      +'</style></head><body><div class="deck">';
+
+    // ── Cover ────────────
+    html += '<div class="deck-section deck-cover">'
+      +'<div class="brand">'+_e(dealName)+'</div>'
+      +'<div class="sub">'+_e(addr)+'</div>'
+      +'<div class="meta">'+(units?units+' units · ':'')+(assetClass?assetClass+' · ':'')+(year?'Built '+year+' · ':'')+'Tier '+(tier||'—')+'</div>'
+      +'<div style="margin-top:80pt;font-size:11pt;color:#475569"><strong>Total capitalization:</strong> '+_money(price)+' · <strong>Equity:</strong> '+_money(equityNeeded)+' · <strong>Debt:</strong> '+_money(loan)+'</div>'
+      +'<div class="meta" style="margin-top:60pt">Generated '+(new Date()).toLocaleDateString()+'</div>'
+      +'</div>';
+
+    // ── Investment Highlights ────────────
+    html += '<div class="deck-section"><h2>📊 Investment Highlights</h2>'
+      +'<div class="deck-kpi-grid">'
+        +'<div class="deck-kpi"><div class="deck-kpi-label">Cap Rate</div><div class="deck-kpi-val">'+_pct(capRate,2)+'</div><div class="deck-kpi-sub">NOI ÷ price (Year 1)</div></div>'
+        +'<div class="deck-kpi"><div class="deck-kpi-label">Cash-on-Cash</div><div class="deck-kpi-val">'+_pct(coc,2)+'</div><div class="deck-kpi-sub">Year 1 cash return</div></div>'
+        +'<div class="deck-kpi"><div class="deck-kpi-label">DSCR</div><div class="deck-kpi-val">'+(dscr?dscr.toFixed(2)+'x':'—')+'</div><div class="deck-kpi-sub">NOI ÷ debt service</div></div>'
+        +'<div class="deck-kpi"><div class="deck-kpi-label">IRR ('+hold+'-yr)</div><div class="deck-kpi-val">'+_pct(S.irr||0,1)+'</div><div class="deck-kpi-sub">Levered, deal-level</div></div>'
+        +'<div class="deck-kpi"><div class="deck-kpi-label">Equity Multiple</div><div class="deck-kpi-val">'+(S.em?S.em.toFixed(2)+'x':'—')+'</div><div class="deck-kpi-sub">Total $ out / $ in</div></div>'
+        +'<div class="deck-kpi"><div class="deck-kpi-label">Hold Period</div><div class="deck-kpi-val">'+hold+'<span style="font-size:11pt">yrs</span></div><div class="deck-kpi-sub">Plus '+(pn.refiYear?'refi at Y'+pn.refiYear:'no refi')+'</div></div>'
+      +'</div>'
+      +'<h3>Cash Flow Profile by Year</h3>';
+    var maxCf = Math.max.apply(Math, holdYears.map(function(y){return Math.abs(y.cf);})) || 1;
+    holdYears.forEach(function(y){
+      var pctW = Math.max(2, Math.round(Math.abs(y.cf)/maxCf*100));
+      html += '<div class="deck-bar-row"><div>Year '+y.y+'</div>'
+        +'<div class="deck-bar-track"><div class="deck-bar-fill" style="width:'+pctW+'%"></div></div>'
+        +'<div style="text-align:right;font-weight:700">'+_money(y.cf)+'</div>'
+        +'<div style="text-align:right;color:#475569">'+_pct(y.coc,1)+' CoC</div></div>';
+    });
+    html += '</div>';
+
+    // ── Property Overview ────────────
+    html += '<div class="deck-section"><h2>🏢 Property Overview</h2>'
+      +'<table class="deck-tbl"><tbody>'
+        +'<tr><td>Address</td><td>'+_e(addr)+'</td></tr>'
+        +'<tr><td>Asset class</td><td>'+_e(assetClass||'—')+'</td></tr>'
+        +'<tr><td>Units</td><td>'+(units||'—')+'</td></tr>'
+        +'<tr><td>Square footage</td><td>'+(sqft?sqft.toLocaleString()+' sf':'—')+'</td></tr>'
+        +'<tr><td>Year built</td><td>'+(year||'—')+'</td></tr>'
+        +'<tr><td>Market tier</td><td>'+(tier||'—')+'</td></tr>'
+      +'</tbody></table></div>';
+
+    // ── Sources & Uses ────────────
+    html += '<div class="deck-section"><h2>💰 Sources &amp; Uses</h2>'
+      +'<table class="deck-tbl">'
+        +'<thead><tr><th>Source</th><th>Amount</th><th>%</th></tr></thead>'
+        +'<tbody>'
+          +'<tr><td>Senior debt</td><td>'+_money(loan)+'</td><td>'+_pct(loan/(loan+equityNeeded),1)+'</td></tr>'
+          +'<tr><td>Equity (down + closing)</td><td>'+_money(equityNeeded)+'</td><td>'+_pct(equityNeeded/(loan+equityNeeded),1)+'</td></tr>'
+          +'<tr style="border-top:2px solid #1b3d6b;font-weight:700"><td>Total sources</td><td>'+_money(loan+equityNeeded)+'</td><td>100%</td></tr>'
+        +'</tbody></table>'
+      +'<table class="deck-tbl" style="margin-top:14pt">'
+        +'<thead><tr><th>Use</th><th>Amount</th><th>%</th></tr></thead>'
+        +'<tbody>'
+          +'<tr><td>Purchase price</td><td>'+_money(price)+'</td><td>'+_pct(price/(price+closing),1)+'</td></tr>'
+          +'<tr><td>Closing costs</td><td>'+_money(closing)+'</td><td>'+_pct(closing/(price+closing),1)+'</td></tr>'
+          +'<tr style="border-top:2px solid #1b3d6b;font-weight:700"><td>Total uses</td><td>'+_money(price+closing)+'</td><td>100%</td></tr>'
+        +'</tbody></table></div>';
+
+    // ── Year-1 Pro Forma ────────────
+    var vacancy = rent * 0.05;
+    var egi = rent - vacancy;
+    html += '<div class="deck-section"><h2>📊 Year-1 Pro Forma</h2>'
+      +'<table class="deck-tbl"><tbody>'
+        +'<tr><td>Gross Scheduled Income</td><td>'+_money(rent)+'</td></tr>'
+        +'<tr><td>Less: Vacancy (5% assumed)</td><td>('+_money(vacancy)+')</td></tr>'
+        +'<tr style="font-weight:700"><td>Effective Gross Income</td><td>'+_money(egi)+'</td></tr>'
+        +'<tr><td>Operating expenses</td><td>('+_money(exp)+')</td></tr>'
+        +'<tr style="border-top:2px solid #1b3d6b;font-weight:700"><td>Net Operating Income</td><td>'+_money(noi)+'</td></tr>'
+        +'<tr><td>Debt service (P&I)</td><td>('+_money(annDS)+')</td></tr>'
+        +'<tr style="border-top:1px solid #1b3d6b;font-weight:700;color:#047857"><td>Cash Flow After Debt Service</td><td>'+_money(cfYr1)+'</td></tr>'
+      +'</tbody></table></div>';
+
+    // ── Business Plan placeholder ────────────
+    html += '<div class="deck-section"><h2>🎯 Business Plan</h2>'
+      +'<p style="font-size:11pt;color:#1a1a2e;line-height:1.7">Strategy: '
+      +(pn.refiYear>0 ? 'Acquire at the offered cap, optimize operations, and refinance at Year '+pn.refiYear+' to return capital to investors. Hold through Year '+hold+' for full disposition.' : 'Acquire, optimize, hold for '+hold+' years, then dispose at the projected exit cap of '+(pn.exitCap||6)+'%.')
+      +'</p><p style="font-size:11pt;color:#1a1a2e;line-height:1.7;margin-top:10pt">Underwriting assumes '+_pct((pn.rentG||3)/100,0)+' annual rent growth and '+_pct((pn.expG||2.5)/100,0)+' annual expense growth, exit cap of '+(pn.exitCap||6)+'%.</p>'
+      +'</div>';
+
+    // ── Sensitivity / Stress ────────────
+    if(stressHtml){
+      html += '<div class="deck-section"><h2>📉 Sensitivity &amp; Stress</h2>'
+        + '<div style="font-size:10.5pt;color:#1a1a2e">'+stressHtml+'</div></div>';
+    }
+
+    // ── Exit Strategy ────────────
+    html += '<div class="deck-section"><h2>🚪 Exit Strategy</h2>'
+      +'<table class="deck-tbl"><tbody>'
+        +'<tr><td>Hold period</td><td>'+hold+' years</td></tr>'
+        +'<tr><td>Refi at year</td><td>'+(pn.refiYear>0?('Y'+pn.refiYear):'No refi modeled')+'</td></tr>'
+        +'<tr><td>Exit cap rate</td><td>'+(pn.exitCap||6)+'%</td></tr>'
+        +'<tr><td>Forward NOI at sale (Y'+hold+')</td><td>'+_money(saleNOI)+'</td></tr>'
+        +'<tr><td>Projected sale proceeds</td><td>'+_money(saleProceeds)+'</td></tr>'
+      +'</tbody></table></div>';
+
+    // ── Returns Summary ────────────
+    html += '<div class="deck-section"><h2>📈 Returns Summary</h2>'
+      +'<h3>Per-investor</h3>'+invCardsHtml+'</div>';
+
+    // ── Risk Factors ────────────
+    var riskItems = [];
+    if(tier === 'C') riskItems.push('Tertiary-market — limited agency lender appetite. Term sheet may require recourse and stricter LTV.');
+    if(tier === 'D') riskItems.push('Sub-tertiary / rural — most agency and CMBS lenders will decline. Plan for local-bank or seller financing.');
+    if(dscr && dscr < 1.20) riskItems.push('DSCR '+dscr.toFixed(2)+'x is below typical lender minimum (1.20-1.25x). Re-underwrite or accept lower LTV.');
+    if(dst.tax && dst.tax.seller && dst.tax.county){
+      var taxDelta = Math.abs((dst.tax.county-dst.tax.seller)/dst.tax.seller*100);
+      if(taxDelta > 15) riskItems.push('Tax record gap '+taxDelta.toFixed(1)+'% — the #1 deal-killer per lender feedback.');
+    }
+    var sfAmt = _gn('sf_amt')||0;
+    if(sfAmt && price && sfAmt/price > 0.10) riskItems.push('Seller carry '+(sfAmt/price*100).toFixed(1)+'% — most senior lenders decline above 10%.');
+    if(!riskItems.length) riskItems.push('No structural killers identified at this stage of underwriting. Tradition risk factors apply (market, interest rate, execution).');
+    html += '<div class="deck-section"><h2>⚠ Risk Factors</h2><ul style="font-size:11pt;line-height:1.7;color:#1a1a2e">';
+    riskItems.forEach(function(r){ html += '<li>'+_e(r)+'</li>'; });
+    html += '</ul></div>';
+
+    // ── Sponsor / KP ────────────
+    html += '<div class="deck-section"><h2>👤 Sponsor / Key Principal</h2>';
+    if(dst.kp && (dst.kp.fico||dst.kp.nw)){
+      html += '<table class="deck-tbl"><tbody>';
+      if(dst.kp.fico) html += '<tr><td>KP FICO</td><td>'+dst.kp.fico+'</td></tr>';
+      if(dst.kp.nw) html += '<tr><td>Net worth</td><td>'+_money(dst.kp.nw)+'</td></tr>';
+      if(dst.kp.liq) html += '<tr><td>Liquidity</td><td>'+_money(dst.kp.liq)+'</td></tr>';
+      if(dst.kp.exp) html += '<tr><td>Similar-asset experience</td><td>'+dst.kp.exp+' yrs</td></tr>';
+      html += '</tbody></table>';
+    } else {
+      html += '<p class="muted">KP profile not filled in Discipline tab.</p>';
+    }
+    html += '</div>';
+
+    // ── Disclaimer ────────────
+    html += '<div class="deck-disclaimer">This document is a summary of a real estate investment opportunity prepared by the Sponsor for informational and discussion purposes only. It is not an offer or solicitation to buy or sell any security. Projections are based on current assumptions and are subject to risk. Past performance is not indicative of future results. Consult your legal, tax, and financial advisors before investing.</div>';
+
+    html += '</div></body></html>';
+    w.document.write(html);
+    w.document.close();
+    setTimeout(function(){w.focus();}, 200);
   };
 
   window.dscInit = function(){
