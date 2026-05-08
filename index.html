@@ -3496,6 +3496,12 @@ strong { color: #e2e8f0; }
     <div class="card-title">🤝 Seller-Finance Lender Compatibility</div>
     <div id="dsc_sf_result" style="font-size:13px;line-height:1.7"></div>
   </div>
+
+  <!-- Section 8: Fundraising Probability -->
+  <div class="card" style="background:linear-gradient(135deg,rgba(99,102,241,.04),var(--surface))">
+    <div class="card-title">🎯 Fundraising Probability</div>
+    <div id="dsc_raise_result" style="font-size:13px;line-height:1.6"></div>
+  </div>
 </div><!-- end panel16 -->
 
 <!-- ══════════════════════════════════════════════ PANEL 15: METRICS (whole-deal + per-investor canonical view) -->
@@ -15259,6 +15265,202 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
     box.innerHTML = lines.join('<br>');
   };
 
+  // ── 8. Fundraising Probability ──────────────────────────────────────
+  // Weighted score (0-100) combining: LP-return quality, discipline, risk factors, deal structure.
+  // Reads live from partners state, S deal state, and the discipline state above.
+  window.dscRenderRaise = function(){
+    var box = _id('dsc_raise_result'); if(!box) return;
+    var dst = _loadState();
+    var S = window.S || {};
+
+    // Pull partners state for LP returns + waterfall config
+    var pn = {};
+    try { pn = JSON.parse(localStorage.getItem('jp_partners_v1')||'{}'); } catch(e){ pn = {}; }
+    var lps = (pn.investors||[]).filter(function(x){return x.type==='lp';});
+    var gps = (pn.investors||[]).filter(function(x){return x.type==='gp';});
+    var totalCap = (pn.investors||[]).reduce(function(a,b){return a+(+b.capital||0);},0);
+
+    // Pull computed per-investor metrics from the rendered Partners cards (if present)
+    // Fall back to estimating from deal metrics if not yet rendered
+    var lpIRR = null, lpEM = null, lpCoC = null;
+    var lpInvCards = document.querySelectorAll('#pn_investor_cards .pn-inv-card');
+    if(lpInvCards.length){
+      var sumI = 0, sumE = 0, sumC = 0, n = 0;
+      lpInvCards.forEach(function(card, idx){
+        if(card.classList.contains('gp')) return;
+        var stats = card.querySelectorAll('.pn-inv-stat-val');
+        if(stats.length < 4) return;
+        var ir = parseFloat((stats[0].textContent||'').replace('%',''))/100;
+        var em = parseFloat((stats[1].textContent||'').replace('x',''));
+        var aar = parseFloat((stats[3].textContent||'').replace('%',''))/100;
+        if(isFinite(ir)) { sumI+=ir; n++; }
+        if(isFinite(em)) sumE+=em;
+        if(isFinite(aar)) sumC+=aar;
+      });
+      if(n>0){ lpIRR = sumI/n; lpEM = sumE/n; lpCoC = sumC/n; }
+    }
+    // Fallback: use deal-level metrics if no per-LP data
+    if(lpIRR === null){
+      lpIRR = S.irr || null;
+      lpEM  = S.em  || null;
+      lpCoC = S.coc || null;
+    }
+
+    // ── Category scores ─────────────────────────────────
+    function _bucket(v, breaks){  // breaks = [veryGood, good, ok, marginal] descending
+      if(v == null || !isFinite(v)) return null;
+      if(v >= breaks[0]) return 100;
+      if(v >= breaks[1]) return 80;
+      if(v >= breaks[2]) return 60;
+      if(v >= breaks[3]) return 40;
+      return 20;
+    }
+
+    var c1Items = [];
+    var s1Sum = 0, s1N = 0;
+    if(lpIRR != null){ var v = _bucket(lpIRR, [0.17,0.14,0.12,0.10]); s1Sum += v; s1N++; c1Items.push({k:'LP IRR', v:_pct(lpIRR), score:v}); }
+    if(lpEM != null) { var v2 = _bucket(lpEM, [2.0,1.7,1.5,1.3]); s1Sum += v2; s1N++; c1Items.push({k:'LP Equity Multiple', v:lpEM.toFixed(2)+'x', score:v2}); }
+    if(lpCoC != null){ var v3 = _bucket(lpCoC, [0.09,0.07,0.05,0.03]); s1Sum += v3; s1N++; c1Items.push({k:'LP avg annual return', v:_pct(lpCoC), score:v3}); }
+    var c1 = s1N ? s1Sum/s1N : 50;   // default neutral if no metrics yet
+
+    // Category 2 — Underwriting Discipline (positive when applied)
+    var c2Items = [];
+    var c2 = 0, c2N = 0;
+    var overlayApplied = !!dst.applied;
+    c2Items.push({k:'Conservative Overlay applied', v: overlayApplied?'Yes':'No', score: overlayApplied?100:30});
+    c2 += (overlayApplied?100:30); c2N++;
+    var taxOk = dst.tax && dst.tax.seller && dst.tax.county;
+    var taxDelta = taxOk ? Math.abs((dst.tax.county-dst.tax.seller)/dst.tax.seller*100) : null;
+    if(taxOk){
+      var tScore = taxDelta < 5 ? 100 : taxDelta < 15 ? 60 : 0;
+      c2Items.push({k:'Tax record reconciled', v:'Δ '+taxDelta.toFixed(1)+'%', score:tScore});
+      c2 += tScore; c2N++;
+    } else {
+      c2Items.push({k:'Tax record reconciled', v:'Not checked', score:40});
+      c2 += 40; c2N++;
+    }
+    var kpOk = dst.kp && dst.kp.fico;
+    if(kpOk){
+      var price = S.price || 0;
+      var loan = price * 0.75;
+      var passes = 0, total = 0;
+      if(dst.kp.fico){total++; if(dst.kp.fico>=650)passes++;}
+      if(dst.kp.nw && loan){total++; if(dst.kp.nw>=loan)passes++;}
+      if(dst.kp.liq && loan){total++; if(dst.kp.liq>=loan*0.09)passes++;}
+      if(dst.kp.exp){total++; if(dst.kp.exp>=1)passes++;}
+      var kpScore = total ? Math.round(passes/total*100) : 50;
+      c2Items.push({k:'KP profile', v:passes+'/'+total+' agency baseline', score:kpScore});
+      c2 += kpScore; c2N++;
+    } else {
+      c2Items.push({k:'KP profile', v:'Not filled', score:40});
+      c2 += 40; c2N++;
+    }
+    c2 = c2N ? c2/c2N : 50;
+
+    // Category 3 — Risk Factors (subtractive — start at 100, deduct for killers)
+    var c3 = 100;
+    var c3Items = [];
+    var tier = (_gv('mkt_tier')||'').toUpperCase();
+    if(tier === 'D' || tier === 'rural'){ c3 -= 40; c3Items.push({k:'Market tier disqualifier (rural/sub-tertiary)', score:-40, color:'#ef4444'}); }
+    else if(tier === 'C'){ c3 -= 15; c3Items.push({k:'Tertiary market — lender appetite limited', score:-15, color:'#fbbf24'}); }
+    else if(tier === 'A' || tier === 'B'){ c3Items.push({k:'Market tier '+tier+' (primary/secondary)', score:0, color:'#10b981'}); }
+
+    if(taxDelta != null && taxDelta > 15){ c3 -= 35; c3Items.push({k:'Tax record mismatch >15% (#1 deal-killer)', score:-35, color:'#ef4444'}); }
+
+    if(S.dscr != null){
+      if(S.dscr < 1.10){ c3 -= 30; c3Items.push({k:'DSCR '+S.dscr.toFixed(2)+'x will fail lender uw', score:-30, color:'#ef4444'}); }
+      else if(S.dscr < 1.20){ c3 -= 15; c3Items.push({k:'DSCR '+S.dscr.toFixed(2)+'x is thin', score:-15, color:'#fbbf24'}); }
+    }
+
+    var sfAmt = _gn('sf_amt')||0;
+    var price = S.price || (_gn('pur_price')||0);
+    if(sfAmt && price){
+      var sfPct = sfAmt/price*100;
+      if(sfPct > 20){ c3 -= 25; c3Items.push({k:'Seller carry '+sfPct.toFixed(1)+'% — lender almost universally rejects', score:-25, color:'#ef4444'}); }
+      else if(sfPct > 10){ c3 -= 15; c3Items.push({k:'Seller carry '+sfPct.toFixed(1)+'% — most lenders decline', score:-15, color:'#fbbf24'}); }
+    }
+
+    c3 = Math.max(0, c3);
+
+    // Category 4 — Deal Structure attractiveness to LPs
+    var c4 = 50, c4Items = [];
+    if(pn.t1 && pn.t1.lp){
+      var lpSplit = pn.t1.lp;
+      var splitScore = lpSplit >= 80 ? 100 : lpSplit >= 70 ? 80 : lpSplit >= 60 ? 60 : 40;
+      c4 = splitScore;
+      c4Items.push({k:'LP/GP split '+lpSplit+'/'+(pn.t1.gp||0), score:splitScore, color:splitScore>=80?'#10b981':splitScore>=60?'#fbbf24':'#fca5a5'});
+    }
+    if(pn.pref >= 7){
+      c4 = Math.min(100, c4+10);
+      c4Items.push({k:'Pref return '+pn.pref+'% — broadens retail LP base', score:10, color:'#10b981'});
+    } else if(!pn.pref || pn.pref === 0){
+      c4Items.push({k:'No preferred return — narrows to sophisticated LPs (Blank-style)', score:0, color:'#94a3b8'});
+    }
+    if(pn.hold && pn.hold>=5 && pn.hold<=10){
+      c4 = Math.min(100, c4+5);
+      c4Items.push({k:'Hold period '+pn.hold+' yrs — standard sweet spot', score:5, color:'#10b981'});
+    }
+    if(pn.refiYear > 0){
+      c4 = Math.min(100, c4+5);
+      c4Items.push({k:'Refi at year '+pn.refiYear+' — offers mid-cycle return-of-capital to LPs', score:5, color:'#10b981'});
+    }
+
+    // ── Weighted overall ─────────────────────────────────
+    var overall = Math.round(c1*0.35 + c2*0.25 + c3*0.25 + c4*0.15);
+
+    // Verdict
+    var verdict, vColor, vBg;
+    if(overall >= 75){      verdict = '🟢 Strong raise candidate'; vColor = '#10b981'; vBg = 'rgba(16,185,129,.10)'; }
+    else if(overall >= 55){ verdict = '🟡 Realistic with the right LP base'; vColor = '#fbbf24'; vBg = 'rgba(245,158,11,.10)'; }
+    else if(overall >= 35){ verdict = '🟠 Difficult — narrow LP appeal'; vColor = '#fb923c'; vBg = 'rgba(251,146,60,.10)'; }
+    else {                  verdict = '🔴 Hard to raise — fix the killers first'; vColor = '#ef4444'; vBg = 'rgba(239,68,68,.10)'; }
+
+    // Recommendations
+    var recs = [];
+    if(c1 < 60 && lpIRR != null) recs.push('LP IRR is the weakest signal — run Conservative Overlay then bump exit cap or extend hold to lift it.');
+    if(!overlayApplied) recs.push('Apply Conservative Overlay above — most institutional LPs require it before they\'ll even read the deal.');
+    if(!taxOk) recs.push('Reconcile tax records — the #1 deal-killer per your lender feedback (80–90% of failed deals).');
+    if(!kpOk) recs.push('Fill KP profile (FICO, NW, liquidity, experience) — LPs ask for this on the first call.');
+    if(tier === 'C' || tier === 'D') recs.push('Market tier limits non-recourse exec — be transparent with LPs about the financing path.');
+    if(sfAmt && price && sfAmt/price > 0.10) recs.push('Seller carry > 10% will scare senior LPs — negotiate to ≤ 10% or restructure as preferred equity.');
+    if(pn.pref === 0 || !pn.pref) recs.push('Consider adding a 6-8% pref — broadens raise to retail accredited investors.');
+
+    // ── Render ───────────────────────────────────────────
+    var html = '';
+    html += '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:'+vBg+';padding:14px 16px;border-radius:10px;border-left:4px solid '+vColor+'">';
+    html += '<div style="font-size:42px;font-weight:900;color:'+vColor+';letter-spacing:-1px;line-height:1">'+overall+'<span style="font-size:16px;font-weight:600;opacity:.7">/100</span></div>';
+    html += '<div style="flex:1;min-width:180px"><div style="font-size:14px;font-weight:700;color:'+vColor+';margin-bottom:4px">'+verdict+'</div>';
+    html += '<div style="font-size:11px;color:var(--muted);line-height:1.5">Weighted score across LP returns (35%), discipline (25%), risk factors (25%), and deal structure (15%).</div></div>';
+    html += '</div>';
+
+    function _catRow(label, score, items){
+      var c = score >= 75 ? '#10b981' : score >= 55 ? '#fbbf24' : score >= 35 ? '#fb923c' : '#ef4444';
+      var inner = items.map(function(it){
+        var col = it.color || (it.score>=75?'#10b981':it.score>=55?'#fbbf24':it.score>=35?'#fb923c':'#ef4444');
+        var sgn = (it.score!=null && typeof it.score==='number' && it.score<0) ? (' '+it.score) : '';
+        return '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px"><span style="color:var(--text2)">'+_e(it.k)+'</span><span style="color:'+col+';font-weight:600">'+(it.v||'')+sgn+'</span></div>';
+      }).join('');
+      return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 14px;margin-top:10px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="font-size:12px;font-weight:700;color:var(--text)">'+label+'</div><div style="font-size:13px;font-weight:800;color:'+c+'">'+Math.round(score)+'</div></div>'
+        + inner + '</div>';
+    }
+
+    html += _catRow('LP Return Quality (35%)', c1, c1Items.length?c1Items:[{k:'No LP data yet',v:'Add investors in Partners',score:50}]);
+    html += _catRow('Underwriting Discipline (25%)', c2, c2Items);
+    html += _catRow('Risk Factors (25%)', c3, c3Items.length?c3Items:[{k:'No flags raised',v:'',score:100,color:'#10b981'}]);
+    html += _catRow('Deal Structure for LPs (15%)', c4, c4Items.length?c4Items:[{k:'Add Partners + waterfall to score',v:'',score:50}]);
+
+    if(recs.length){
+      html += '<div style="margin-top:12px;padding:10px 14px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.25);border-radius:10px">';
+      html += '<div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">💡 To raise the score</div>';
+      html += '<ul style="margin:0;padding-left:18px;font-size:12.5px;color:var(--text2);line-height:1.6">';
+      recs.forEach(function(r){ html += '<li style="margin-bottom:3px">'+_e(r)+'</li>'; });
+      html += '</ul></div>';
+    }
+
+    box.innerHTML = html;
+  };
+
   window.dscInit = function(){
     // Restore prior state
     var st = _loadState();
@@ -15279,17 +15481,25 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
     dscKpCheck();
     dscRenderTier();
     dscRenderSF();
+    // Make sure Partners is computed first so we can scrape its rendered LP cards
+    if(typeof partnerCompute === 'function') {
+      try { partnerCompute(); } catch(e){}
+    }
+    setTimeout(dscRenderRaise, 100);
   };
 
-  // Re-render whenever Intake changes while panel16 is active
+  // Re-render whenever Intake / Partners / Discipline fields change while panel16 is active
   document.addEventListener('input', function(e){
     var p = _id('panel16'); if(!p || !p.classList.contains('active')) return;
     if(!e.target || !e.target.id) return;
-    if(/^(prop_|mkt_|pur_|fin_|sf_)/.test(e.target.id)){
+    if(/^(prop_|mkt_|pur_|fin_|sf_|pn_|dsc_)/.test(e.target.id)){
       clearTimeout(window._dscDebounce);
       window._dscDebounce = setTimeout(function(){
-        dscRenderTruthTable(); dscRenderTier(); dscRenderSF();
-      }, 200);
+        dscRenderTruthTable();
+        dscRenderTier();
+        dscRenderSF();
+        dscRenderRaise();
+      }, 220);
     }
   });
 
