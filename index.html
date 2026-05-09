@@ -4001,70 +4001,44 @@ strong { color: #e2e8f0; }
   <div id="fcHubContent"></div>
 </div><!-- end panel13 -->
 
-<!-- ══════════════════════════════════════════════ PANEL 18: DEBT SNOWBALL CALCULATOR -->
+<!-- ══════════════════════════════════════════════ PANEL 18: MORTGAGE PAYOFF ACCELERATOR -->
 <div class="panel" id="panel18">
 <div class="g2">
 <div class="card">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-    <h2 style="margin:0;font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.2px">❄️ Debt Snowball Calculator</h2>
-    <div style="display:flex;gap:6px"><button class="btn btn-outline btn-sm" onclick="sbReset()" title="Reset to defaults">↺ Reset</button></div>
-  </div>
+  <div class="card-title">❄️ Mortgage Payoff Accelerator</div>
   <div class="highlight-box">
     <div style="font-size:11px;color:var(--accent2);font-weight:700;margin-bottom:4px">HOW IT WORKS</div>
-    <div style="font-size:12px;color:var(--text2)">Apply your full available cash flow to ONE mortgage at a time. When that one's paid off, snowball ALL of its freed-up payment into the next debt. Compares <strong>avalanche</strong> (highest rate first — least interest) vs <strong>snowball</strong> (smallest balance first — fastest psychological wins) vs paying minimums only.</div>
+    <div style="font-size:12px;color:var(--text2)">Extra principal payments cut years AND interest off any amortizing mortgage. Even a few hundred a month can finish a 30-year loan in 22 and save tens of thousands. Works on Conventional, DSCR, FHA, Hard Money, Seller-Finance — any structure with a fixed monthly P&amp;I.</div>
   </div>
 
   <div class="g2" style="margin-top:8px">
-    <div class="field"><label>Strategy</label>
-      <select id="sb_strategy" oninput="sbCompute()">
-        <option value="avalanche">Avalanche — Highest rate first</option>
-        <option value="snowball">Snowball — Smallest balance first</option>
-        <option value="largest">Largest payment first</option>
-      </select>
-    </div>
-    <div class="field"><label>Extra $ / month available <span class="info" title="Cash flow you can allocate above and beyond minimum payments">?</span></label><input type="number" id="sb_extra" placeholder="500" step="50" oninput="sbCompute()"></div>
+    <div class="field"><label>Loan Balance ($)</label><input type="number" id="sb_bal" step="1000" placeholder="240000" oninput="sbCompute()"></div>
+    <div class="field"><label>Annual Rate (%)</label><input type="number" id="sb_rate" step=".125" placeholder="7.0" oninput="sbCompute()"></div>
+  </div>
+  <div class="g2">
+    <div class="field"><label>Remaining Term (yrs)</label><input type="number" id="sb_term" placeholder="30" value="30" oninput="sbCompute()"></div>
+    <div class="field"><label>Base Monthly P&amp;I ($) <span class="info" title="Auto-calculated from balance, rate, and term if blank">?</span></label><input type="number" id="sb_pmt" step="10" placeholder="auto" oninput="sbCompute()"></div>
+  </div>
+  <div class="g2">
+    <div class="field"><label>Extra Principal / month ($)</label><input type="number" id="sb_extra" step="50" placeholder="500" oninput="sbCompute()"></div>
+    <div class="field"><label>One-time Lump Sum ($) <span class="info" title="Optional. Applied at month 1 (e.g., tax refund, bonus, refi cash-out)">?</span></label><input type="number" id="sb_lump" step="500" placeholder="0" oninput="sbCompute()"></div>
   </div>
 
-  <!-- DEBT 1 -->
-  <div class="card2" style="margin-top:6px">
-    <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px">📌 Debt 1 (e.g., Primary Mortgage)</div>
-    <div class="g3">
-      <div class="field"><label>Balance ($)</label><input type="number" id="sb1_bal" step="1000" placeholder="200000" oninput="sbCompute()"></div>
-      <div class="field"><label>Annual rate (%)</label><input type="number" id="sb1_apr" step=".125" placeholder="6.5" oninput="sbCompute()"></div>
-      <div class="field"><label>Min monthly payment ($)</label><input type="number" id="sb1_pmt" step="10" placeholder="1264" oninput="sbCompute()"></div>
-    </div>
-  </div>
-
-  <!-- DEBT 2 -->
-  <div class="card2">
-    <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:10px">📌 Debt 2 (e.g., Rental #2 Mortgage)</div>
-    <div class="g3">
-      <div class="field"><label>Balance ($)</label><input type="number" id="sb2_bal" step="1000" placeholder="100000" oninput="sbCompute()"></div>
-      <div class="field"><label>Annual rate (%)</label><input type="number" id="sb2_apr" step=".125" placeholder="7.25" oninput="sbCompute()"></div>
-      <div class="field"><label>Min monthly payment ($)</label><input type="number" id="sb2_pmt" step="10" placeholder="682" oninput="sbCompute()"></div>
-    </div>
-  </div>
-
-  <!-- DEBT 3 -->
-  <div class="card2">
-    <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px">📌 Debt 3 (Optional — HELOC / Card / 3rd Mortgage)</div>
-    <div class="g3">
-      <div class="field"><label>Balance ($)</label><input type="number" id="sb3_bal" step="500" placeholder="0" oninput="sbCompute()"></div>
-      <div class="field"><label>Annual rate (%)</label><input type="number" id="sb3_apr" step=".125" placeholder="0" oninput="sbCompute()"></div>
-      <div class="field"><label>Min monthly payment ($)</label><input type="number" id="sb3_pmt" step="10" placeholder="0" oninput="sbCompute()"></div>
-    </div>
+  <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn btn-outline btn-sm" onclick="sbPullFromIntake()" title="Pre-fill from the active financing structure in this deal">⬇ Pull from Active Structure</button>
+    <button class="btn btn-outline btn-sm" onclick="sbReset()">↺ Reset</button>
   </div>
 </div>
 
 <div class="card" id="sbResult">
-  <div class="card-title">📊 Snowball Comparison</div>
-  <div id="sbResultBody" style="font-size:12px;color:var(--muted)">Enter at least one debt + an extra $ amount to compute the snowball plan.</div>
+  <div class="card-title">⏳ Payoff Comparison</div>
+  <div id="sbResultBody" style="font-size:12px;color:var(--muted)">Enter loan balance, rate, term, and extra principal to see how many years and dollars you save.</div>
 </div>
 </div>
 
 <div class="card">
-  <div class="card-title">📅 Payoff Order</div>
-  <div class="amort-wrap"><table><thead><tr><th style="text-align:left">#</th><th style="text-align:left">Debt</th><th>Balance</th><th>Rate</th><th>Min Pmt</th><th>Payoff Month</th><th>Interest Paid</th></tr></thead><tbody id="sbPayoffBody"></tbody></table></div>
+  <div class="card-title">📅 Year-by-Year Balance</div>
+  <div class="amort-wrap"><table><thead><tr><th style="text-align:left">Year</th><th>Standard Balance</th><th>With Extra Balance</th><th>Standard Int (yr)</th><th>With Extra Int (yr)</th><th>Status</th></tr></thead><tbody id="sbTableBody"></tbody></table></div>
 </div>
 </div><!-- end panel18 -->
 
@@ -17429,134 +17403,142 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 })();
 </script>
 
-<!-- ── Debt Snowball Calculator ───────────────────────────────────────────── -->
+<!-- ── Mortgage Payoff Accelerator ───────────────────────────────────────────
+   Single-loan, extra-principal calculator. Runs two amortization schedules
+   (standard vs accelerated) month-by-month and reports years + interest saved.
+   ────────────────────────────────────────────────────────────────────────── -->
 <script>
 (function(){
   function _id(x){return document.getElementById(x);}
   function _v(id){var e=_id(id); return e?parseFloat(e.value)||0:0;}
   function _$(n){return '$'+Math.round(n||0).toLocaleString();}
-  function _mo(n){if(n>=600) return (n/12).toFixed(1)+' yr'; return Math.round(n)+' mo';}
+  function _yr(months){if(months<=0) return '0 yr'; var y=Math.floor(months/12), m=months%12; return y+' yr'+(m?' '+m+' mo':'');}
 
-  function _readDebts(){
-    var out = [];
-    [1,2,3].forEach(function(i){
-      var bal = _v('sb'+i+'_bal');
-      var apr = _v('sb'+i+'_apr')/100;
-      var pmt = _v('sb'+i+'_pmt');
-      if(bal > 0 && pmt > 0) out.push({idx:i, bal:bal, apr:apr, pmt:pmt, origBal:bal, origPmt:pmt});
-    });
-    return out;
+  // Compute the standard P&I for a loan
+  function _calcPmt(bal, monthlyR, n){
+    if(monthlyR <= 0) return bal/n;
+    return bal * monthlyR / (1 - Math.pow(1 + monthlyR, -n));
   }
 
-  // Simulate paying off a list of debts month-by-month with min payments + extra applied to one target
-  // Returns {months, totalInterest, perDebt: [{idx, payoffMonth, totalInterest}]}
-  function _simulate(debts, extraPerMonth, getTargetIdx){
-    var d = debts.map(function(x){return {idx:x.idx, bal:x.bal, apr:x.apr, pmt:x.pmt, paidOff:false, payoffMonth:null, totalInterest:0};});
+  // Run a month-by-month amortization. extraPM is constant extra principal each
+  // month; lump is one-time at month 1. Returns {months, totalInt, yearly:[
+  // {year, balEnd, intYear}, ... ], paidOff: bool}
+  function _amortize(bal, monthlyR, basePmt, extraPM, lump){
+    var b = bal;
+    if(lump > 0) b = Math.max(0, b - lump);
+    var totalInt = 0;
     var months = 0;
-    var maxMonths = 480;  // 40 yr safety
-    var freedPmt = 0;
-    while(d.some(function(x){return !x.paidOff;}) && months < maxMonths){
+    var maxMonths = 600; // 50 yr safety cap
+    var yearly = [];
+    var yearInt = 0;
+    while(b > 0.01 && months < maxMonths){
       months++;
-      // 1) Apply min payments + interest to every active debt
-      d.forEach(function(x){
-        if(x.paidOff) return;
-        var intM = x.bal * x.apr/12;
-        x.totalInterest += intM;
-        var princ = Math.max(0, x.pmt - intM);
-        x.bal = Math.max(0, x.bal + intM - x.pmt);
-      });
-      // 2) Apply extra + freed payments to target debt
-      var pool = extraPerMonth + freedPmt;
-      if(pool > 0){
-        var tgt = getTargetIdx(d);
-        if(tgt !== -1 && !d[tgt].paidOff){
-          d[tgt].bal = Math.max(0, d[tgt].bal - pool);
-        }
+      var intM = b * monthlyR;
+      totalInt += intM;
+      yearInt += intM;
+      // Standard P&I covers interest + part of principal; extra goes 100% to principal
+      var princ = (basePmt - intM) + extraPM;
+      if(princ > b) princ = b;       // last payment can't overpay
+      b = Math.max(0, b - princ);
+      if(months % 12 === 0 || b <= 0.01){
+        yearly.push({year: Math.ceil(months/12), balEnd: b, intYear: yearInt});
+        yearInt = 0;
       }
-      // 3) Mark anything paid off; freed-up payment rolls into the snowball
-      d.forEach(function(x){
-        if(!x.paidOff && x.bal <= 0.01){
-          x.paidOff = true;
-          x.payoffMonth = months;
-          freedPmt += x.pmt;
-        }
-      });
     }
-    return {months:months, totalInterest:d.reduce(function(a,b){return a+b.totalInterest;},0),
-            perDebt:d.map(function(x){return {idx:x.idx, payoffMonth:x.payoffMonth, totalInterest:x.totalInterest};})};
-  }
-
-  function _strategySelector(strat){
-    if(strat === 'snowball')   return function(d){var act=d.filter(function(x){return !x.paidOff;}); if(!act.length)return -1; var min=act.reduce(function(a,b){return a.bal<b.bal?a:b;}); return d.indexOf(min);};
-    if(strat === 'largest')    return function(d){var act=d.filter(function(x){return !x.paidOff;}); if(!act.length)return -1; var max=act.reduce(function(a,b){return a.pmt>b.pmt?a:b;}); return d.indexOf(max);};
-    /* avalanche */            return function(d){var act=d.filter(function(x){return !x.paidOff;}); if(!act.length)return -1; var max=act.reduce(function(a,b){return a.apr>b.apr?a:b;}); return d.indexOf(max);};
+    return {months: months, totalInt: totalInt, yearly: yearly, paidOff: b <= 0.01};
   }
 
   window.sbCompute = function(){
-    var debts = _readDebts();
+    var bal = _v('sb_bal');
+    var rate = _v('sb_rate') / 100;
+    var termY = _v('sb_term') || 30;
+    var pmtIn = _v('sb_pmt');
     var extra = _v('sb_extra');
-    var strat = (_id('sb_strategy')||{}).value || 'avalanche';
+    var lump = _v('sb_lump');
     var body = _id('sbResultBody');
-    var tbody = _id('sbPayoffBody');
+    var tbody = _id('sbTableBody');
     if(tbody) tbody.innerHTML = '';
+    if(!body) return;
 
-    if(debts.length === 0){
-      if(body) body.textContent = 'Enter at least one debt (balance + min monthly payment) to compute the snowball plan.';
+    if(bal <= 0 || rate <= 0 || termY <= 0){
+      body.innerHTML = '<div style="color:var(--muted);font-size:12px">Enter loan balance, rate, and term to compute. Tip: click <strong>⬇ Pull from Active Structure</strong> to pre-fill from the deal.</div>';
       return;
     }
 
-    // Baseline: min payments only (no extra)
-    var baseline = _simulate(debts, 0, _strategySelector('avalanche'));
-    // With strategy
-    var withSb  = _simulate(debts, extra, _strategySelector(strat));
+    var monthlyR = rate / 12;
+    var n = termY * 12;
+    var basePmt = pmtIn > 0 ? pmtIn : _calcPmt(bal, monthlyR, n);
+    // Update placeholder to show auto-calculated P&I
+    var pmtEl = _id('sb_pmt');
+    if(pmtEl && pmtIn === 0) pmtEl.placeholder = basePmt.toFixed(2);
 
-    var savedMonths   = baseline.months - withSb.months;
-    var savedInterest = baseline.totalInterest - withSb.totalInterest;
-    var pctFaster     = baseline.months > 0 ? (savedMonths / baseline.months * 100) : 0;
+    var std = _amortize(bal, monthlyR, basePmt, 0, 0);
+    var acc = _amortize(bal, monthlyR, basePmt, extra, lump);
 
-    if(body){
-      var stratLbl = {avalanche:'Avalanche (highest rate first)', snowball:'Snowball (smallest balance first)', largest:'Largest payment first'}[strat];
-      body.innerHTML =
-        '<div class="g2" style="gap:10px;margin-bottom:10px">'+
-          '<div class="vb-stat"><div class="vb-stat-label">Min payments only</div>'+
-            '<div class="vb-stat-val">'+_mo(baseline.months)+'</div>'+
-            '<div class="vb-stat-sub">'+_$(baseline.totalInterest)+' interest</div></div>'+
-          '<div class="vb-stat vb-stat-velocity"><div class="vb-stat-label">With '+stratLbl+'</div>'+
-            '<div class="vb-stat-val">'+_mo(withSb.months)+'</div>'+
-            '<div class="vb-stat-sub">'+_$(withSb.totalInterest)+' interest</div></div>'+
-        '</div>'+
-        '<div class="g2" style="gap:10px">'+
-          '<div class="vb-stat"><div class="vb-stat-label">Time saved</div>'+
-            '<div class="vb-stat-val" style="color:var(--green)">'+_mo(Math.max(0,savedMonths))+'</div>'+
-            '<div class="vb-stat-sub">'+pctFaster.toFixed(1)+'% faster</div></div>'+
+    var monthsSaved = std.months - acc.months;
+    var intSaved = std.totalInt - acc.totalInt;
+    var pctFaster = std.months > 0 ? (monthsSaved / std.months * 100) : 0;
+
+    var savingsCallout = (extra > 0 || lump > 0)
+      ? '<div class="g2" style="gap:10px">'+
+          '<div class="vb-stat"><div class="vb-stat-label">Years saved</div>'+
+            '<div class="vb-stat-val" style="color:var(--green);font-size:24px">'+_yr(Math.max(0,monthsSaved))+'</div>'+
+            '<div class="vb-stat-sub">'+pctFaster.toFixed(1)+'% faster payoff</div></div>'+
           '<div class="vb-stat"><div class="vb-stat-label">Interest saved</div>'+
-            '<div class="vb-stat-val" style="color:var(--green)">'+_$(Math.max(0,savedInterest))+'</div>'+
-            '<div class="vb-stat-sub">extra '+_$(extra)+'/mo applied</div></div>'+
-        '</div>';
-    }
+            '<div class="vb-stat-val" style="color:var(--green);font-size:24px">'+_$(Math.max(0,intSaved))+'</div>'+
+            '<div class="vb-stat-sub">extra '+_$(extra)+'/mo'+(lump>0?' + '+_$(lump)+' lump':'')+'</div></div>'+
+        '</div>'
+      : '<div style="background:rgba(99,102,241,.1);border:1px dashed rgba(99,102,241,.3);border-radius:8px;padding:10px;font-size:12px;color:var(--muted);text-align:center;margin-top:6px">Add extra principal or a lump sum above to see your savings.</div>';
 
-    // Per-debt payoff table — sorted by payoff month
+    body.innerHTML =
+      '<div class="g2" style="gap:10px;margin-bottom:10px">'+
+        '<div class="vb-stat"><div class="vb-stat-label">Standard payoff</div>'+
+          '<div class="vb-stat-val">'+_yr(std.months)+'</div>'+
+          '<div class="vb-stat-sub">'+_$(std.totalInt)+' total interest</div></div>'+
+        '<div class="vb-stat vb-stat-velocity"><div class="vb-stat-label">Accelerated payoff</div>'+
+          '<div class="vb-stat-val">'+_yr(acc.months)+'</div>'+
+          '<div class="vb-stat-sub">'+_$(acc.totalInt)+' total interest</div></div>'+
+      '</div>' + savingsCallout +
+      '<div style="margin-top:10px;font-size:10.5px;color:var(--muted);text-align:center">Base P&amp;I: '+_$(basePmt)+'/mo · Effective monthly: '+_$(basePmt+extra)+(lump>0?' (+ '+_$(lump)+' once)':'')+'</div>';
+
+    // Year-by-year comparison table
     if(tbody){
-      var rows = debts.map(function(d, i){
-        var detail = withSb.perDebt[i];
-        return {idx:d.idx, bal:d.origBal, apr:d.apr, pmt:d.origPmt,
-                payoffMonth: detail.payoffMonth, interest: detail.totalInterest};
-      }).sort(function(a,b){
-        return (a.payoffMonth || 999) - (b.payoffMonth || 999);
-      });
-      tbody.innerHTML = rows.map(function(r, i){
-        return '<tr><td>'+(i+1)+'</td><td>Debt '+r.idx+'</td><td>'+_$(r.bal)+'</td>'+
-               '<td>'+(r.apr*100).toFixed(2)+'%</td><td>'+_$(r.pmt)+'</td>'+
-               '<td>'+(r.payoffMonth ? _mo(r.payoffMonth) : '—')+'</td>'+
-               '<td>'+_$(r.interest)+'</td></tr>';
-      }).join('');
+      var maxYears = Math.max(std.yearly.length, acc.yearly.length);
+      var rows = [];
+      for(var i=0; i<maxYears; i++){
+        var s = std.yearly[i], a = acc.yearly[i];
+        var year = (s && s.year) || (a && a.year) || (i+1);
+        var status = '';
+        if(a && a.balEnd <= 0.01 && (!s || s.balEnd > 0.01)) status = '<span style="color:var(--green);font-weight:700">✓ Paid off</span>';
+        else if(s && s.balEnd <= 0.01) status = '<span style="color:var(--muted)">— Paid off</span>';
+        rows.push('<tr><td>'+year+'</td>'+
+          '<td>'+(s ? _$(s.balEnd) : '—')+'</td>'+
+          '<td style="color:var(--accent)">'+(a ? _$(a.balEnd) : '<span style="color:var(--green)">$0</span>')+'</td>'+
+          '<td>'+(s ? _$(s.intYear) : '—')+'</td>'+
+          '<td>'+(a ? _$(a.intYear) : '—')+'</td>'+
+          '<td>'+status+'</td></tr>');
+      }
+      tbody.innerHTML = rows.join('');
     }
   };
 
+  // Pre-fill from the active financing structure (loan + rate from S)
+  window.sbPullFromIntake = function(){
+    var S = window.S || {};
+    if(!S.activeLoan || S.activeLoan <= 0){
+      alert('No active financing structure yet. Fill out the Deal Intake first (purchase price + down payment).');
+      return;
+    }
+    var balEl = _id('sb_bal'); if(balEl) balEl.value = Math.round(S.activeLoan);
+    var rateEl = _id('sb_rate'); if(rateEl) rateEl.value = ((S.activeRate || S.convRate || 0.07) * 100).toFixed(3);
+    var termEl = _id('sb_term'); if(termEl && !termEl.value) termEl.value = 30;
+    var pmtEl = _id('sb_pmt'); if(pmtEl) pmtEl.value = '';  // auto-calc
+    sbCompute();
+  };
+
   window.sbReset = function(){
-    ['sb_extra','sb1_bal','sb1_apr','sb1_pmt','sb2_bal','sb2_apr','sb2_pmt','sb3_bal','sb3_apr','sb3_pmt']
-      .forEach(function(id){var e=_id(id); if(e) e.value='';});
-    var sel = _id('sb_strategy'); if(sel) sel.value = 'avalanche';
+    ['sb_bal','sb_rate','sb_pmt','sb_extra','sb_lump'].forEach(function(id){var e=_id(id); if(e) e.value='';});
+    var termEl = _id('sb_term'); if(termEl) termEl.value = 30;
     sbCompute();
   };
 })();
