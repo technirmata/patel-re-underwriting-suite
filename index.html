@@ -9330,6 +9330,12 @@ async function trialUpdateBanner(){
   const profile = await _fetchProfile();
   if(!profile){ bar.style.display='none'; return; }
 
+  // Show admin tab BEFORE any early returns so comp/active admins see it
+  try {
+    const adminTab = document.querySelector('.tab[data-tab="17"]');
+    if(adminTab) adminTab.style.display = profile.is_admin ? '' : 'none';
+  } catch(_){}
+
   // Comp + active hide the banner entirely
   if(profile.subscription_status === 'active' || profile.subscription_status === 'comp'){
     bar.style.display='none';
@@ -9362,11 +9368,7 @@ async function trialUpdateBanner(){
     bar.style.display='flex';
   }
 
-  // Also reveal admin tab if applicable
-  const adminTab = document.querySelector('.tab[data-tab="17"]');
-  if(adminTab){
-    adminTab.style.display = profile.is_admin ? '' : 'none';
-  }
+  // (admin tab visibility now handled at top of this function — before early returns)
 }
 
 function trialOpenPaywall(){
