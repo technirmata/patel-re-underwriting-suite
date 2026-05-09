@@ -3523,13 +3523,12 @@ strong { color: #e2e8f0; }
       <span style="font-size:11px;color:var(--muted)">Grant view-only or moderation rights to other accounts</span>
     </div>
     <div style="font-size:11.5px;color:var(--text2);line-height:1.5;margin-bottom:10px">
-      <strong>admin</strong> = full read + write + can grant/revoke other admins. <strong>moderator</strong> = read all profiles+projects + can change subscription_status. <strong>viewer</strong> = read-only access to all profiles+projects. The grantee must already have an account (signed in once).
+      <strong>admin</strong> = full read + write + can grant/revoke other admins + sees activity logs. <strong>moderator</strong> = read all profiles+projects + can change subscription_status (no log access). The grantee must already have an account (signed in once).
     </div>
     <form id="adminGrantForm" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px" onsubmit="event.preventDefault();adminGrantRole();">
       <div class="field" style="flex:1;min-width:200px"><label>Grantee email</label><input type="email" id="adminGrantEmail" placeholder="user@example.com" required></div>
       <div class="field" style="min-width:140px"><label>Role</label>
         <select id="adminGrantRoleSel">
-          <option value="viewer">viewer (read-only)</option>
           <option value="moderator">moderator (read + update sub status)</option>
           <option value="admin">admin (full access + grants)</option>
         </select>
@@ -3541,10 +3540,10 @@ strong { color: #e2e8f0; }
     <div style="overflow-x:auto"><table class="pn-table" id="adminGrantsTable"></table></div>
   </div>
 
-  <!-- Activity Logs -->
-  <div class="card">
+  <!-- Activity Logs (admin-only) -->
+  <div class="card" id="adminLogsCard" style="display:none">
     <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
-      <span>📜 Activity Logs</span>
+      <span>📜 Activity Logs <span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.5px">ADMIN ONLY</span></span>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <div role="tablist" style="display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:2px">
           <button class="btn btn-sm" id="logsTabAdmin" onclick="adminSwitchLogsTab('admin')" style="font-size:11px;padding:4px 10px;background:var(--accent);color:#fff;border:none;border-radius:6px">Admin actions</button>
@@ -9342,18 +9341,36 @@ async function _userHasPanelAccess(){
   const profile = await _fetchProfile();
   if(!profile) return false;
   if(profile.is_admin) return true;
-  // Check user_role_grants for active grant
+  // Admin OR moderator only — viewer role no longer grants admin-panel access
   try {
     const sb = _sbClient();
     const { data, error } = await sb.from('user_role_grants')
       .select('role')
       .eq('grantee_user_id', profile.user_id)
       .is('revoked_at', null)
-      .in('role', ['admin','moderator','viewer'])
+      .in('role', ['admin','moderator'])
       .limit(1);
     return !error && data && data.length > 0;
   } catch(e){ return false; }
 }
+
+// Stricter check: ONLY admins (logs section visibility)
+async function _userIsAdmin(){
+  const profile = await _fetchProfile();
+  if(!profile) return false;
+  if(profile.is_admin) return true;
+  try {
+    const sb = _sbClient();
+    const { data, error } = await sb.from('user_role_grants')
+      .select('role')
+      .eq('grantee_user_id', profile.user_id)
+      .is('revoked_at', null)
+      .eq('role', 'admin')
+      .limit(1);
+    return !error && data && data.length > 0;
+  } catch(e){ return false; }
+}
+window._userIsAdmin = _userIsAdmin;
 window._userHasPanelAccess = _userHasPanelAccess;
 
 // Open the admin panel (panel17) directly from the user-chip dropdown.
@@ -9822,6 +9839,14 @@ window.adminSwitchLogsTab = function(tab){
 async function adminLoadLogs(force){
   const errEl = document.getElementById('adminLogsError');
   if(errEl) { errEl.style.display='none'; errEl.textContent=''; }
+  // Gate: only admins see the logs card. Hide it for moderators.
+  const card = document.getElementById('adminLogsCard');
+  let isAdmin = false;
+  try {
+    if(typeof _userIsAdmin === 'function') isAdmin = await _userIsAdmin();
+  } catch(_){}
+  if(card) card.style.display = isAdmin ? '' : 'none';
+  if(!isAdmin) return;  // moderator/viewer never fetch the log data
   try {
     const sb = _sbClient();
     const [adm, ev, grt] = await Promise.all([
