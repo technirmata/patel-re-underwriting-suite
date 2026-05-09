@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>JP Real Estate Underwriting Suite v4</title>
+<title>Patel RE Underwriting Suite v4</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -1158,7 +1158,7 @@ strong { color: #e2e8f0; }
 <div class="auth-overlay" id="authOverlay" style="display:none">
   <div class="auth-modal">
     <div class="auth-modal-top">
-      <div class="auth-logo">⚡ JP Underwriting Suite</div>
+      <div class="auth-logo">⚡ Patel RE Underwriting Suite</div>
       <div class="auth-sub">Sign in to save projects across devices</div>
     </div>
     <div class="auth-tabs">
@@ -1274,7 +1274,7 @@ strong { color: #e2e8f0; }
   <div class="paywall-modal">
     <div class="paywall-icon">⭐</div>
     <div class="paywall-title" id="paywallTitle">Your trial has ended</div>
-    <div class="paywall-sub" id="paywallSub">Subscribe to keep using JP Underwriting Suite for your deals.</div>
+    <div class="paywall-sub" id="paywallSub">Subscribe to keep using Patel RE Underwriting Suite for your deals.</div>
     <div class="paywall-features">
       <div class="paywall-feature">Unlimited deal underwriting + saving</div>
       <div class="paywall-feature">AI Research checklist (Anthropic Opus 4.7 + Perplexity)</div>
@@ -1290,7 +1290,7 @@ strong { color: #e2e8f0; }
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <div class="logo">⚡ JP Suite</div>
+  <div class="logo">⚡ Patel RE Suite</div>
   <div class="topbar-actions">
     <!-- Primary action — always visible -->
     <button class="btn btn-primary btn-sm tb-primary" onclick="ST(6);syncIntakeToLOI();buildLOI()" title="Build LOI">📝 <span class="tb-lbl">Build LOI</span></button>
@@ -6057,7 +6057,7 @@ function printExecPDF() {
   if(!w){alert('Pop-up blocked — please allow pop-ups for this page and try again.');return;}
 
   w.document.write('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
-    +'<title>Executive Summary \u2014 JP Underwriting Suite</title>'
+    +'<title>Executive Summary \u2014 Patel RE Underwriting Suite</title>'
     +'<style>'+appCSS+'</style>'
     +'<style>'
     // Print essentials — light/ink-saving theme is now defined inside appCSS
@@ -10049,7 +10049,7 @@ function importProjectFileHandler(event) {
     } else if(obj.name && obj.data) {
       proj = obj; // raw project object
     } else {
-      alert('This file does not appear to be a valid JP Underwriting Suite project.'); return;
+      alert('This file does not appear to be a valid Patel RE Underwriting Suite project.'); return;
     }
 
     if(!proj.name || typeof proj.data !== 'object') {
@@ -10653,7 +10653,7 @@ function importProjects(evt) {
       renderProjList();
       showProjToast(`✅ Imported ${Object.keys(incoming).length} project(s)`);
     } catch(err) {
-      alert('Invalid file. Please select a JP Underwriting Projects JSON file.');
+      alert('Invalid file. Please select a Patel RE Underwriting Projects JSON file.');
     }
   };
   reader.readAsText(file);
@@ -10729,7 +10729,7 @@ async function linkProjectsFile() {
   if(!('showOpenFilePicker' in window)){ alert('File System Access API requires Chrome or Edge.'); return; }
   try {
     const [h]=await window.showOpenFilePicker({
-      types:[{description:'JP Projects File',accept:{'application/json':['.json']}}],
+      types:[{description:'Patel RE Projects File',accept:{'application/json':['.json']}}],
       multiple:false
     });
     _projFileHandle=h;
@@ -10749,7 +10749,7 @@ async function createProjectsFile() {
   if(!('showSaveFilePicker' in window)){ alert('File System Access API requires Chrome or Edge.'); return; }
   try {
     const h=await window.showSaveFilePicker({
-      types:[{description:'JP Projects File',accept:{'application/json':['.json']}}],
+      types:[{description:'Patel RE Projects File',accept:{'application/json':['.json']}}],
       suggestedName:'JP_Projects.json'
     });
     _projFileHandle=h;
@@ -14468,7 +14468,7 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
     if(S.coc)              bits.push('Cash-on-cash: '+(S.coc*100).toFixed(2)+'%');
     if(S.irr)              bits.push('IRR (5yr): '+(S.irr*100).toFixed(2)+'%');
     if(S.em)               bits.push('Equity multiple: '+S.em.toFixed(2)+'x');
-    return 'You are a real estate underwriting assistant inside the JP Underwriting Suite. ' +
+    return 'You are a real estate underwriting assistant inside the Patel RE Underwriting Suite. ' +
       'Answer questions about THIS specific deal with concrete, candid analysis. ' +
       'Be direct about risks (especially appraisal-gap risk when in-place rents > market, tax-record mismatch, DSCR shortfall on bigger deals, market-tier disqualifiers, seller-finance lender conflicts). ' +
       'Never invent numbers — if you don\'t know, say so and suggest where to verify.' +
