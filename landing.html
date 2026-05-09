@@ -3,560 +3,819 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b0e16">
-<title>Patel RE Underwriting Suite — Underwrite multifamily deals in 7 minutes</title>
-<meta name="description" content="Single-deal underwriter for active real estate investors. BRRRR, subject-to, seller-finance, value-add — all the math, none of the spreadsheet hell. $49/mo, 7-day free trial.">
+<meta name="theme-color" content="#F2EEE8">
+<title>Patel RE Underwriting Suite — A field guide for working real estate operators</title>
+<meta name="description" content="Underwrite 12 asset classes — SFR through 100+ unit syndication — with full LP/GP waterfall math, deal-killer detection, and 9 financing structures. $49/mo, 7-day trial.">
 <meta property="og:title" content="Patel RE Underwriting Suite">
-<meta property="og:description" content="Underwrite 5–50 unit deals in 7 minutes. Live DSCR, IRR, equity multiple, partner waterfall, AI deal chat. $49/mo with a 7-day trial.">
+<meta property="og:description" content="From SFR to 100+ unit syndication. Twelve asset classes. Nine financing structures. One screen.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://technirmata.github.io/patel-re-underwriting-suite/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,800&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #070a12;
-  --bg2: #0b0e16;
-  --surface: #0f1320;
-  --surface2: #161b2c;
-  --surface3: #1d2238;
-  --border: #232842;
-  --text: #e7eaf6;
-  --text2: #b0b7d0;
-  --muted: #6b7393;
-  --accent: #6366f1;
-  --accent2: #8b5cf6;
-  --green: #34d399;
-  --red: #f87171;
-  --yellow: #fbbf24;
-  --shadow: 0 8px 24px rgba(0,0,0,.35);
-  --shadow-lg: 0 24px 60px rgba(0,0,0,.5);
-  --radius: 14px;
-  --radius-lg: 22px;
-  --max: 1240px;
-  --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --paper: #F2EEE8;
+  --paper-2: #E8E3DA;
+  --ink: #0A0A0A;
+  --ink-2: #2A2A2A;
+  --rule: rgba(10,10,10,.14);
+  --rule-strong: rgba(10,10,10,.32);
+  --muted: rgba(10,10,10,.55);
+  --accent: #4F46E5;
+  --accent-soft: rgba(79,70,229,.07);
+  --killed: #B0301C;
+  --kept: #1F6B3F;
+  --max: 1320px;
+  --gut: 32px;
 }
-* { box-sizing: border-box }
-html, body { margin:0; background:var(--bg); color:var(--text); font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.55; overflow-x:hidden }
-body { padding-bottom:env(safe-area-inset-bottom) }
-a { color:var(--accent); text-decoration:none; transition:color .15s }
-a:hover { color:#a4a7ff }
-img { display:block; max-width:100% }
-.mono { font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace }
-.container { max-width:var(--max); margin:0 auto; padding:0 24px }
+* { box-sizing:border-box; -webkit-text-size-adjust:100% }
+html, body { margin:0; background:var(--paper); color:var(--ink); font-family:'Inter Tight',system-ui,-apple-system,Segoe UI,sans-serif; font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale }
+body { background-image: linear-gradient(var(--rule) 1px, transparent 1px); background-size: 100% 8px; background-position: 0 -1px; background-attachment:fixed; background-blend-mode:multiply }
+@supports (background-image: linear-gradient(0deg, transparent, transparent)) { body { background-image:none } }
+img,svg { display:block; max-width:100% }
+a { color:inherit; text-decoration:none }
+.serif { font-family:'Fraunces',Times,serif; font-feature-settings:"ss01","ss02"; letter-spacing:-.01em }
+.mono { font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.02em }
+.eyebrow { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500; letter-spacing:.18em; text-transform:uppercase; color:var(--muted) }
+::selection { background:var(--accent); color:var(--paper) }
 
-/* ── ambient gradient glow on hero ── */
-.bg-glow { position:fixed; inset:auto 0 auto 50%; transform:translateX(-50%); top:-40vh; width:140vw; height:90vh; background:radial-gradient(ellipse at center, rgba(99,102,241,.30), transparent 60%); filter:blur(60px); pointer-events:none; z-index:0 }
-.bg-glow-2 { position:absolute; right:-20%; top:25vh; width:60vw; height:60vh; background:radial-gradient(ellipse at center, rgba(139,92,246,.18), transparent 65%); filter:blur(80px); pointer-events:none; z-index:0 }
+/* ── grid frame ─────────────────────────────────── */
+.frame {
+  max-width:var(--max);
+  margin:0 auto;
+  padding:0 var(--gut);
+  position:relative;
+}
 
-/* ── nav ── */
-.nav { position:sticky; top:0; z-index:50; background:rgba(7,10,18,.7); backdrop-filter:saturate(150%) blur(14px); border-bottom:1px solid rgba(255,255,255,.05) }
-.nav-inner { display:flex; align-items:center; gap:16px; padding:14px 24px; max-width:var(--max); margin:0 auto }
-.brand { display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:-.2px; font-size:15px; color:var(--text); flex:1 }
-.brand .bolt { width:28px; height:28px; border-radius:8px; background:var(--gradient); display:flex; align-items:center; justify-content:center; font-size:14px; box-shadow:0 6px 18px rgba(99,102,241,.45) }
-.nav-cta { display:flex; gap:8px; align-items:center }
-.nav-link { color:var(--text2); font-size:13.5px; font-weight:500; padding:8px 12px; border-radius:8px }
-.nav-link:hover { color:var(--text); background:rgba(255,255,255,.04) }
-.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:inherit; font-size:14px; font-weight:600; padding:11px 18px; border-radius:10px; border:1px solid transparent; cursor:pointer; transition:.15s; text-decoration:none; white-space:nowrap }
-.btn-primary { background:var(--gradient); color:#fff; box-shadow:0 8px 24px rgba(99,102,241,.35) }
-.btn-primary:hover { filter:brightness(1.1); transform:translateY(-1px); color:#fff }
-.btn-ghost { background:transparent; color:var(--text); border-color:var(--border) }
-.btn-ghost:hover { background:var(--surface2); border-color:var(--surface3) }
-.btn-lg { font-size:15px; padding:14px 24px; border-radius:12px }
+.rule { height:1px; background:var(--ink); width:100%; margin:0 }
+.rule-soft { height:1px; background:var(--rule-strong); width:100%; margin:0 }
 
-/* ── hero ── */
-.hero { position:relative; padding:80px 0 60px; z-index:1 }
-.hero-grid { display:grid; grid-template-columns:1.05fr .95fr; gap:56px; align-items:center }
-.eyebrow { display:inline-flex; align-items:center; gap:8px; padding:6px 12px; background:rgba(99,102,241,.10); border:1px solid rgba(99,102,241,.30); color:#c7d2fe; font-size:12px; font-weight:600; letter-spacing:.3px; border-radius:99px; margin-bottom:20px }
-.eyebrow .dot { width:6px; height:6px; border-radius:50%; background:#8b5cf6; box-shadow:0 0 10px #8b5cf6 }
-.hero h1 { margin:0 0 18px; font-size:clamp(38px,5.4vw,64px); font-weight:800; letter-spacing:-1.4px; line-height:1.05 }
-.hero h1 .grad { background:var(--gradient); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent }
-.hero p.lede { font-size:clamp(16px,1.4vw,18.5px); color:var(--text2); margin:0 0 28px; max-width:540px; line-height:1.6 }
-.hero-cta { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:22px }
-.hero-microcopy { font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:14px; flex-wrap:wrap }
-.hero-microcopy .dot-sep { width:3px; height:3px; background:var(--muted); border-radius:50%; opacity:.5 }
-.hero-mockup { position:relative; padding:8px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); transform:perspective(1200px) rotateY(-3deg) rotateX(2deg) }
-.hero-mockup::before { content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; background:linear-gradient(135deg, rgba(99,102,241,.6), transparent 50%); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none }
-.mockup-bar { display:flex; align-items:center; gap:6px; padding:8px 12px; background:var(--surface2); border-bottom:1px solid var(--border); border-radius:14px 14px 0 0 }
-.mockup-bar span { width:9px; height:9px; border-radius:50%; background:#3b3f55 }
-.mockup-bar span:nth-child(1) { background:#ff5f57 }
-.mockup-bar span:nth-child(2) { background:#febc2e }
-.mockup-bar span:nth-child(3) { background:#28c840 }
-.mockup-bar small { margin-left:auto; font-size:10.5px; color:var(--muted); letter-spacing:.3px }
-.mockup-body { padding:20px 18px; background:var(--bg2); border-radius:0 0 14px 14px }
-.mock-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px }
-.mock-head .lbl { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px }
-.mock-head .grade { font-size:14px; font-weight:800; color:var(--green); padding:3px 10px; background:rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.3); border-radius:99px }
-.mock-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px }
-.mock-tile { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 12px }
-.mock-tile .k { font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px }
-.mock-tile .v { font-size:18px; font-weight:800; letter-spacing:-.4px; font-family:'JetBrains Mono',monospace }
-.mock-tile.green .v { color:var(--green) }
-.mock-tile.purple .v { color:#c4b5fd }
-.mock-tile.amber .v { color:var(--yellow) }
-.mock-chart { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; height:120px; position:relative; overflow:hidden }
-.mock-chart .grid-h { position:absolute; left:14px; right:14px; height:1px; background:rgba(255,255,255,.04) }
-.mock-chart svg { display:block; width:100%; height:100% }
-.mock-chart .lbl-tl { position:absolute; top:10px; left:14px; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px }
+/* ── nav ───────────────────────────────────────── */
+.nav {
+  position:sticky; top:0; z-index:80;
+  background:rgba(242,238,232,.92);
+  backdrop-filter:saturate(140%) blur(8px);
+  border-bottom:1px solid var(--ink);
+}
+.nav-inner {
+  display:flex; align-items:center; gap:24px;
+  padding:14px var(--gut);
+  max-width:var(--max); margin:0 auto;
+  font-size:13px;
+}
+.nav-brand { font-family:'Fraunces',serif; font-weight:600; font-size:17px; letter-spacing:-.4px; flex:1 }
+.nav-brand .index { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); margin-right:8px; font-weight:400; letter-spacing:.1em }
+.nav-link { color:var(--ink-2); padding:6px 0; border-bottom:1px solid transparent; transition:border-color .15s }
+.nav-link:hover { border-bottom-color:var(--ink) }
+.nav-cta { display:flex; gap:18px; align-items:center }
 
-/* ── trust strip ── */
-.trust { padding:36px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); background:rgba(15,19,32,.4) }
-.trust-row { display:flex; gap:36px; flex-wrap:wrap; justify-content:center; align-items:center; opacity:.85; font-size:13px; color:var(--text2) }
-.trust-pill { display:inline-flex; align-items:center; gap:8px; padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:99px; font-size:12px; color:var(--text2); font-weight:500 }
-.trust-pill svg { color:var(--accent) }
+/* ── square buttons ────────────────────────────── */
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  font-family:inherit; font-size:14px; font-weight:600;
+  padding:13px 22px; border-radius:2px;
+  border:1px solid var(--ink); cursor:pointer;
+  background:var(--ink); color:var(--paper);
+  transition:transform .12s, background .12s;
+  text-decoration:none; white-space:nowrap;
+  letter-spacing:-.005em;
+}
+.btn:hover { transform:translate(2px,-2px); box-shadow:-2px 2px 0 var(--ink) }
+.btn-link {
+  background:transparent; color:var(--ink); border-color:transparent;
+  border-bottom:1px solid var(--ink); border-radius:0;
+  padding:10px 0; gap:6px;
+}
+.btn-link:hover { transform:none; box-shadow:none; background:transparent }
+.btn-link::after { content:"→"; font-family:'JetBrains Mono',monospace; transition:transform .15s }
+.btn-link:hover::after { transform:translateX(3px) }
 
-/* ── sections ── */
-.sec { padding:96px 0; position:relative; z-index:1 }
-.sec h2 { margin:0 0 14px; font-size:clamp(28px,3.4vw,42px); font-weight:800; letter-spacing:-.8px; line-height:1.1 }
-.sec h2 .grad { background:var(--gradient); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent }
-.sec .lede { font-size:17px; color:var(--text2); max-width:680px; margin:0 0 56px; line-height:1.6 }
-.sec-head { text-align:center; margin-bottom:48px }
-.sec-head .lede { margin:0 auto 0 auto }
+/* ── section index marginalia ────────────────────────── */
+.sec { padding:96px 0; position:relative; border-top:1px solid var(--rule-strong) }
+.sec:first-of-type { border-top:none }
+.sec-head {
+  display:grid; grid-template-columns: 80px 1fr; gap:32px;
+  align-items:baseline;
+  margin-bottom:48px;
+}
+.sec-num {
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px; color:var(--muted); font-weight:500;
+  letter-spacing:.1em;
+  padding-top:6px;
+}
+.sec-title {
+  font-family:'Fraunces',serif;
+  font-size:clamp(34px, 4.4vw, 56px);
+  font-weight:500;
+  letter-spacing:-1.2px;
+  line-height:1.05;
+  margin:0;
+}
+.sec-title em { font-style:italic; font-weight:400 }
+.sec-lede {
+  font-size:18px; color:var(--ink-2); max-width:600px;
+  line-height:1.6; margin-top:16px;
+}
 
-/* ── problem section (raw, punchy) ── */
-.problem { background:var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border) }
-.problem-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; margin-top:44px }
-.problem-card { padding:22px 22px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); display:flex; gap:14px; align-items:flex-start }
-.problem-card .icon { width:42px; height:42px; flex-shrink:0; border-radius:10px; background:rgba(248,113,113,.10); border:1px solid rgba(248,113,113,.25); display:flex; align-items:center; justify-content:center; font-size:18px }
-.problem-card h3 { margin:0 0 6px; font-size:15.5px; font-weight:700; color:var(--text); letter-spacing:-.2px }
-.problem-card p { margin:0; font-size:13.5px; color:var(--text2); line-height:1.6 }
+/* ── HERO ─────────────────────────────────── */
+.hero { padding:64px 0 88px; border-bottom:1px solid var(--ink) }
+.hero-grid {
+  display:grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap:64px;
+  align-items:end;
+}
+.hero-eyebrow { display:flex; gap:18px; align-items:center; margin-bottom:36px }
+.hero-eyebrow .ix { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500; letter-spacing:.18em; color:var(--muted) }
+.hero-eyebrow .lbl { font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; padding:5px 10px; background:var(--ink); color:var(--paper); border-radius:0 }
+.hero h1 {
+  font-family:'Fraunces',serif;
+  font-weight:400; font-style:normal;
+  font-size:clamp(56px, 8.5vw, 124px);
+  line-height:.96;
+  letter-spacing:-3px;
+  margin:0 0 36px;
+  font-variation-settings:"opsz" 144;
+}
+.hero h1 em { font-style:italic; font-weight:400; color:var(--accent) }
+.hero h1 .num { font-family:'JetBrains Mono',monospace; font-weight:500; font-size:.75em; letter-spacing:-2px; vertical-align:.06em }
+.hero-lead {
+  font-size:18px; line-height:1.7; max-width:540px;
+  color:var(--ink-2); margin:0 0 36px;
+}
+.hero-lead strong { color:var(--ink); font-weight:500 }
+.hero-cta { display:flex; gap:32px; align-items:center; flex-wrap:wrap }
+.hero-microcopy {
+  font-family:'JetBrains Mono',monospace;
+  font-size:11.5px; letter-spacing:.04em;
+  color:var(--muted); margin-top:38px;
+  display:flex; gap:24px; flex-wrap:wrap;
+}
+.hero-microcopy span::before { content:"·"; margin-right:18px; opacity:.5 }
+.hero-microcopy span:first-child::before { display:none }
 
-/* ── feature bento ── */
-.bento { display:grid; grid-template-columns:repeat(6,1fr); gap:16px; margin-top:8px }
-.bento-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:28px; position:relative; overflow:hidden; transition:transform .25s, border-color .25s }
-.bento-card:hover { transform:translateY(-3px); border-color:rgba(99,102,241,.35) }
-.bento-card h3 { margin:0 0 10px; font-size:18px; font-weight:700; letter-spacing:-.3px; color:var(--text) }
-.bento-card p { margin:0 0 14px; color:var(--text2); font-size:13.5px; line-height:1.55 }
-.bento-card .icon { width:38px; height:38px; border-radius:10px; background:rgba(99,102,241,.12); border:1px solid rgba(99,102,241,.25); display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:14px }
-.b-wide { grid-column:span 4 }
-.b-narrow { grid-column:span 2 }
-.b-half { grid-column:span 3 }
-.b-mini-stats { display:flex; gap:14px; flex-wrap:wrap; margin-top:14px }
-.b-stat { font-size:12.5px; color:var(--text2) }
-.b-stat strong { color:var(--text); font-weight:700; font-family:'JetBrains Mono',monospace; font-size:13.5px }
+/* ── hero RIGHT: a real product screenshot ── */
+.hero-screen {
+  background:#0a0e1a;
+  color:#e7eaf6;
+  font-size:13px;
+  border:1px solid var(--ink);
+  position:relative;
+  overflow:hidden;
+  padding:22px 24px 26px;
+}
+.hero-screen .browser-bar { display:flex; gap:5px; align-items:center; padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,.08); margin-bottom:18px }
+.hero-screen .browser-bar i { display:block; width:9px; height:9px; border-radius:50%; background:#3b3f55 }
+.hero-screen .browser-bar i:nth-child(1) { background:#ff5f57 } .hero-screen .browser-bar i:nth-child(2) { background:#febc2e } .hero-screen .browser-bar i:nth-child(3) { background:#28c840 }
+.hero-screen .browser-bar small { margin-left:14px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#7a829c; letter-spacing:.04em }
+.hero-screen .head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px }
+.hero-screen .head .lbl { font-family:'JetBrains Mono',monospace; font-size:9.5px; color:#7a829c; letter-spacing:.16em; text-transform:uppercase }
+.hero-screen .head .deal { font-family:'Fraunces',serif; font-size:20px; font-weight:500; letter-spacing:-.4px; color:#fff; margin-top:4px }
+.hero-screen .head .grade { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; letter-spacing:.12em; padding:6px 12px; border:1px solid rgba(76,217,140,.5); color:#4cd98c; background:rgba(76,217,140,.08) }
+.hero-screen .grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  border-top:1px solid rgba(255,255,255,.08);
+  border-left:1px solid rgba(255,255,255,.08);
+}
+.hero-screen .cell {
+  padding:14px 14px 16px;
+  border-right:1px solid rgba(255,255,255,.08);
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.hero-screen .cell .k { font-family:'JetBrains Mono',monospace; font-size:9.5px; color:#7a829c; letter-spacing:.16em; text-transform:uppercase; margin-bottom:8px }
+.hero-screen .cell .v { font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:500; letter-spacing:-.5px }
+.hero-screen .cell.green .v { color:#4cd98c } .hero-screen .cell.amber .v { color:#fbbf24 } .hero-screen .cell.indigo .v { color:#a4a7ff }
+.hero-screen .annotation {
+  position:absolute; right:-8px; top:64px;
+  font-family:'Fraunces',serif; font-style:italic; font-size:13px; color:#fbbf24;
+  background:#0a0e1a; padding:4px 10px; border:1px solid rgba(251,191,36,.4); transform:rotate(-3deg)
+}
+.hero-screen .annotation::before { content:"↘"; display:inline-block; transform:rotate(40deg); margin-right:6px }
+.hero-screen .annotation small { display:block; font-family:'JetBrains Mono',monospace; font-style:normal; font-size:9.5px; color:#7a829c; margin-top:2px; text-align:right }
 
-/* feature visual mockups */
-.fv-row { display:grid; grid-template-columns:1fr 1fr; gap:6px }
-.fv-tile { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 12px }
-.fv-tile .k { font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px }
-.fv-tile .v { font-size:14px; font-weight:700; font-family:'JetBrains Mono',monospace }
-.fv-tile.green .v { color:var(--green) }
-.fv-tile.amber .v { color:var(--yellow) }
-.fv-pills { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px }
-.fv-pill { font-size:11px; padding:4px 9px; border-radius:99px; background:var(--surface3); color:var(--text2); border:1px solid var(--border) }
-.fv-pill.active { background:rgba(99,102,241,.15); color:#c7d2fe; border-color:rgba(99,102,241,.4) }
+/* ── ticker just under hero ──────────────── */
+.ticker {
+  background:var(--ink); color:var(--paper);
+  border-bottom:1px solid var(--ink);
+  overflow:hidden;
+  font-family:'JetBrains Mono',monospace; font-size:12px;
+  letter-spacing:.05em;
+}
+.ticker-track {
+  display:inline-flex; gap:48px;
+  padding:14px 0;
+  white-space:nowrap;
+  animation:tick 60s linear infinite;
+}
+.ticker-track span { display:inline-flex; gap:10px; align-items:center }
+.ticker-track .lbl { color:var(--paper); opacity:.5 }
+.ticker-track .v { color:var(--paper) }
+.ticker-track .v.green { color:#4cd98c }
+.ticker-track .v.amber { color:#fbbf24 }
+.ticker-track .v.killed { color:#ff8975; text-decoration:line-through }
+@keyframes tick { from { transform:translateX(0) } to { transform:translateX(-50%) } }
 
-/* ── how it works ── */
-.steps { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:8px }
-.step { padding:22px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); position:relative }
-.step .num { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent); font-weight:800; letter-spacing:1px; margin-bottom:10px }
-.step h3 { margin:0 0 8px; font-size:15.5px; font-weight:700; color:var(--text); letter-spacing:-.2px }
-.step p { margin:0; font-size:13px; color:var(--text2); line-height:1.55 }
+/* ── pull quote ──────────────────────────── */
+.pull {
+  display:grid;
+  grid-template-columns: 80px 1fr;
+  gap:32px; align-items:flex-start;
+  padding:80px 0;
+  border-top:1px solid var(--rule-strong);
+  border-bottom:1px solid var(--rule-strong);
+}
+.pull .corner {
+  font-family:'Fraunces',serif; font-style:italic; font-size:80px; line-height:.6; color:var(--accent); margin:0
+}
+.pull q {
+  font-family:'Fraunces',serif; font-weight:400; font-style:italic;
+  font-size:clamp(26px, 3vw, 38px); line-height:1.25; letter-spacing:-.6px;
+  color:var(--ink); display:block;
+  quotes:none; margin:0 0 22px;
+}
+.pull q::before, .pull q::after { content:"" }
+.pull cite {
+  font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:var(--muted); letter-spacing:.08em; font-style:normal;
+}
+.pull cite strong { color:var(--ink); font-weight:500 }
 
-/* ── pricing ── */
-.pricing { background:var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border) }
-.price-card { max-width:520px; margin:0 auto; background:linear-gradient(180deg, var(--surface) 0%, var(--surface2) 100%); border:1px solid var(--border); border-radius:var(--radius-lg); padding:38px 36px; position:relative; box-shadow:var(--shadow-lg) }
-.price-card::before { content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; background:var(--gradient); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none; opacity:.55 }
-.price-card .tier { font-size:13px; color:var(--accent); font-weight:700; text-transform:uppercase; letter-spacing:.7px; margin-bottom:8px }
-.price-amount { display:flex; align-items:baseline; gap:6px; margin-bottom:6px }
-.price-amount .num { font-size:64px; font-weight:800; letter-spacing:-2px; font-family:'JetBrains Mono',monospace }
-.price-amount .per { font-size:16px; color:var(--text2); font-weight:500 }
-.price-trial { font-size:14px; color:var(--text2); margin-bottom:24px }
-.price-trial strong { color:var(--text) }
-.price-list { list-style:none; padding:0; margin:0 0 28px }
-.price-list li { padding:10px 0; border-bottom:1px solid rgba(255,255,255,.05); display:flex; gap:10px; align-items:flex-start; font-size:14.5px; color:var(--text2) }
-.price-list li:last-child { border-bottom:none }
-.price-list li::before { content:"✓"; color:var(--green); font-weight:800; flex-shrink:0; width:18px }
-.price-card .btn { width:100%; padding:14px; font-size:15px }
-.price-microcopy { font-size:12px; color:var(--muted); text-align:center; margin-top:14px; line-height:1.6 }
+/* ── thesis (problem-flipped-to-thesis) ───── */
+.thesis-grid {
+  display:grid; grid-template-columns:repeat(2,1fr); gap:0;
+  border-top:1px solid var(--rule-strong);
+}
+.thesis-cell {
+  padding:42px 32px 42px 0;
+  border-right:1px solid var(--rule-strong);
+  border-bottom:1px solid var(--rule-strong);
+}
+.thesis-cell:nth-child(2n) { padding-right:0; padding-left:32px; border-right:none }
+.thesis-cell .ix { font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--muted); letter-spacing:.16em; margin-bottom:16px }
+.thesis-cell h3 {
+  font-family:'Fraunces',serif; font-weight:500; font-size:24px;
+  letter-spacing:-.5px; line-height:1.2; margin:0 0 12px;
+}
+.thesis-cell p { color:var(--ink-2); font-size:15px; line-height:1.65; margin:0; max-width:480px }
 
-/* ── faq ── */
-.faq-list { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px }
-.faq-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden }
-.faq-item summary { padding:18px 22px; font-size:15px; font-weight:600; color:var(--text); cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:14px }
-.faq-item summary::-webkit-details-marker { display:none }
-.faq-item summary::after { content:"+"; font-size:22px; color:var(--accent); font-weight:300; flex-shrink:0; transition:transform .2s }
-.faq-item[open] summary::after { content:"−" }
-.faq-item .answer { padding:0 22px 18px; color:var(--text2); font-size:14px; line-height:1.7 }
-
-/* ── final CTA band ── */
-.cta-band { padding:96px 0; text-align:center; background:linear-gradient(180deg, var(--bg) 0%, rgba(99,102,241,.08) 100%); position:relative; z-index:1 }
-.cta-band h2 { margin:0 0 14px }
-.cta-band .lede { margin:0 auto 30px }
-
-/* ── footer ── */
-.footer { padding:40px 0 60px; border-top:1px solid var(--border); color:var(--muted); font-size:13px }
-.footer-inner { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:18px }
-.footer-links { display:flex; gap:20px; flex-wrap:wrap }
-.footer-links a { color:var(--text2); font-size:13px }
-.footer-links a:hover { color:var(--text) }
-
-/* ── mobile ── */
+/* ── field guide list (asset classes) ─────── */
+.fg {
+  border-top:1px solid var(--ink);
+  border-bottom:1px solid var(--ink);
+}
+.fg-row {
+  display:grid;
+  grid-template-columns: 60px 1.2fr 2fr 1fr 90px;
+  gap:24px; align-items:center;
+  padding:22px 0;
+  border-bottom:1px solid var(--rule);
+  transition:background .15s;
+}
+.fg-row:last-child { border-bottom:none }
+.fg-row:hover { background:var(--accent-soft) }
+.fg-row .ix { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); font-weight:500 }
+.fg-row .name { font-family:'Fraunces',serif; font-weight:500; font-size:23px; letter-spacing:-.4px; line-height:1.1 }
+.fg-row .name em { font-style:italic; font-weight:400 }
+.fg-row .spec { font-size:14px; color:var(--ink-2); line-height:1.5 }
+.fg-row .range { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink-2); display:flex; gap:8px; align-items:center }
+.fg-row .spark { width:80px; height:18px }
+.fg-row .check { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; color:var(--kept); text-align:right }
 @media (max-width:880px) {
-  .nav-link { display:none }
-  .hero { padding:48px 0 36px }
-  .hero-grid { grid-template-columns:1fr; gap:36px }
-  .hero-mockup { transform:none; max-width:480px; margin:0 auto }
-  .sec { padding:64px 0 }
-  .bento { grid-template-columns:repeat(2,1fr) }
-  .b-wide, .b-narrow, .b-half { grid-column:span 2 }
-  .steps { grid-template-columns:repeat(2,1fr) }
-  .problem-grid { grid-template-columns:1fr }
-  .faq-list { grid-template-columns:1fr }
-  .price-card { padding:30px 24px }
-  .price-amount .num { font-size:54px }
-  /* sticky bottom CTA on mobile */
-  .mobile-cta { position:fixed; bottom:0; left:0; right:0; padding:12px; background:rgba(7,10,18,.92); backdrop-filter:blur(12px); border-top:1px solid var(--border); z-index:60 }
+  .fg-row { grid-template-columns: 36px 1fr; gap:14px; row-gap:6px }
+  .fg-row .ix { grid-row:span 2 }
+  .fg-row .spec { grid-column:2; font-size:13px }
+  .fg-row .range, .fg-row .check { display:none }
+}
+
+/* ── inside the suite (DARK section) ──────── */
+.inside { background:var(--ink); color:var(--paper); padding:120px 0; border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); position:relative }
+.inside .sec-head .sec-num { color:rgba(242,238,232,.45) }
+.inside .sec-title { color:var(--paper) }
+.inside .sec-title em { color:#a4a7ff }
+.inside .sec-lede { color:rgba(242,238,232,.7) }
+.inside .feat-row {
+  display:grid; grid-template-columns: 80px 1.1fr 1.4fr; gap:32px;
+  padding:48px 0;
+  border-top:1px solid rgba(242,238,232,.14);
+}
+.inside .feat-row .ix { font-family:'JetBrains Mono',monospace; font-size:12px; color:rgba(242,238,232,.45); letter-spacing:.12em; padding-top:6px }
+.inside .feat-row h3 { font-family:'Fraunces',serif; font-weight:500; font-size:36px; letter-spacing:-1px; line-height:1.05; margin:0 0 14px; color:var(--paper) }
+.inside .feat-row p { color:rgba(242,238,232,.78); font-size:15.5px; line-height:1.6; margin:0; max-width:480px }
+.inside .feat-row .vis {
+  background:#15192a;
+  border:1px solid rgba(242,238,232,.14);
+  padding:18px;
+  font-family:'JetBrains Mono',monospace; font-size:12px;
+  position:relative;
+  min-height:180px;
+}
+.inside .feat-row .vis .lbl { color:rgba(242,238,232,.45); font-size:10px; letter-spacing:.18em; text-transform:uppercase; margin-bottom:14px }
+.inside .feat-row .vis .row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(242,238,232,.07) }
+.inside .feat-row .vis .row:last-child { border-bottom:none }
+.inside .feat-row .vis .row .k { color:rgba(242,238,232,.65); font-family:'Inter Tight',sans-serif; font-size:13px }
+.inside .feat-row .vis .row .v { font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:500 }
+.inside .feat-row .vis .row .v.g { color:#4cd98c } .inside .feat-row .vis .row .v.r { color:#ff8975 } .inside .feat-row .vis .row .v.a { color:#fbbf24 } .inside .feat-row .vis .row .v.i { color:#a4a7ff }
+
+/* ── pricing (editorial) ──────────────────── */
+.price-row {
+  display:grid; grid-template-columns: 1.2fr 1fr; gap:80px;
+  padding:80px 0; align-items:flex-start;
+  border-top:1px solid var(--rule-strong); border-bottom:1px solid var(--rule-strong);
+}
+.price-amount {
+  font-family:'JetBrains Mono',monospace; font-size:clamp(72px, 11vw, 156px);
+  font-weight:500; letter-spacing:-5px; line-height:.9;
+  color:var(--ink);
+  position:relative;
+}
+.price-amount sup { font-family:'Fraunces',serif; font-style:italic; font-size:.28em; font-weight:400; color:var(--muted); margin-right:6px; vertical-align:.7em }
+.price-amount sub { font-family:'Fraunces',serif; font-style:italic; font-size:.18em; font-weight:400; color:var(--muted); margin-left:8px; vertical-align:0 }
+.price-detail h3 { font-family:'Fraunces',serif; font-weight:500; font-size:30px; letter-spacing:-.6px; margin:0 0 10px }
+.price-detail .deal { font-size:15px; color:var(--ink-2); line-height:1.7; margin-bottom:24px }
+.price-detail ul { padding:0; margin:0 0 30px; list-style:none }
+.price-detail li {
+  display:grid; grid-template-columns: 24px 1fr; gap:12px;
+  padding:11px 0;
+  font-size:14.5px; color:var(--ink-2);
+  border-bottom:1px solid var(--rule);
+}
+.price-detail li::before { content:"✓"; font-family:'JetBrains Mono',monospace; color:var(--accent); font-weight:700 }
+.price-foot { font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--muted); margin-top:18px; line-height:1.7 }
+
+/* ── faq (editorial Q&A) ──────────────────── */
+.faq-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:0; border-top:1px solid var(--rule-strong) }
+.faq-item { padding:30px 32px 30px 0; border-bottom:1px solid var(--rule-strong); border-right:1px solid var(--rule-strong) }
+.faq-item:nth-child(2n) { padding-right:0; padding-left:32px; border-right:none }
+.faq-item .ix { font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--muted); letter-spacing:.16em; margin-bottom:8px }
+.faq-item h3 { font-family:'Fraunces',serif; font-weight:500; font-size:21px; letter-spacing:-.4px; line-height:1.25; margin:0 0 12px }
+.faq-item p { font-size:14.5px; color:var(--ink-2); line-height:1.65; margin:0; max-width:520px }
+.faq-item p strong { color:var(--ink); font-weight:500 }
+
+/* ── final CTA ───────────────────────────── */
+.final {
+  padding:140px 0 100px; text-align:center;
+  border-top:1px solid var(--ink);
+  background:var(--paper-2);
+}
+.final h2 {
+  font-family:'Fraunces',serif; font-weight:400;
+  font-size:clamp(46px, 7vw, 92px); line-height:1; letter-spacing:-2.5px;
+  margin:0 0 28px;
+}
+.final h2 em { font-style:italic; color:var(--accent) }
+.final .stamp { display:flex; justify-content:center; margin-bottom:36px }
+.final .stamp svg { width:64px; height:64px }
+.final .lede { font-size:17px; color:var(--ink-2); max-width:520px; margin:0 auto 36px; line-height:1.7 }
+
+/* ── colophon footer ──────────────────────── */
+.colophon {
+  border-top:1px solid var(--ink);
+  padding:60px 0 80px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11.5px; color:var(--muted);
+  letter-spacing:.04em;
+}
+.colophon-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:32px; align-items:flex-start }
+.colophon-col h4 { font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink); margin:0 0 14px; font-weight:500 }
+.colophon-col a { display:block; padding:5px 0; color:var(--ink-2); font-size:12px; letter-spacing:.02em }
+.colophon-col a:hover { color:var(--ink); text-decoration:underline }
+.colophon-col p { font-size:11.5px; line-height:1.7; color:var(--muted); margin:0 }
+.colophon-foot { display:flex; justify-content:space-between; align-items:center; margin-top:48px; padding-top:24px; border-top:1px solid var(--rule); flex-wrap:wrap; gap:14px }
+
+/* ── mobile ──────────────────────────────── */
+@media (max-width:880px) {
+  .nav-link, .nav-cta .btn-link { display:none }
+  :root { --gut:20px }
+  .hero { padding:36px 0 56px }
+  .hero-grid { grid-template-columns:1fr; gap:42px }
+  .hero h1 { font-size:64px; letter-spacing:-1.6px }
+  .sec { padding:60px 0 }
+  .sec-head { grid-template-columns:1fr; gap:8px }
+  .pull { grid-template-columns:1fr; gap:14px; padding:48px 0 }
+  .thesis-grid { grid-template-columns:1fr }
+  .thesis-cell { padding:30px 0 !important; border-right:none !important; border-left:none !important }
+  .inside .feat-row { grid-template-columns:1fr; gap:18px; padding:36px 0 }
+  .price-row { grid-template-columns:1fr; gap:24px; padding:48px 0 }
+  .price-amount { font-size:120px }
+  .faq-grid { grid-template-columns:1fr }
+  .faq-item { padding:24px 0 !important; border-right:none !important }
+  .colophon-grid { grid-template-columns:1fr 1fr; gap:30px }
+  .mobile-cta { position:fixed; left:0; right:0; bottom:0; padding:12px; background:var(--paper); border-top:1px solid var(--ink); z-index:90 }
   .mobile-cta .btn { width:100% }
-  .footer { padding-bottom:96px }
+  .colophon { padding-bottom:88px }
 }
 @media (min-width:881px) { .mobile-cta { display:none } }
-@media (max-width:520px) {
-  .container { padding:0 18px }
-  .mock-grid { grid-template-columns:repeat(2,1fr) }
-  .nav-cta .btn-ghost { display:none }
-  .hero h1 { font-size:36px }
-  .trust-row { gap:14px }
-}
-
-/* ── motion ── */
-@media (prefers-reduced-motion:no-preference) {
-  .bg-glow { animation:drift 18s ease-in-out infinite alternate }
-  @keyframes drift { from { transform:translateX(-50%) translateY(0) } to { transform:translateX(-45%) translateY(20px) } }
-}
 </style>
 </head>
 <body>
 
-<div class="bg-glow" aria-hidden="true"></div>
-<div class="bg-glow-2" aria-hidden="true"></div>
-
-<!-- ── NAV ── -->
+<!-- ── NAV ─────────────────────────────────────────── -->
 <nav class="nav">
   <div class="nav-inner">
-    <div class="brand"><span class="bolt">⚡</span> Patel RE Underwriting Suite</div>
-    <a href="#features" class="nav-link">Features</a>
-    <a href="#how" class="nav-link">How it works</a>
+    <div class="nav-brand"><span class="index">№ 01</span>Patel RE Underwriting Suite</div>
+    <a href="#thesis"  class="nav-link">Thesis</a>
+    <a href="#guide"   class="nav-link">Field Guide</a>
+    <a href="#inside"  class="nav-link">Inside</a>
     <a href="#pricing" class="nav-link">Pricing</a>
-    <a href="#faq" class="nav-link">FAQ</a>
+    <a href="#faq"     class="nav-link">FAQ</a>
     <div class="nav-cta">
-      <a href="index.html#login" class="btn btn-ghost">Sign in</a>
-      <a href="index.html#register" class="btn btn-primary">Start 7-day trial</a>
+      <a href="index.html#login" class="btn-link">Sign in</a>
+      <a href="index.html#register" class="btn">Start 7-day trial</a>
     </div>
   </div>
 </nav>
 
-<!-- ── HERO ── -->
+<!-- ── HERO ────────────────────────────────────────── -->
 <section class="hero">
-<div class="container">
+<div class="frame">
+  <div class="hero-eyebrow">
+    <span class="ix">№ 01 / Cover</span>
+    <span class="lbl">A field guide for working operators</span>
+  </div>
+
   <div class="hero-grid">
     <div>
-      <div class="eyebrow"><span class="dot"></span> Built for active 5–50 unit operators</div>
-      <h1>Underwrite multifamily deals <span class="grad">in 7 minutes</span>, not 7 hours.</h1>
-      <p class="lede">Stop modeling deals in Excel that break at unit 10. Patel RE Underwriting Suite is the single-deal underwriter for active investors running BRRRR, subject-to, seller-finance, and value-add plays. Live DSCR, IRR, equity multiple, partner waterfall, AI deal-chat — all in one screen.</p>
+      <h1>From a duplex to a <em>100-unit</em> syndication, in <span class="num">one</span> screen.</h1>
+      <p class="hero-lead">Twelve asset classes. Nine financing structures. Full LP/GP waterfall math with tiered IRR hurdles, preferred return, and catch-up. Live deal-killer detection on every keystroke. <strong>Underwrite as fast as you find.</strong></p>
       <div class="hero-cta">
-        <a href="index.html#register" class="btn btn-primary btn-lg">Start your 7-day trial →</a>
-        <a href="#how" class="btn btn-ghost btn-lg">See how it works</a>
+        <a href="index.html#register" class="btn">Start your 7-day trial</a>
+        <a href="#guide" class="btn-link">See the field guide</a>
       </div>
       <div class="hero-microcopy">
-        <span>💳 Card required · Cancel in 1 click</span>
-        <span class="dot-sep"></span>
-        <span>📧 We email you 2 days before charge</span>
-        <span class="dot-sep"></span>
-        <span>🔒 Your deals stay private</span>
+        <span>Card required</span>
+        <span>Cancel in one click</span>
+        <span>30-day refund</span>
+        <span>$49 / mo</span>
       </div>
     </div>
 
-    <!-- Hero mockup: simulated metrics dashboard -->
-    <div class="hero-mockup" aria-hidden="true">
-      <div class="mockup-bar"><span></span><span></span><span></span><small>📊 Metrics — 24-unit MFR · Phoenix, AZ</small></div>
-      <div class="mockup-body">
-        <div class="mock-head">
-          <div>
-            <div class="lbl">Investment Analysis</div>
-            <div style="font-size:18px;font-weight:800;letter-spacing:-.3px;margin-top:2px">$3.2M acquisition</div>
-          </div>
-          <div class="grade">A — STRONG BUY</div>
+    <!-- Real product screenshot — annotated -->
+    <div class="hero-screen" aria-hidden="true">
+      <div class="browser-bar"><i></i><i></i><i></i><small>📊 Metrics — 24-unit MFR · Phoenix · Tier B</small></div>
+      <div class="head">
+        <div>
+          <div class="lbl">Investment Analysis</div>
+          <div class="deal">$3.20M acquisition</div>
         </div>
-        <div class="mock-grid">
-          <div class="mock-tile"><div class="k">DSCR</div><div class="v">1.42x</div></div>
-          <div class="mock-tile green"><div class="k">CAP RATE</div><div class="v">7.8%</div></div>
-          <div class="mock-tile purple"><div class="k">IRR (5yr)</div><div class="v">18.2%</div></div>
-          <div class="mock-tile amber"><div class="k">CASH ON CASH</div><div class="v">11.4%</div></div>
-          <div class="mock-tile"><div class="k">EQUITY MULT</div><div class="v">2.1x</div></div>
-          <div class="mock-tile"><div class="k">CF / MO</div><div class="v">$4,820</div></div>
-          <div class="mock-tile"><div class="k">LTV</div><div class="v">75.0%</div></div>
-          <div class="mock-tile green"><div class="k">DEBT YIELD</div><div class="v">10.4%</div></div>
-        </div>
-        <div class="mock-chart">
-          <div class="lbl-tl">5-year cash flow projection</div>
-          <svg viewBox="0 0 300 120" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#6366f1" stop-opacity=".4"/>
-                <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-            <path d="M 0 96 L 60 84 L 120 70 L 180 56 L 240 38 L 300 22 L 300 120 L 0 120 Z" fill="url(#g1)"/>
-            <path d="M 0 96 L 60 84 L 120 70 L 180 56 L 240 38 L 300 22" stroke="#a4a7ff" stroke-width="2" fill="none" stroke-linecap="round"/>
-            <circle cx="60" cy="84" r="3" fill="#a4a7ff"/>
-            <circle cx="120" cy="70" r="3" fill="#a4a7ff"/>
-            <circle cx="180" cy="56" r="3" fill="#a4a7ff"/>
-            <circle cx="240" cy="38" r="3" fill="#a4a7ff"/>
-            <circle cx="300" cy="22" r="3" fill="#a4a7ff"/>
-          </svg>
-        </div>
+        <div class="grade">A · STRONG BUY</div>
+      </div>
+      <div class="grid">
+        <div class="cell"><div class="k">DSCR</div><div class="v">1.42×</div></div>
+        <div class="cell green"><div class="k">CAP</div><div class="v">7.8%</div></div>
+        <div class="cell indigo"><div class="k">IRR 5y</div><div class="v">18.2%</div></div>
+        <div class="cell amber"><div class="k">CoC</div><div class="v">11.4%</div></div>
+        <div class="cell"><div class="k">EM</div><div class="v">2.1×</div></div>
+        <div class="cell"><div class="k">CF/mo</div><div class="v">$4,820</div></div>
+        <div class="cell"><div class="k">LTV</div><div class="v">75.0%</div></div>
+        <div class="cell green"><div class="k">DEBT YIELD</div><div class="v">10.4%</div></div>
+      </div>
+      <div class="annotation">DSCR floor 1.25× — clears agency debt comfortably<small>auto-flagged · Fannie/Freddie</small></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ── LIVE TICKER ── -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <span><span class="lbl">MF / 24-unit / Phoenix</span><span class="v green">DSCR 1.42 · IRR 18.2% · KEPT</span></span>
+    <span><span class="lbl">SFR / Triplex / Memphis</span><span class="v amber">DSCR 1.18 · IRR 14.1% · MARGINAL</span></span>
+    <span><span class="lbl">RV / 60-pad / Tampa</span><span class="v green">CAP 9.2% · IRR 22.4% · KEPT</span></span>
+    <span><span class="lbl">Storage / 220-unit / Austin</span><span class="v killed">CAP 4.8% · DEAL KILLED — appraisal gap</span></span>
+    <span><span class="lbl">MHP / 42-pad / Greenville</span><span class="v green">DSCR 1.61 · IRR 24.1% · KEPT</span></span>
+    <span><span class="lbl">STR / Smoky Mtns</span><span class="v amber">DSCR 1.22 · CoC 9.4% · MARGINAL</span></span>
+    <span><span class="lbl">MF Synd / 96-unit / Dallas</span><span class="v green">LP IRR 16.8% · GP promote $1.2M</span></span>
+    <span><span class="lbl">Office / 12k sqft / Phoenix</span><span class="v killed">DSCR 0.92 · DEAL KILLED — vacancy risk</span></span>
+    <!-- duplicate for seamless loop -->
+    <span><span class="lbl">MF / 24-unit / Phoenix</span><span class="v green">DSCR 1.42 · IRR 18.2% · KEPT</span></span>
+    <span><span class="lbl">SFR / Triplex / Memphis</span><span class="v amber">DSCR 1.18 · IRR 14.1% · MARGINAL</span></span>
+    <span><span class="lbl">RV / 60-pad / Tampa</span><span class="v green">CAP 9.2% · IRR 22.4% · KEPT</span></span>
+    <span><span class="lbl">Storage / 220-unit / Austin</span><span class="v killed">CAP 4.8% · DEAL KILLED — appraisal gap</span></span>
+  </div>
+</div>
+
+<!-- ── PULL QUOTE ── -->
+<div class="frame">
+<blockquote class="pull">
+  <p class="corner">“</p>
+  <div>
+    <q>Excel breaks at unit ten. Argus is for institutional shops with twelve analysts. Everything between SFR and the institutional cliff is a desert — and that's where most of us actually work.</q>
+    <cite>— <strong>Working syndicator</strong> · 312 units closed · $42M AUM</cite>
+  </div>
+</blockquote>
+</div>
+
+<!-- ── 02 / THE THESIS ── -->
+<section class="sec" id="thesis">
+<div class="frame">
+  <div class="sec-head">
+    <div class="sec-num">— 02 / Thesis</div>
+    <h2 class="sec-title">Most deals die in <em>the gaps</em><br>your pro-forma never modeled.</h2>
+  </div>
+  <p class="sec-lede" style="grid-column:2;margin-left:0;max-width:680px">Tax-record mismatches kill the appraisal. Lenders ghost on creative finance. Pro-formas lie about T-12 rent. The default tooling — spreadsheets stitched together at midnight — wasn't built for the speed deals actually move at. This is the field guide we wished existed when we were closing our first ten.</p>
+
+  <div class="thesis-grid" style="margin-top:64px">
+    <div class="thesis-cell">
+      <div class="ix">№ 02.1 — Appraisal gap</div>
+      <h3>The valuation never matched the seller's deck.</h3>
+      <p>In-place T-12 rent vs. lease roll vs. market rent — three different stories. Appraiser comes in $80k low. You're renegotiating 14 days from close. Patel RE flags T-12 / lease-roll / market spread before you sign the LOI.</p>
+    </div>
+    <div class="thesis-cell">
+      <div class="ix">№ 02.2 — Tax reassessment</div>
+      <h3>Property taxes recalibrate at sale.</h3>
+      <p>The seller's pro-forma showed taxes at $4,200. The county reassesses at sale price; your DSCR drops below 1.20 and the lender pulls. We pull the public tax record, model the post-sale reassessment, and surface the new DSCR before underwriting locks.</p>
+    </div>
+    <div class="thesis-cell">
+      <div class="ix">№ 02.3 — Capital stack drift</div>
+      <h3>Three-loan stacks need real waterfall math.</h3>
+      <p>1st-position bank + 2nd-position seller carry + private money on the rehab — each with its own amort, balloon, and rate. Most spreadsheets get the cumulative debt service wrong by year three. We don't.</p>
+    </div>
+    <div class="thesis-cell">
+      <div class="ix">№ 02.4 — Decision velocity</div>
+      <h3>Sellers want LOIs by Friday.</h3>
+      <p>By the time your sheet has the answer, the next investor is already in DD. Every metric in this suite recomputes on every keystroke. You decide in minutes, not in a Sunday model-build.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ── 03 / FIELD GUIDE — ASSET CLASSES ── -->
+<section class="sec" id="guide">
+<div class="frame">
+  <div class="sec-head">
+    <div class="sec-num">— 03 / Field Guide</div>
+    <h2 class="sec-title">Twelve asset classes.<br>One <em>set of math</em>.</h2>
+  </div>
+  <p class="sec-lede" style="grid-column:2;margin-left:0;max-width:680px">Each class gets its own pro-forma logic, deal-killer rules, and per-unit metrics — not just a different label on the same template. The math underneath is the same; the assumptions and disqualifiers are class-specific.</p>
+
+  <div class="fg" style="margin-top:48px">
+    <div class="fg-row"><span class="ix">01</span><span class="name">Single-Family <em>Rental</em></span><span class="spec">1–4 unit · BRRRR-ready · DSCR or 30-yr conventional · 1% rule + cash-on-cash floors</span><span class="range mono"><span>IRR</span><svg class="spark" viewBox="0 0 80 18"><polyline points="0,14 16,11 32,9 48,7 64,5 80,4" stroke="#4F46E5" stroke-width="1.5" fill="none"/></svg></span><span class="check">12–18%</span></div>
+    <div class="fg-row"><span class="ix">02</span><span class="name">Multifamily <em>Small</em> (5–49)</span><span class="spec">2–100+ unit · Agency-eligible · per-unit NOI · cap-rate compression model</span><span class="range mono"><span>IRR</span><svg class="spark" viewBox="0 0 80 18"><polyline points="0,13 16,10 32,8 48,6 64,5 80,3" stroke="#4F46E5" stroke-width="1.5" fill="none"/></svg></span><span class="check">14–22%</span></div>
+    <div class="fg-row"><span class="ix">03</span><span class="name">Multifamily <em>Syndication</em> (50+)</span><span class="spec">Full LP/GP waterfall · tiered hurdles 8/12/18 · acq + AM + dispo fees · pref + catch-up</span><span class="range mono"><span>LP IRR</span><svg class="spark" viewBox="0 0 80 18"><polyline points="0,12 16,9 32,7 48,5 64,4 80,3" stroke="#4F46E5" stroke-width="1.5" fill="none"/></svg></span><span class="check">15–20%</span></div>
+    <div class="fg-row"><span class="ix">04</span><span class="name">RV <em>Park</em></span><span class="spec">Per-pad rent · seasonal occupancy · electric pass-through margins · transient vs. annual mix</span><span class="range mono"><span>CAP</span><svg class="spark" viewBox="0 0 80 18"><polyline points="0,11 16,8 32,7 48,5 64,4 80,3" stroke="#4F46E5" stroke-width="1.5" fill="none"/></svg></span><span class="check">8–12%</span></div>
+    <div class="fg-row"><span class="ix">05</span><span class="name">Mobile Home <em>Park</em></span><span class="spec">Lot rent vs. POH (park-owned home) split · utility billing back · ROI on infrastructure capex</span><span class="range mono"><span>IRR</span><svg class="spark" viewBox="0 0 80 18"><polyline points="0,12 16,9 32,7 48,5 64,4 80,2" stroke="#4F46E5" stroke-width="1.5" fill="none"/></svg></span><span class="check">18–28%</span></div>
+    <div class="fg-row"><span class="ix">06</span><span class="name">Self <em>Storage</em></span><span class="spec">Climate vs. drive-up split · rent-per-sqft tiers · break-even occupancy · ECRI escalation</span><span class="range mono"><span>CAP</span><svg class="spark" viewBox="0 0 80 18"><polyline points="0,12 16,10 32,8 48,7 64,5 80,4" stroke="#4F46E5" stroke-width="1.5" fill="none"/></svg></span><span class="check">6–9%</span></div>
+    <div class="fg-row"><span class="ix">07</span><span class="name">Short-Term <em>Rental</em></span><span class="spec">ADR × occupancy · seasonal index · cleaning + management drag · regulatory-risk score</span><span class="range mono"><span>CoC</span><svg class="spark" viewBox="0 0 80 18"><polyline points="0,11 16,9 32,8 48,6 64,5 80,4" stroke="#4F46E5" stroke-width="1.5" fill="none"/></svg></span><span class="check">15–25%</span></div>
+    <div class="fg-row"><span class="ix">08</span><span class="name">Commercial / <em>NNN</em></span><span class="spec">Triple-net spread · credit-tenant rating · lease term to expiry · CTL financing eligibility</span><span class="range mono"><span>CAP</span><svg class="spark" viewBox="0 0 80 18"><polyline points="0,11 16,10 32,9 48,8 64,7 80,6" stroke="#4F46E5" stroke-width="1.5" fill="none"/></svg></span><span class="check">5–8%</span></div>
+    <div class="fg-row"><span class="ix">09</span><span class="name"><em>Office</em></span><span class="spec">Tenant credit + lease maturity stack · TI/LC reserve · post-WFH vacancy stress · re-tenanting capex</span><span class="range mono"><span>CAP</span><svg class="spark" viewBox="0 0 80 18"><polyline points="0,8 16,9 32,11 48,12 64,12 80,11" stroke="#B0301C" stroke-width="1.5" fill="none"/></svg></span><span class="check">7–11%</span></div>
+    <div class="fg-row"><span class="ix">10</span><span class="name"><em>Retail</em> Strip</span><span class="spec">Anchor + inline mix · co-tenancy clauses · CAM reconciliation · grocery-anchored premium</span><span class="range mono"><span>CAP</span><svg class="spark" viewBox="0 0 80 18"><polyline points="0,11 16,10 32,9 48,8 64,7 80,7" stroke="#4F46E5" stroke-width="1.5" fill="none"/></svg></span><span class="check">6–10%</span></div>
+    <div class="fg-row"><span class="ix">11</span><span class="name">Mixed <em>Use</em></span><span class="spec">Residential vs. commercial split NOI · separate vacancy + cap rates per use · lender bifurcation</span><span class="range mono"><span>CAP</span><svg class="spark" viewBox="0 0 80 18"><polyline points="0,11 16,10 32,8 48,7 64,5 80,5" stroke="#4F46E5" stroke-width="1.5" fill="none"/></svg></span><span class="check">7–10%</span></div>
+    <div class="fg-row"><span class="ix">12</span><span class="name">Land · <em>Development</em></span><span class="spec">Entitlement timeline · soft-cost reserve · build-cost escalator · pro-forma stabilized cap</span><span class="range mono"><span>IRR</span><svg class="spark" viewBox="0 0 80 18"><polyline points="0,14 16,12 32,10 48,7 64,4 80,2" stroke="#4F46E5" stroke-width="1.5" fill="none"/></svg></span><span class="check">22–35%</span></div>
+  </div>
+
+  <p class="mono" style="font-size:11.5px;color:var(--muted);letter-spacing:.05em;margin-top:18px;text-align:right">▲ Ranges shown are typical underwriting outcomes for in-criteria deals · not guaranteed returns</p>
+</div>
+</section>
+
+<!-- ── 04 / INSIDE THE SUITE (DARK) ── -->
+<section class="inside" id="inside">
+<div class="frame">
+  <div class="sec-head">
+    <div class="sec-num">— 04 / Inside</div>
+    <h2 class="sec-title">Underwriting in <em>public</em>.</h2>
+  </div>
+  <p class="sec-lede" style="grid-column:2;margin-left:0;max-width:680px">Every metric live. Nine financing structures stress-tested side by side. Full syndication waterfall with tiered hurdles. AI second opinion grounded in your actual numbers. The pitch deck and LOI generate themselves.</p>
+
+  <!-- Feature 1: Live underwriting -->
+  <div class="feat-row">
+    <div class="ix">№ 04.1</div>
+    <div>
+      <h3>Live underwriting that recomputes on every keystroke.</h3>
+      <p>DSCR, IRR, equity multiple, cap rate, cash-on-cash, debt yield, break-even ratio, NPV, payback period, deal grade. Edit one assumption, watch fourteen metrics shift in place.</p>
+    </div>
+    <div class="vis">
+      <div class="lbl">Whole-Deal KPIs · Live</div>
+      <div class="row"><span class="k">DSCR</span><span class="v g">1.42×</span></div>
+      <div class="row"><span class="k">Cap Rate</span><span class="v g">7.8%</span></div>
+      <div class="row"><span class="k">IRR (5-yr)</span><span class="v i">18.2%</span></div>
+      <div class="row"><span class="k">Equity Multiple</span><span class="v">2.1×</span></div>
+      <div class="row"><span class="k">Cash-on-cash</span><span class="v a">11.4%</span></div>
+      <div class="row"><span class="k">Debt Yield</span><span class="v g">10.4%</span></div>
+      <div class="row"><span class="k">Break-even</span><span class="v">68%</span></div>
+      <div class="row"><span class="k">Deal Grade</span><span class="v g">A · STRONG BUY</span></div>
+    </div>
+  </div>
+
+  <!-- Feature 2: Syndication waterfall -->
+  <div class="feat-row">
+    <div class="ix">№ 04.2</div>
+    <div>
+      <h3>LP / GP waterfall — pref, catch-up, tiered hurdles.</h3>
+      <p>Configure 8% pref → 80/20 → 70/30 @ 12% IRR → 60/40 @ 18% IRR. Acquisition fee, asset-management fee, refi capital-tx fee, disposition fee. Per-investor IRR, equity multiple, year-by-year cash flow distribution. Real syndication math, not a stylized chart.</p>
+    </div>
+    <div class="vis">
+      <div class="lbl">Per-Investor Returns · 5yr Hold</div>
+      <div class="row"><span class="k">LP-1 capital</span><span class="v">$ 425,000</span></div>
+      <div class="row"><span class="k">LP-1 IRR</span><span class="v g">16.8%</span></div>
+      <div class="row"><span class="k">LP-1 Equity Mult</span><span class="v">1.9×</span></div>
+      <div class="row"><span class="k">LP-1 Pref met</span><span class="v g">✓ 8.0% met</span></div>
+      <div class="row"><span class="k">GP promote</span><span class="v i">$ 218,400</span></div>
+      <div class="row"><span class="k">GP fees earned</span><span class="v">$ 64,200</span></div>
+      <div class="row"><span class="k">GP total comp</span><span class="v g">$ 282,600</span></div>
+      <div class="row"><span class="k">GP IRR (own cap)</span><span class="v g">28.4%</span></div>
+    </div>
+  </div>
+
+  <!-- Feature 3: Deal-killer watchlist -->
+  <div class="feat-row">
+    <div class="ix">№ 04.3</div>
+    <div>
+      <h3>Deal-killer detection, before the LOI.</h3>
+      <p>Tax-reassessment gap. Appraisal gap from inflated T-12. DSCR shortfall on agency debt. Market-tier disqualifiers. Key-principal credit floor. Seller-carry conflicts with first-lien lender. Twenty-three live rules — every one of them learned the hard way.</p>
+    </div>
+    <div class="vis">
+      <div class="lbl">Watchlist · Active Flags</div>
+      <div class="row"><span class="k">Tax reassess gap</span><span class="v r">⚠ +$5,600/yr</span></div>
+      <div class="row"><span class="k">T-12 vs lease roll</span><span class="v a">— $9k spread</span></div>
+      <div class="row"><span class="k">DSCR (post-tax)</span><span class="v g">✓ 1.27× clears</span></div>
+      <div class="row"><span class="k">Market tier</span><span class="v g">✓ Tier B</span></div>
+      <div class="row"><span class="k">KP credit</span><span class="v g">✓ 720+</span></div>
+      <div class="row"><span class="k">Seller carry conflict</span><span class="v">— None (1st only)</span></div>
+      <div class="row"><span class="k">Rural disqualifier</span><span class="v g">✓ Pass</span></div>
+      <div class="row"><span class="k">Vacancy stress</span><span class="v g">✓ Holds @ 12%</span></div>
+    </div>
+  </div>
+
+  <!-- Feature 4: AI deal chat -->
+  <div class="feat-row">
+    <div class="ix">№ 04.4</div>
+    <div>
+      <h3>AI second opinion — grounded in your numbers.</h3>
+      <p>Drop the OM, ask “what kills this deal?” Live answers using your actual underwriting context. Bring your own key — Anthropic Claude, Perplexity (web-grounded), OpenAI, or Groq. No markup, no rate limits we impose, no model-of-the-month theatre.</p>
+    </div>
+    <div class="vis" style="font-family:'Inter Tight',sans-serif">
+      <div class="lbl mono">Deal Chat · Anthropic Claude</div>
+      <div style="font-size:13px;line-height:1.55;color:rgba(242,238,232,.78);padding:6px 0">
+        <strong style="color:#a4a7ff">You:</strong> What kills this deal?<br><br>
+        <strong style="color:#4cd98c">Claude:</strong> Three risks. (1) The seller's T-12 rent is 11% above market — appraisal will likely come in 5–7% under contract. Negotiate a $80–110k price reduction or walk. (2) Phoenix Tier B but the 85040 zip is recovery-grade, not tier-B average — comp picks matter. (3) DSCR holds at 1.27× post-reassessment but only at the agency 7.0% rate; at 7.5% you're at 1.21×, below floor.
       </div>
     </div>
   </div>
+
+  <!-- Feature 5: Pitch + LOI -->
+  <div class="feat-row">
+    <div class="ix">№ 04.5</div>
+    <div>
+      <h3>Pitch deck and LOI — generated, not assembled.</h3>
+      <p>Cover, financials, capital stack, returns projection, exit scenarios, risks, comparables — all auto-built from the deal you already entered. JP Investments LOI template, fully editable preview. Export .pptx + .docx with one click.</p>
+    </div>
+    <div class="vis">
+      <div class="lbl">Investor Deck Slides · 12</div>
+      <div class="row"><span class="k">Cover</span><span class="v g">✓</span></div>
+      <div class="row"><span class="k">Investment Highlights</span><span class="v g">✓</span></div>
+      <div class="row"><span class="k">Capital Stack</span><span class="v g">✓</span></div>
+      <div class="row"><span class="k">Financial Summary</span><span class="v g">✓</span></div>
+      <div class="row"><span class="k">5-Year Projections</span><span class="v g">✓</span></div>
+      <div class="row"><span class="k">Sponsor Bio</span><span class="v g">✓</span></div>
+      <div class="row"><span class="k">Risk Factors</span><span class="v g">✓</span></div>
+      <div class="row"><span class="k">Investor Opportunity</span><span class="v g">✓</span></div>
+    </div>
+  </div>
 </div>
 </section>
 
-<!-- ── TRUST STRIP ── -->
-<section class="trust">
-  <div class="container">
-    <div class="trust-row">
-      <span class="trust-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Fannie / Freddie DSCR thresholds</span>
-      <span class="trust-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> CBRE / M&amp;M cap-rate logic</span>
-      <span class="trust-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/></svg> Encrypted &amp; private</span>
-      <span class="trust-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Live calculations</span>
-      <span class="trust-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg> Cancel in one click</span>
-    </div>
-  </div>
-</section>
-
-<!-- ── PROBLEM ── -->
-<section class="sec problem">
-<div class="container">
+<!-- ── 05 / PRICING ── -->
+<section class="sec" id="pricing">
+<div class="frame">
   <div class="sec-head">
-    <h2>Deals die in the gaps your spreadsheet didn't catch.</h2>
-    <p class="lede">Tax-record mismatches kill the appraisal. Lenders ghost on creative finance. Excel breaks at unit 10. Pro-formas lie about the rent. You're underwriting on intuition because nothing else moves at deal speed.</p>
-  </div>
-  <div class="problem-grid">
-    <div class="problem-card">
-      <div class="icon">📉</div>
-      <div><h3>Appraisal gap kills the deal at the closing table</h3><p>You didn't catch the in-place rent vs. T-12 mismatch until the appraiser came in $80k low. Now you're scrambling to renegotiate with 14 days to close.</p></div>
-    </div>
-    <div class="problem-card">
-      <div class="icon">🏚</div>
-      <div><h3>Tax-record gap blew up your DSCR</h3><p>The seller's pro-forma showed taxes at $4,200. The county shows $9,800 reassessed at sale price. Your DSCR drops below lender minimum and the loan dies.</p></div>
-    </div>
-    <div class="problem-card">
-      <div class="icon">📊</div>
-      <div><h3>Excel models break at unit 10</h3><p>Stacking 3 loans, modeling refi-at-year-3, calculating per-investor IRR with a 6% pref and tiered promote — your sheet has 47 tabs and no one trusts the output anymore.</p></div>
-    </div>
-    <div class="problem-card">
-      <div class="icon">⏱</div>
-      <div><h3>Decisions take 7 hours when deals close in 7 days</h3><p>The seller wants an LOI by Friday. You haven't even modeled the exit cap sensitivity. By the time your spreadsheet says yes, the next investor is already in due diligence.</p></div>
-    </div>
-  </div>
-</div>
-</section>
-
-<!-- ── FEATURES ── -->
-<section class="sec" id="features">
-<div class="container">
-  <div class="sec-head">
-    <h2>Everything you need to underwrite a deal — in one screen.</h2>
-    <p class="lede">Live calculations the moment you change a number. Seven financing structures stress-tested side-by-side. AI second opinions on every assumption. The pitch deck and LOI generate themselves.</p>
+    <div class="sec-num">— 05 / Pricing</div>
+    <h2 class="sec-title">One plan. <em>Everything in.</em></h2>
   </div>
 
-  <div class="bento">
-    <!-- Live underwriting -->
-    <div class="bento-card b-wide">
-      <div class="icon">📊</div>
-      <h3>Live underwriting that recomputes on every keystroke</h3>
-      <p>DSCR, IRR, equity multiple, cap rate, cash-on-cash, debt yield, break-even ratio, NPV, payback period. Update one number, watch all 14 metrics shift.</p>
-      <div class="fv-row">
-        <div class="fv-tile"><div class="k">DSCR</div><div class="v">1.42x</div></div>
-        <div class="fv-tile green"><div class="k">CAP</div><div class="v">7.8%</div></div>
-        <div class="fv-tile"><div class="k">IRR (5yr)</div><div class="v">18.2%</div></div>
-        <div class="fv-tile amber"><div class="k">EQUITY MULT</div><div class="v">2.1x</div></div>
-      </div>
+  <div class="price-row">
+    <div class="price-amount">
+      <sup>$</sup>49<sub>/ month</sub>
     </div>
-
-    <!-- Financing structures -->
-    <div class="bento-card b-narrow">
-      <div class="icon">🏦</div>
-      <h3>7 financing structures stress-tested</h3>
-      <p>Conventional, FHA/203k, hard money, DSCR, subject-to, seller finance (stacked loans), lease-option.</p>
-      <div class="fv-pills">
-        <span class="fv-pill active">Conv</span>
-        <span class="fv-pill">DSCR</span>
-        <span class="fv-pill active">Sub-to</span>
-        <span class="fv-pill">Seller</span>
-        <span class="fv-pill active">LTO</span>
-      </div>
-    </div>
-
-    <!-- AI deal chat -->
-    <div class="bento-card b-narrow">
-      <div class="icon">🤖</div>
-      <h3>AI deal chat for second opinions</h3>
-      <p>Drop the OM, ask "what kills this deal?". Live grounded answers using YOUR numbers — Anthropic Claude or Perplexity (web-grounded).</p>
-    </div>
-
-    <!-- Partner waterfall -->
-    <div class="bento-card b-wide">
-      <div class="icon">👥</div>
-      <h3>Partner waterfall + per-investor returns</h3>
-      <p>Configurable pref, catch-up, tiered IRR hurdles. Acquisition / asset-mgmt / capital-tx / disposition fees. Refi-at-year-N event modeling. Per-LP IRR + EM + pref-met flags.</p>
-    </div>
-
-    <!-- Deal killer watchlist -->
-    <div class="bento-card b-half">
-      <div class="icon">⚠</div>
-      <h3>Deal-killer watchlist</h3>
-      <p>Tax-record gap, appraisal gap, DSCR shortfall, market-tier disqualifiers, key-principal credit, seller-carry vs. lender conflicts. Surfaced before you sign the LOI.</p>
-    </div>
-
-    <!-- Investor deck + LOI -->
-    <div class="bento-card b-half">
-      <div class="icon">📄</div>
-      <h3>Pitch deck &amp; LOI in one click</h3>
-      <p>Cover, financials, capital stack, projections, risks — auto-built from intake. JP Investments LOI template. Editable preview, .pptx + .docx export.</p>
+    <div class="price-detail">
+      <h3>Standard — that's the only tier.</h3>
+      <p class="deal">Built for working investors, not procurement committees. Card required to start the trial — never charged if you cancel before day eight. We email you forty-eight hours ahead.</p>
+      <ul>
+        <li>Unlimited deals across all twelve asset classes</li>
+        <li>Nine financing structures stress-tested side-by-side</li>
+        <li>Full LP / GP waterfall, fees, tiers, refi events</li>
+        <li>Deal-killer watchlist — twenty-three rules, live</li>
+        <li>AI deal chat (bring your own key — no markup)</li>
+        <li>Pitch deck (.pptx) + LOI (.docx) generators</li>
+        <li>Mortgage payoff accelerator + value-add modeling</li>
+        <li>Per-user encrypted storage. Cancel in one click.</li>
+      </ul>
+      <a href="index.html#register" class="btn">Start my 7-day trial</a>
+      <div class="price-foot">By starting the trial you agree to our terms. Card details handled by Stripe — we never see them.<br>Cancel anytime via Manage Billing. 30-day refund, no questions.</div>
     </div>
   </div>
 </div>
 </section>
 
-<!-- ── HOW IT WORKS ── -->
-<section class="sec" id="how" style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
-<div class="container">
-  <div class="sec-head">
-    <h2>From OM to LOI in <span class="grad">four steps.</span></h2>
-    <p class="lede">No tutorial. No 40-page onboarding. Open the app, paste the OM, see the deal.</p>
-  </div>
-  <div class="steps">
-    <div class="step">
-      <div class="num">STEP 01</div>
-      <h3>Paste the OM</h3>
-      <p>Drop a PDF, paste the listing URL, or fill the intake fields. AI auto-extracts price, rent, units, expenses.</p>
-    </div>
-    <div class="step">
-      <div class="num">STEP 02</div>
-      <h3>See every metric live</h3>
-      <p>DSCR, IRR, cap rate, CoC, debt yield, equity multiple, NOI, exit equity. All visible. All recomputing.</p>
-    </div>
-    <div class="step">
-      <div class="num">STEP 03</div>
-      <h3>Stress-test the structures</h3>
-      <p>What if it's seller-finance? Hard money + refi? Conventional 25% down? Compare side by side, pick the winner.</p>
-    </div>
-    <div class="step">
-      <div class="num">STEP 04</div>
-      <h3>Generate the pitch + LOI</h3>
-      <p>Investor pitch deck, partner waterfall, exit scenarios, LOI — all generated from the deal you already entered.</p>
-    </div>
-  </div>
-</div>
-</section>
-
-<!-- ── PRICING ── -->
-<section class="sec pricing" id="pricing">
-<div class="container">
-  <div class="sec-head">
-    <h2>One plan. Everything in. <span class="grad">No tiers.</span></h2>
-    <p class="lede">Built for working investors, not procurement committees. $49/month. Card required to start the trial — never charged if you cancel.</p>
-  </div>
-  <div class="price-card">
-    <div class="tier">Standard</div>
-    <div class="price-amount"><span class="num">$49</span><span class="per">/ month</span></div>
-    <div class="price-trial"><strong>7-day free trial</strong> · We email you 2 days before charge</div>
-    <ul class="price-list">
-      <li>Unlimited deals, unlimited financing structures</li>
-      <li>Live DSCR, IRR, equity multiple, partner waterfall</li>
-      <li>Deal-killer watchlist + appraisal-gap detection</li>
-      <li>Pitch deck (.pptx) + LOI (.docx) generators</li>
-      <li>AI deal chat (Claude / Perplexity / OpenAI / Groq — bring your own key)</li>
-      <li>Mortgage payoff accelerator + value-add modeling</li>
-      <li>Per-user encrypted storage — your deals stay yours</li>
-      <li>Cancel in one click, anytime — 30-day refund, no questions</li>
-    </ul>
-    <a href="index.html#register" class="btn btn-primary">Start my 7-day trial →</a>
-    <div class="price-microcopy">By starting the trial you agree to our terms. Card details handled by Stripe — we never see them. Cancel anytime via Manage Billing.</div>
-  </div>
-</div>
-</section>
-
-<!-- ── FAQ ── -->
+<!-- ── 06 / FAQ ── -->
 <section class="sec" id="faq">
-<div class="container">
+<div class="frame">
   <div class="sec-head">
-    <h2>Questions investors actually ask.</h2>
+    <div class="sec-num">— 06 / FAQ</div>
+    <h2 class="sec-title">Questions <em>investors actually ask.</em></h2>
   </div>
-  <div class="faq-list">
-    <details class="faq-item">
-      <summary>Will my card get charged during the 7-day trial?</summary>
-      <div class="answer">No. Stripe holds the card on file but doesn't charge until day 8. We email you 2 days before charge. If you cancel before day 8 — even 30 seconds before — there's no charge. Click <strong>Manage billing</strong> from your account menu to cancel.</div>
-    </details>
-    <details class="faq-item">
-      <summary>Why do you require a card for the trial?</summary>
-      <div class="answer">Two reasons: (1) it filters out tire-kickers so the people in the app are actually working on deals, which means the AI deal chat memory and feature requests stay relevant; (2) you can keep working through day 8 without re-entering payment info if you want to stay. Card collection cuts trial signups but lifts trial-to-paid conversion 2-3x — fewer dropoffs at the moment of truth.</div>
-    </details>
-    <details class="faq-item">
-      <summary>Who is this built for? Who is it NOT for?</summary>
-      <div class="answer"><strong>For:</strong> active investors doing 5–50 unit multifamily, SFR portfolios, BRRRR, creative finance (subject-to, seller-finance, lease-options), and value-add. Working syndicators raising LP money. House-hackers stepping into 4-plexes. <strong>Not for:</strong> passive Roofstock-marketplace browsers, REIT investors, anyone underwriting 100+ unit institutional deals (use Argus or Yardi for those).</div>
-    </details>
-    <details class="faq-item">
-      <summary>Are my deals kept private?</summary>
-      <div class="answer">Yes. Each user's deals are encrypted at rest and gated by row-level security in our database — we (and other users) can't read them. Your deals are never shared with lenders, sellers, or any third party. We don't train any model on your data.</div>
-    </details>
-    <details class="faq-item">
-      <summary>What happens to my data if I cancel?</summary>
-      <div class="answer">Your deals stay accessible for 30 days after cancellation in case you re-subscribe. After 30 days they're permanently deleted. You can export everything as PDF or JSON anytime from the <strong>Projects</strong> menu.</div>
-    </details>
-    <details class="faq-item">
-      <summary>Can I bring my own AI API key?</summary>
-      <div class="answer">Yes — and we recommend it. The AI deal chat works with Anthropic Claude (best for analysis), Perplexity (best for live web research), OpenAI, or Groq. Drop your key in Settings, pay your AI provider directly, get unlimited deal queries with no markup from us.</div>
-    </details>
-    <details class="faq-item">
-      <summary>What's the refund policy?</summary>
-      <div class="answer">30 days, no questions asked. Email us within 30 days of any charge and we'll refund it in full. We'd rather refund a one-month try-out than have you stuck on a tool that doesn't fit.</div>
-    </details>
-    <details class="faq-item">
-      <summary>Does it work on mobile?</summary>
-      <div class="answer">Yes for read-only review (deal recap, AI chat, viewing past deals) and basic intake. Heavy underwriting + the partner waterfall builder is a desktop-class experience — large tables and side-by-side comparisons need real screen real estate.</div>
-    </details>
+
+  <div class="faq-grid" style="margin-top:36px">
+    <div class="faq-item">
+      <div class="ix">06.1</div>
+      <h3>Will my card get charged during the trial?</h3>
+      <p><strong>No.</strong> Stripe holds the card on file but doesn't charge until day eight. We email you 48 hours before. Cancel anytime in one click via the Manage Billing menu — even 30 seconds before charge. No charge, no awkward dispute.</p>
+    </div>
+    <div class="faq-item">
+      <div class="ix">06.2</div>
+      <h3>Why require a card to start a trial?</h3>
+      <p>Filters out tire-kickers and lifts trial-to-paid conversion 2–3×. The people in the app are working on real deals, which keeps the AI chat memory and feature focus relevant. It's the same playbook Linear, Mercury, and Pace use.</p>
+    </div>
+    <div class="faq-item">
+      <div class="ix">06.3</div>
+      <h3>Who is this for? Who is it not for?</h3>
+      <p><strong>For:</strong> active operators doing 5–100 unit deals, BRRRR, creative finance, value-add. Working syndicators raising LP money. House-hackers stepping into 4-plexes. <strong>Not for:</strong> passive Roofstock browsers, REIT investors, institutional acquirers (use Argus or Yardi for 250+ unit deals).</p>
+    </div>
+    <div class="faq-item">
+      <div class="ix">06.4</div>
+      <h3>Are my deals kept private?</h3>
+      <p>Yes. Deals are encrypted at rest and gated by row-level security in Postgres — we and other users can't read them. Never shared with lenders, sellers, or any third party. We don't train any model on your data.</p>
+    </div>
+    <div class="faq-item">
+      <div class="ix">06.5</div>
+      <h3>What's the refund policy?</h3>
+      <p>30 days, no questions. Email us within 30 days of any charge and we refund in full. We'd rather refund a one-month try-out than have you stuck on a tool that doesn't fit your workflow.</p>
+    </div>
+    <div class="faq-item">
+      <div class="ix">06.6</div>
+      <h3>Can I bring my own AI API key?</h3>
+      <p>Yes — and we recommend it. Anthropic Claude (best for analysis), Perplexity (best for live web research), OpenAI, or Groq. Drop your key in Settings, pay your AI provider directly, get unlimited deal queries with no markup.</p>
+    </div>
+    <div class="faq-item">
+      <div class="ix">06.7</div>
+      <h3>What happens to my data if I cancel?</h3>
+      <p>Your deals stay accessible for 30 days after cancellation in case you re-subscribe. After 30 days they're permanently deleted. Export everything as PDF or JSON anytime from the Projects menu.</p>
+    </div>
+    <div class="faq-item">
+      <div class="ix">06.8</div>
+      <h3>Does it work on mobile?</h3>
+      <p>Read-only review on mobile (deal recap, AI chat, viewing past deals). Heavy underwriting and the syndication waterfall builder need real screen real estate — desktop / iPad-class is the recommendation.</p>
+    </div>
   </div>
 </div>
 </section>
 
 <!-- ── FINAL CTA ── -->
-<section class="cta-band">
-<div class="container">
-  <h2>Stop modeling deals in Excel.<br>Start underwriting in <span class="grad">minutes.</span></h2>
-  <p class="lede">Card required to start the trial — but you cancel in one click before day 8 and you're never charged. We even email you 2 days before, just in case.</p>
-  <a href="index.html#register" class="btn btn-primary btn-lg">Start your 7-day trial →</a>
+<section class="final">
+<div class="frame">
+  <h2>Stop modeling deals at midnight.<br>Start <em>underwriting in minutes</em>.</h2>
+  <p class="lede">Card required to start the trial. Cancel in one click before day eight and you're never charged. We email you 48 hours ahead.</p>
+  <a href="index.html#register" class="btn">Start your 7-day trial</a>
 </div>
 </section>
 
-<!-- ── FOOTER ── -->
-<footer class="footer">
-<div class="container footer-inner">
-  <div>© 2026 Patel RE Underwriting Suite. Built by an active syndicator.</div>
-  <div class="footer-links">
-    <a href="#features">Features</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#faq">FAQ</a>
-    <a href="index.html#login">Sign in</a>
-    <a href="mailto:parthusarealestate@gmail.com">Contact</a>
+<!-- ── COLOPHON ── -->
+<footer class="colophon">
+<div class="frame">
+  <div class="colophon-grid">
+    <div class="colophon-col">
+      <h4>Product</h4>
+      <a href="#guide">Field guide</a>
+      <a href="#inside">Inside the suite</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="colophon-col">
+      <h4>Account</h4>
+      <a href="index.html#login">Sign in</a>
+      <a href="index.html#register">Start trial</a>
+      <a href="mailto:parthusarealestate@gmail.com">Contact</a>
+    </div>
+    <div class="colophon-col">
+      <h4>Type</h4>
+      <p>Display: Fraunces, variable<br>Body: Inter Tight<br>Data: JetBrains Mono</p>
+    </div>
+    <div class="colophon-col">
+      <h4>Build</h4>
+      <p>v4 · 2026.05<br>Single-file SPA · ~1.0 MB<br>Hosted: GitHub Pages<br>Auth: Supabase · Pay: Stripe</p>
+    </div>
+  </div>
+  <div class="colophon-foot">
+    <span>© 2026 Patel RE Underwriting Suite. Built by an active syndicator.</span>
+    <span>№ 01 of 01 · Field Guide Edition</span>
   </div>
 </div>
 </footer>
 
 <!-- ── MOBILE STICKY CTA ── -->
-<div class="mobile-cta"><a href="index.html#register" class="btn btn-primary">Start your 7-day trial →</a></div>
+<div class="mobile-cta"><a href="index.html#register" class="btn">Start your 7-day trial</a></div>
 
 <script>
 // Soft scroll for in-page anchors
 document.querySelectorAll('a[href^="#"]').forEach(a => {
   a.addEventListener('click', e => {
     const id = a.getAttribute('href').slice(1);
+    if(!id) return;
     const t = document.getElementById(id);
     if(t){ e.preventDefault(); t.scrollIntoView({behavior:'smooth', block:'start'}); }
   });
 });
 </script>
+
 </body>
 </html>
