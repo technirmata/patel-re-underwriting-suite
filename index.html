@@ -17281,5 +17281,31 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 })();
 </script>
 
+<!-- ── Defensive: move AI FAB, backdrop, chat to <body> so they aren't trapped inside any panel's display:none ── -->
+<script>
+(function(){
+  function moveToBody(){
+    ['aiFab','aiChatBackdrop','aiChat'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(!el) return;
+      if(el.parentElement !== document.body) document.body.appendChild(el);
+    });
+  }
+  if(document.readyState !== 'loading') moveToBody();
+  else document.addEventListener('DOMContentLoaded', moveToBody);
+  // Also re-run after any panel switch — defends against future nesting regressions
+  if(typeof window !== 'undefined'){
+    var origST = window.ST;
+    if(typeof origST === 'function'){
+      window.ST = function(){
+        var r = origST.apply(this, arguments);
+        try { moveToBody(); } catch(_){}
+        return r;
+      };
+    }
+  }
+})();
+</script>
+
 </body>
 </html>
