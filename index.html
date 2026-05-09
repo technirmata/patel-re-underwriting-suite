@@ -2922,8 +2922,9 @@ strong { color: #e2e8f0; }
 <div id="execVerdict" class="gonogo" data-exec-section="verdict" data-exec-label="Go / No-Go" style="display:none"></div>
 </div>
 </div>
-</div><!-- execContent -->
-</div><!-- end panel7 -->
+</div><!-- end g2 inner -->
+</div><!-- end execContent -->
+</div><!-- end panel7 (was missing — caused panels 8/9/10/11/13/14/15/16/17 to nest as children of panel7 in the parsed DOM, hiding them when panel7 was display:none. Runtime heal compensates but this is the source-level fix.) -->
 
 <!-- ══════════════════════════════════════════════ PANEL 8: PROJECTIONS -->
 <div class="panel" id="panel8">
