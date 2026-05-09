@@ -81,8 +81,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .verdict-badge{border-radius:8px;padding:5px 14px;font-size:12px;font-weight:700;border:none;cursor:default}
 .vrd-g{background:#166534;color:#bbf7d0}.vrd-y{background:#78350f;color:#fef3c7}.vrd-r{background:#7f1d1d;color:#fecaca}.vrd-m{background:var(--surface3);color:var(--muted)}
 /* ── tabs ── */
-.tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;padding:0 16px;align-items:stretch}
-.tab{padding:12px 16px;cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:500;border-bottom:2px solid transparent;white-space:nowrap;transition:var(--trans);display:flex;align-items:center;gap:5px}
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;overflow-y:hidden;padding:0 12px;align-items:stretch;scrollbar-width:thin;scrollbar-color:var(--accent) transparent;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{height:4px}
+.tabs::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px;opacity:.4}
+.tabs::-webkit-scrollbar-track{background:transparent}
+.tab{padding:11px 12px;cursor:pointer;color:var(--muted);font-size:12px;font-weight:500;border-bottom:2px solid transparent;white-space:nowrap;transition:var(--trans);display:flex;align-items:center;gap:5px;flex-shrink:0}
 .tab:hover{color:var(--text)}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
 /* phase separators */
@@ -1527,8 +1530,7 @@ strong { color: #e2e8f0; }
   <!-- Phase: Analyze (compare structures + KPIs) -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Analyze</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="1" onclick="ST(1)">✅ Recommendation</div>
-  <div class="tab" data-tab="5" onclick="ST(5)">📊 Dashboard</div>
-  <!-- Phase: Finance Calculators — single hub with sub-nav inside (Conv / Creative / Morby / Velocity) -->
+    <!-- Phase: Finance Calculators — single hub with sub-nav inside (Conv / Creative / Morby / Velocity) -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Finance Calculators</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="13" onclick="ST(13)">💰 Finance Calculators</div>
   <!-- Phase: Capital -->
@@ -2587,122 +2589,7 @@ strong { color: #e2e8f0; }
 </div><!-- end panel4 -->
 
 <!-- ══════════════════════════════════════════════ PANEL 5: DASHBOARD -->
-<div class="panel" id="panel5">
 
-<!-- Active Financing / PITI card — shown only when a structure is activated -->
-<div class="card" id="dash_piti_card" style="margin-bottom:14px;display:none">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-    <div class="card-title" style="margin:0">🏠 Active Financing Structure</div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span id="dash_active_fin" style="background:rgba(129,140,248,.15);color:#818cf8;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;display:none"></span>
-      <button class="btn btn-outline btn-sm" onclick="clearActiveFin()" style="font-size:10px;padding:2px 8px">✕ Clear Structure</button>
-    </div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
-    <div class="mc"><div class="mc-val" id="dash_piti_pi">—</div><div class="mc-sub">P&amp;I</div><div class="mc-label">Monthly P&amp;I</div></div>
-    <div class="mc"><div class="mc-val" id="dash_piti_t">—</div><div class="mc-sub">Taxes</div><div class="mc-label">Taxes / mo</div></div>
-    <div class="mc"><div class="mc-val" id="dash_piti_i">—</div><div class="mc-sub">Insurance</div><div class="mc-label">Insurance / mo</div></div>
-    <div class="mc" style="border-color:rgba(129,140,248,.4)"><div class="mc-val" style="color:#818cf8" id="dash_piti_total">—</div><div class="mc-sub" id="dash_piti_vs">—</div><div class="mc-label">PITI Total / mo</div></div>
-    <div class="mc"><div class="mc-val" id="dash_annual_ds">—</div><div class="mc-sub" id="dash_cash_in_sub">—</div><div class="mc-label">Annual Debt Svc</div></div>
-  </div>
-</div>
-
-<div class="mc-grid" id="dashMetrics"></div>
-<div id="dashVerdict" class="gonogo vrd-m" style="margin-bottom:16px">Complete Intake tab to see full analysis.</div>
-
-<!-- ── Deal Intelligence Tips ── -->
-<div id="dashTips" style="margin-bottom:16px;display:none"></div>
-
-<!-- ── Sensitivity Analysis ── -->
-<div class="card" id="dashSensCard" style="margin-bottom:16px;display:none">
-  <div class="card-title">🎯 What-If Sensitivity Analysis — Cash Flow / Month</div>
-  <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">How monthly cash flow changes across rent and interest rate scenarios. Current scenario marked ★.</div>
-  <div class="sens-wrap"><table class="sens-table">
-    <thead id="sensHead"></thead>
-    <tbody id="sensBody"></tbody>
-  </table></div>
-  <div style="font-size:10.5px;color:var(--muted);margin-top:8px;display:flex;gap:16px">
-    <span><span style="color:#22c55e">■</span> CF &gt; $100/mo</span>
-    <span><span style="color:#f59e0b">■</span> -$100 to $100</span>
-    <span><span style="color:#ef4444">■</span> CF &lt; -$100/mo</span>
-    <span style="margin-left:8px">★ = current scenario</span>
-  </div>
-</div>
-
-<div class="chart-grid">
-  <div class="chart-card"><div class="chart-title">Expense Breakdown</div><canvas id="chartExpense"></canvas></div>
-  <div class="chart-card"><div class="chart-title">Income vs Expenses Waterfall</div><canvas id="chartWaterfall"></canvas></div>
-  <div class="chart-card"><div class="chart-title">5-Year Cash Flow Projection</div><canvas id="chartProjection"></canvas></div>
-  <div class="chart-card"><div class="chart-title">Key Metrics vs Targets</div><canvas id="chartMetrics"></canvas></div>
-</div>
-<div class="card" style="margin-top:16px">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
-    <div class="card-title" style="margin-bottom:0">📅 Cash Flow Projection</div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <label style="font-size:11px;color:#94a3b8;font-weight:500;text-transform:uppercase;letter-spacing:.4px">Show Years</label>
-      <select id="projYears" onchange="updateDash()" style="background:var(--surface3);border:1px solid var(--border);color:#e2e8f0;padding:5px 12px;border-radius:7px;font-size:12px;cursor:pointer">
-        <option value="1">1 Year</option>
-        <option value="2">2 Years</option>
-        <option value="3">3 Years</option>
-        <option value="5" selected>5 Years</option>
-        <option value="7">7 Years</option>
-        <option value="10">10 Years</option>
-        <option value="15">15 Years</option>
-        <option value="20">20 Years</option>
-        <option value="25">25 Years</option>
-        <option value="30">30 Years</option>
-      </select>
-    </div>
-  </div>
-  <div class="amort-wrap" style="max-height:520px"><table class="proj-table">
-    <thead><tr>
-      <th style="text-align:left">Year</th>
-      <th>Gross Rent</th><th>Vacancy</th><th>Expenses</th><th>NOI</th>
-      <th>Debt Svc</th><th>Cash Flow</th><th>Cum. CF</th>
-      <th>Prop Value</th><th>Loan Bal</th><th>Equity</th><th>CoC</th>
-    </tr></thead>
-    <tbody id="projBody"></tbody>
-  </table></div>
-</div>
-
-<!-- ── Loan Payoff Accelerator ── -->
-<div class="card" style="margin-top:16px">
-  <div class="card-title">❄️ Loan Payoff Accelerator — Extra Principal Payments</div>
-  <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start">
-    <div>
-      <div class="g2">
-        <div class="field"><label>Loan Amount ($)</label><input type="number" id="sb_loan" placeholder="Auto from intake" oninput="buildSnowball()"></div>
-        <div class="field"><label>Interest Rate (%)</label><input type="number" id="sb_rate" placeholder="7.0" step="0.1" oninput="buildSnowball()"></div>
-        <div class="field"><label>Loan Term (yrs)</label><input type="number" id="sb_term" value="30" oninput="buildSnowball()"></div>
-        <div class="field"><label>Extra/mo ($)</label><input type="number" id="sb_extra" placeholder="e.g. 200" oninput="buildSnowball()"></div>
-      </div>
-    </div>
-    <div id="sb_results" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
-      <div class="card2" style="text-align:center">
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Normal Payoff</div>
-        <div id="sb_normal_time" style="font-size:18px;font-weight:800;color:#94a3b8">—</div>
-        <div id="sb_normal_int"  style="font-size:11px;color:var(--muted);margin-top:3px">—</div>
-      </div>
-      <div class="card2" style="text-align:center;border-color:rgba(134,239,172,.3)">
-        <div style="font-size:10px;color:#86efac;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">With Extra Payments</div>
-        <div id="sb_accel_time" style="font-size:18px;font-weight:800;color:#86efac">—</div>
-        <div id="sb_accel_int"  style="font-size:11px;color:var(--muted);margin-top:3px">—</div>
-      </div>
-      <div class="card2" style="text-align:center;border-color:rgba(99,102,241,.3)">
-        <div style="font-size:10px;color:#818cf8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Time Saved</div>
-        <div id="sb_time_saved" style="font-size:18px;font-weight:800;color:#818cf8">—</div>
-        <div id="sb_int_saved"  style="font-size:11px;color:var(--muted);margin-top:3px">—</div>
-      </div>
-      <div class="card2" style="text-align:center;border-color:rgba(251,191,36,.3)">
-        <div style="font-size:10px;color:#fbbf24;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Interest Saved</div>
-        <div id="sb_int_saved_big" style="font-size:18px;font-weight:800;color:#fbbf24">—</div>
-        <div id="sb_int_saved_sub" style="font-size:11px;color:var(--muted);margin-top:3px">—</div>
-      </div>
-    </div>
-  </div>
-  <div id="sb_milestones" style="margin-top:14px"></div>
-</div>
-</div>
 
 <!-- ══════════════════════════════════════════════ PANEL 6: LOI BUILDER -->
 <div class="panel" id="panel6">
@@ -3891,6 +3778,126 @@ strong { color: #e2e8f0; }
   </div>
 
   <div id="mxWarn" class="vb-warn" style="display:none"></div>
+
+  <div style="margin-top:18px;border-top:1px solid var(--border);padding-top:18px">
+    <div style="font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">📊 Operating Dashboard</div>
+
+
+<!-- Active Financing / PITI card — shown only when a structure is activated -->
+<div class="card" id="dash_piti_card" style="margin-bottom:14px;display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+    <div class="card-title" style="margin:0">🏠 Active Financing Structure</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="dash_active_fin" style="background:rgba(129,140,248,.15);color:#818cf8;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;display:none"></span>
+      <button class="btn btn-outline btn-sm" onclick="clearActiveFin()" style="font-size:10px;padding:2px 8px">✕ Clear Structure</button>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+    <div class="mc"><div class="mc-val" id="dash_piti_pi">—</div><div class="mc-sub">P&amp;I</div><div class="mc-label">Monthly P&amp;I</div></div>
+    <div class="mc"><div class="mc-val" id="dash_piti_t">—</div><div class="mc-sub">Taxes</div><div class="mc-label">Taxes / mo</div></div>
+    <div class="mc"><div class="mc-val" id="dash_piti_i">—</div><div class="mc-sub">Insurance</div><div class="mc-label">Insurance / mo</div></div>
+    <div class="mc" style="border-color:rgba(129,140,248,.4)"><div class="mc-val" style="color:#818cf8" id="dash_piti_total">—</div><div class="mc-sub" id="dash_piti_vs">—</div><div class="mc-label">PITI Total / mo</div></div>
+    <div class="mc"><div class="mc-val" id="dash_annual_ds">—</div><div class="mc-sub" id="dash_cash_in_sub">—</div><div class="mc-label">Annual Debt Svc</div></div>
+  </div>
+</div>
+
+<div class="mc-grid" id="dashMetrics"></div>
+<div id="dashVerdict" class="gonogo vrd-m" style="margin-bottom:16px">Complete Intake tab to see full analysis.</div>
+
+<!-- ── Deal Intelligence Tips ── -->
+<div id="dashTips" style="margin-bottom:16px;display:none"></div>
+
+<!-- ── Sensitivity Analysis ── -->
+<div class="card" id="dashSensCard" style="margin-bottom:16px;display:none">
+  <div class="card-title">🎯 What-If Sensitivity Analysis — Cash Flow / Month</div>
+  <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">How monthly cash flow changes across rent and interest rate scenarios. Current scenario marked ★.</div>
+  <div class="sens-wrap"><table class="sens-table">
+    <thead id="sensHead"></thead>
+    <tbody id="sensBody"></tbody>
+  </table></div>
+  <div style="font-size:10.5px;color:var(--muted);margin-top:8px;display:flex;gap:16px">
+    <span><span style="color:#22c55e">■</span> CF &gt; $100/mo</span>
+    <span><span style="color:#f59e0b">■</span> -$100 to $100</span>
+    <span><span style="color:#ef4444">■</span> CF &lt; -$100/mo</span>
+    <span style="margin-left:8px">★ = current scenario</span>
+  </div>
+</div>
+
+<div class="chart-grid">
+  <div class="chart-card"><div class="chart-title">Expense Breakdown</div><canvas id="chartExpense"></canvas></div>
+  <div class="chart-card"><div class="chart-title">Income vs Expenses Waterfall</div><canvas id="chartWaterfall"></canvas></div>
+  <div class="chart-card"><div class="chart-title">5-Year Cash Flow Projection</div><canvas id="chartProjection"></canvas></div>
+  <div class="chart-card"><div class="chart-title">Key Metrics vs Targets</div><canvas id="chartMetrics"></canvas></div>
+</div>
+<div class="card" style="margin-top:16px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+    <div class="card-title" style="margin-bottom:0">📅 Cash Flow Projection</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <label style="font-size:11px;color:#94a3b8;font-weight:500;text-transform:uppercase;letter-spacing:.4px">Show Years</label>
+      <select id="projYears" onchange="updateDash()" style="background:var(--surface3);border:1px solid var(--border);color:#e2e8f0;padding:5px 12px;border-radius:7px;font-size:12px;cursor:pointer">
+        <option value="1">1 Year</option>
+        <option value="2">2 Years</option>
+        <option value="3">3 Years</option>
+        <option value="5" selected>5 Years</option>
+        <option value="7">7 Years</option>
+        <option value="10">10 Years</option>
+        <option value="15">15 Years</option>
+        <option value="20">20 Years</option>
+        <option value="25">25 Years</option>
+        <option value="30">30 Years</option>
+      </select>
+    </div>
+  </div>
+  <div class="amort-wrap" style="max-height:520px"><table class="proj-table">
+    <thead><tr>
+      <th style="text-align:left">Year</th>
+      <th>Gross Rent</th><th>Vacancy</th><th>Expenses</th><th>NOI</th>
+      <th>Debt Svc</th><th>Cash Flow</th><th>Cum. CF</th>
+      <th>Prop Value</th><th>Loan Bal</th><th>Equity</th><th>CoC</th>
+    </tr></thead>
+    <tbody id="projBody"></tbody>
+  </table></div>
+</div>
+
+<!-- ── Loan Payoff Accelerator ── -->
+<div class="card" style="margin-top:16px">
+  <div class="card-title">❄️ Loan Payoff Accelerator — Extra Principal Payments</div>
+  <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start">
+    <div>
+      <div class="g2">
+        <div class="field"><label>Loan Amount ($)</label><input type="number" id="sb_loan" placeholder="Auto from intake" oninput="buildSnowball()"></div>
+        <div class="field"><label>Interest Rate (%)</label><input type="number" id="sb_rate" placeholder="7.0" step="0.1" oninput="buildSnowball()"></div>
+        <div class="field"><label>Loan Term (yrs)</label><input type="number" id="sb_term" value="30" oninput="buildSnowball()"></div>
+        <div class="field"><label>Extra/mo ($)</label><input type="number" id="sb_extra" placeholder="e.g. 200" oninput="buildSnowball()"></div>
+      </div>
+    </div>
+    <div id="sb_results" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
+      <div class="card2" style="text-align:center">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Normal Payoff</div>
+        <div id="sb_normal_time" style="font-size:18px;font-weight:800;color:#94a3b8">—</div>
+        <div id="sb_normal_int"  style="font-size:11px;color:var(--muted);margin-top:3px">—</div>
+      </div>
+      <div class="card2" style="text-align:center;border-color:rgba(134,239,172,.3)">
+        <div style="font-size:10px;color:#86efac;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">With Extra Payments</div>
+        <div id="sb_accel_time" style="font-size:18px;font-weight:800;color:#86efac">—</div>
+        <div id="sb_accel_int"  style="font-size:11px;color:var(--muted);margin-top:3px">—</div>
+      </div>
+      <div class="card2" style="text-align:center;border-color:rgba(99,102,241,.3)">
+        <div style="font-size:10px;color:#818cf8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Time Saved</div>
+        <div id="sb_time_saved" style="font-size:18px;font-weight:800;color:#818cf8">—</div>
+        <div id="sb_int_saved"  style="font-size:11px;color:var(--muted);margin-top:3px">—</div>
+      </div>
+      <div class="card2" style="text-align:center;border-color:rgba(251,191,36,.3)">
+        <div style="font-size:10px;color:#fbbf24;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Interest Saved</div>
+        <div id="sb_int_saved_big" style="font-size:18px;font-weight:800;color:#fbbf24">—</div>
+        <div id="sb_int_saved_sub" style="font-size:11px;color:var(--muted);margin-top:3px">—</div>
+      </div>
+    </div>
+  </div>
+  <div id="sb_milestones" style="margin-top:14px"></div>
+</div>
+
+  </div>
 </div><!-- end panel15 -->
 
 <!-- ══════════════════════════════════════════════ PANEL 14: AI RESEARCH (deal-specific checklist) -->
@@ -4093,6 +4100,8 @@ window.livebarToggle = function(){
 
 function ST(i) {
   window.scrollTo({top:0,behavior:'instant'});
+  // Dashboard (5) merged into Metrics (15)
+  if (i === 5) i = 15;
   // FC panels are absorbed into the hub — route through it instead
   if (FC_HUB_PANELS.indexOf(i) !== -1) {
     ST(FC_HUB_INDEX);
@@ -4109,12 +4118,11 @@ function ST(i) {
     2: ()=>{ if(typeof calcConv==='function') calcConv(); },
     3: ()=>{ ['calcFHA','calcHM','calcDSCR','calcSubTo','calcSF','calcLTO'].forEach(function(fn){ try{ if(typeof window[fn]==='function') window[fn](); }catch(e){} }); },
     4: ()=>{ syncCalcFromIntake('morby'); calcMorby(); },
-    5: ()=>{ updateDash(); seedNCP(); if(typeof buildSnowball==='function') buildSnowball(); },
     7: updateExec,
     8: buildProjection,
     13:()=>{ if(typeof fcInit==='function') fcInit(); },
     14:()=>{ if(typeof riAutoOpen==='function') riAutoOpen(); },
-    15:()=>{ if(typeof mxRender==='function') mxRender(); },
+    15:()=>{ if(typeof mxRender==='function') mxRender(); if(typeof updateDash==='function') updateDash(); if(typeof seedNCP==='function') seedNCP(); if(typeof buildSnowball==='function') buildSnowball(); },
     16:()=>{ if(typeof dscInit==='function') dscInit(); },
     17:()=>{ if(typeof adminRender==='function') adminRender(); }
   };
