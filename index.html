@@ -41,9 +41,26 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .topbar-actions{display:flex;gap:8px}
 /* ── live bar ── */
 .livebar{background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;position:sticky;top:var(--topbar-h);z-index:99}
-.livebar.livebar-segmented{flex-direction:column;gap:8px;align-items:stretch;padding:10px 16px}
-.lm-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.lm-box-label{font-size:11px;font-weight:800;color:var(--text);letter-spacing:.4px;text-transform:uppercase;flex-shrink:0;min-width:80px}
+/* Compact horizontal segmented livebar — single row by default, expandable on demand */
+.livebar-wrap{display:flex;flex-direction:column}
+.livebar.livebar-compact{display:flex;flex-direction:row;align-items:center;gap:10px;flex-wrap:nowrap;overflow-x:auto;padding:6px 14px;min-height:48px}
+.lm-chip{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;flex-shrink:0;border-left-width:3px}
+.lm-chip-lender{border-left-color:#fbbf24}
+.lm-chip-lp{border-left-color:#10b981}
+.lm-chip-gp{border-left-color:#a5b4fc}
+.lm-chip-deal{border-left-color:var(--accent)}
+.lm-chip-icon{font-size:13px;flex-shrink:0;opacity:.85}
+.lm-chip-stats{display:flex;gap:10px;align-items:center}
+.lm-chip-stats .lm{padding:0;background:transparent;border:none}
+.lm-chip-stats .lm-label{font-size:9.5px;letter-spacing:.3px}
+.lm-chip-stats .lm-val{font-size:12px;line-height:1.1}
+.livebar-toggle{margin-left:auto;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:14px;width:28px;height:28px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,background .15s;flex-shrink:0}
+.livebar-toggle:hover{background:var(--surface3)}
+.livebar-toggle.is-open{transform:rotate(180deg);background:var(--accent);color:#fff;border-color:var(--accent)}
+/* Expanded view — restored vertical box stack but only when toggled */
+.livebar-expanded{display:flex;flex-direction:column;gap:6px;padding:8px 14px;border-top:1px solid var(--border);background:var(--surface2)}
+.lm-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.lm-box-label{font-size:10.5px;font-weight:800;color:var(--text);letter-spacing:.4px;text-transform:uppercase;flex-shrink:0;min-width:80px}
 .lm-box-lender{border-left:3px solid #fbbf24}
 .lm-box-lp{border-left:3px solid #10b981}
 .lm-box-gp{border-left:3px solid #a5b4fc}
@@ -51,7 +68,12 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .lm-box-grid{display:flex;gap:14px;flex-wrap:wrap;flex:1;min-width:0}
 .lm-box-grid .lm{padding:0 8px;border-right:1px solid var(--border)}
 .lm-box-grid .lm:last-child{border-right:none}
-@media(max-width:900px){.lm-box{flex-direction:column;align-items:flex-start}.lm-box-label{min-width:auto}}
+@media(max-width:768px){
+  .livebar.livebar-compact{flex-wrap:wrap;overflow-x:visible}
+  .lm-chip-stats{gap:8px}
+  .lm-chip-stats .lm-val{font-size:11px}
+  .lm-box{flex-direction:column;align-items:flex-start;gap:6px}
+}
 
 .lm{background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:5px 12px;min-width:90px;text-align:center;flex-shrink:0}
 .lm-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
@@ -1394,13 +1416,96 @@ strong { color: #e2e8f0; }
   </div>
 </div>
 
-<!-- LIVE BAR — segmented into Lender / LP / GP boxes -->
-<div class="livebar livebar-segmented">
-  <!-- Lender box (deal-level: what the bank cares about) -->
-  <div class="lm-box lm-box-lender" title="What the lender underwrites: cash flow vs debt service, leverage, market price">
-    <div class="lm-box-label">🏦 Lender</div>
-    <div class="lm-box-grid">
-      <div class="lm"><div class="lm-label">DSCR</div><div class="lm-val" id="lb_dscr">0.00x</div></div>
+<!-- LIVE BAR — compact horizontal with click-to-expand details -->
+<div class="livebar-wrap" id="livebarWrap">
+  <div class="livebar livebar-compact" id="livebarCompact">
+    <!-- Lender headline -->
+    <div class="lm-chip lm-chip-lender" title="Lender — DSCR / Cap / Debt Yield / LTV">
+      <span class="lm-chip-icon">🏦</span>
+      <div class="lm-chip-stats">
+        <div class="lm"><div class="lm-label">DSCR</div><div class="lm-val" id="lb_dscr">0.00x</div></div>
+        <div class="lm"><div class="lm-label">Cap</div><div class="lm-val" id="lb_cap">0%</div></div>
+        <div class="lm"><div class="lm-label">LTV</div><div class="lm-val" id="lb_ltv">0%</div></div>
+      </div>
+    </div>
+    <!-- LP headline -->
+    <div class="lm-chip lm-chip-lp" title="LP — IRR / CoC / Equity Multiple — from Partners tab">
+      <span class="lm-chip-icon">💼</span>
+      <div class="lm-chip-stats">
+        <div class="lm"><div class="lm-label">LP IRR</div><div class="lm-val" id="lb_lp_irr">—</div></div>
+        <div class="lm"><div class="lm-label">LP Mult</div><div class="lm-val" id="lb_lp_em">—</div></div>
+        <div class="lm"><div class="lm-label">Pref</div><div class="lm-val" id="lb_lp_pref">—</div></div>
+      </div>
+    </div>
+    <!-- GP headline -->
+    <div class="lm-chip lm-chip-gp" title="GP — IRR / Total Comp / Promote">
+      <span class="lm-chip-icon">🏢</span>
+      <div class="lm-chip-stats">
+        <div class="lm"><div class="lm-label">GP IRR</div><div class="lm-val" id="lb_gp_irr">—</div></div>
+        <div class="lm"><div class="lm-label">Promote</div><div class="lm-val" id="lb_gp_promote">$0</div></div>
+        <div class="lm"><div class="lm-label">Total Comp</div><div class="lm-val" id="lb_gp_total">$0</div></div>
+      </div>
+    </div>
+    <!-- Deal headline -->
+    <div class="lm-chip lm-chip-deal" title="Deal — Cash Flow / ROI / IRR / verdict">
+      <span class="lm-chip-icon">📊</span>
+      <div class="lm-chip-stats">
+        <div class="lm"><div class="lm-label">CF/mo</div><div class="lm-val" id="lb_cf">$0</div></div>
+        <div class="lm"><div class="lm-label">ROI</div><div class="lm-val" id="lb_roi" style="color:#86efac">0%</div></div>
+        <div class="lm"><div class="lm-label">IRR</div><div class="lm-val" id="lb_irr">0%</div></div>
+      </div>
+    </div>
+    <!-- Verdict + grade pinned right -->
+    <span class="verdict-badge vrd-m" id="lb_verdict">Enter Deal Info</span>
+    <div class="lm-grade"><div class="lm-label">Grade</div><div class="grade-val g-none" id="lb_grade">—</div></div>
+    <!-- Expand toggle -->
+    <button class="livebar-toggle" id="livebarToggleBtn" onclick="livebarToggle()" title="Show all metrics" aria-label="Toggle full metrics view">⌄</button>
+  </div>
+  <!-- Expanded full view (hidden by default) -->
+  <div class="livebar-expanded" id="livebarExpanded" style="display:none">
+    <div class="lm-box lm-box-lender">
+      <div class="lm-box-label">🏦 Lender</div>
+      <div class="lm-box-grid">
+        <div class="lm"><div class="lm-label">DSCR</div><div class="lm-val" id="lb_dscr_x">0.00x</div></div>
+        <div class="lm"><div class="lm-label">Cap Rate</div><div class="lm-val" id="lb_cap_x">0%</div></div>
+        <div class="lm"><div class="lm-label">NOI/yr</div><div class="lm-val" id="lb_noi">$0</div></div>
+        <div class="lm"><div class="lm-label">Debt Yield</div><div class="lm-val" id="lb_dy">0%</div></div>
+        <div class="lm"><div class="lm-label">LTV</div><div class="lm-val" id="lb_ltv_x">0%</div></div>
+      </div>
+    </div>
+    <div class="lm-box lm-box-lp">
+      <div class="lm-box-label">💼 LP</div>
+      <div class="lm-box-grid">
+        <div class="lm"><div class="lm-label">LP IRR</div><div class="lm-val" id="lb_lp_irr_x">—</div></div>
+        <div class="lm"><div class="lm-label">LP CoC</div><div class="lm-val" id="lb_lp_coc">—</div></div>
+        <div class="lm"><div class="lm-label">LP Mult</div><div class="lm-val" id="lb_lp_em_x">—</div></div>
+        <div class="lm"><div class="lm-label">LP Capital</div><div class="lm-val" id="lb_lp_cap">$0</div></div>
+        <div class="lm"><div class="lm-label">Pref Met</div><div class="lm-val" id="lb_lp_pref_x">—</div></div>
+      </div>
+    </div>
+    <div class="lm-box lm-box-gp">
+      <div class="lm-box-label">🏢 GP</div>
+      <div class="lm-box-grid">
+        <div class="lm"><div class="lm-label">GP IRR</div><div class="lm-val" id="lb_gp_irr_x">—</div></div>
+        <div class="lm"><div class="lm-label">GP Mult</div><div class="lm-val" id="lb_gp_em">—</div></div>
+        <div class="lm"><div class="lm-label">Acq+AM Fees</div><div class="lm-val" id="lb_gp_fees">$0</div></div>
+        <div class="lm"><div class="lm-label">Promote</div><div class="lm-val" id="lb_gp_promote_x">$0</div></div>
+        <div class="lm"><div class="lm-label">Total Comp</div><div class="lm-val" id="lb_gp_total_x">$0</div></div>
+      </div>
+    </div>
+    <div class="lm-box lm-box-overall">
+      <div class="lm-box-label">📊 Deal</div>
+      <div class="lm-box-grid">
+        <div class="lm"><div class="lm-label">CF/mo</div><div class="lm-val" id="lb_cf_x">$0</div></div>
+        <div class="lm"><div class="lm-label">Total ROI</div><div class="lm-val" id="lb_roi_x" style="color:#86efac">0%</div></div>
+        <div class="lm"><div class="lm-label">Equity Mult</div><div class="lm-val" id="lb_em">0x</div></div>
+        <div class="lm"><div class="lm-label">CoC</div><div class="lm-val" id="lb_coc">0%</div></div>
+        <div class="lm"><div class="lm-label">IRR</div><div class="lm-val" id="lb_irr_x">0%</div></div>
+        <div class="lm"><div class="lm-label">GRM</div><div class="lm-val" id="lb_grm">0x</div></div>
+      </div>
+    </div>
+  </div>
+</div>
       <div class="lm"><div class="lm-label">Cap Rate</div><div class="lm-val" id="lb_cap">0%</div></div>
       <div class="lm"><div class="lm-label">NOI/yr</div><div class="lm-val" id="lb_noi">$0</div></div>
       <div class="lm"><div class="lm-label">Debt Yield</div><div class="lm-val" id="lb_dy">0%</div></div>
@@ -3951,27 +4056,74 @@ window._updateLiveBarFromPartners = function(){
     setText('lb_lp_cap','$0'); setText('lb_gp_fees','$0'); setText('lb_gp_promote','$0'); setText('lb_gp_total','$0');
     return;
   }
-  setText('lb_lp_irr', fmtPct(ps.lp.irr));
+  var lpIrr = fmtPct(ps.lp.irr);
+  var lpEm = fmtX(ps.lp.em);
+  var lpPref = ps.lp.prefMet === null ? 'n/a' : (ps.lp.prefMet ? '✓ ' + fmtPct(ps.lp.prefRate) : '✗ ' + fmtPct(ps.lp.prefRate));
+  var gpIrr = fmtPct(ps.gp.irr);
+  var gpPromote = fmt$(ps.gp.promote);
+  var gpTotal = fmt$(ps.gp.totalComp);
+  setText('lb_lp_irr', lpIrr); setText('lb_lp_irr_x', lpIrr);
   setText('lb_lp_coc', fmtPct(ps.lp.coc));
-  setText('lb_lp_em', fmtX(ps.lp.em));
+  setText('lb_lp_em', lpEm); setText('lb_lp_em_x', lpEm);
   setText('lb_lp_cap', fmt$(ps.lp.totalIn));
-  setText('lb_lp_pref', ps.lp.prefMet === null ? 'n/a' : (ps.lp.prefMet ? '✓ ' + fmtPct(ps.lp.prefRate) : '✗ ' + fmtPct(ps.lp.prefRate)));
-  setText('lb_gp_irr', fmtPct(ps.gp.irr));
+  setText('lb_lp_pref', lpPref); setText('lb_lp_pref_x', lpPref);
+  setText('lb_gp_irr', gpIrr); setText('lb_gp_irr_x', gpIrr);
   setText('lb_gp_em', fmtX(ps.gp.em));
   setText('lb_gp_fees', fmt$(ps.gp.feesEarned));
-  setText('lb_gp_promote', fmt$(ps.gp.promote));
-  setText('lb_gp_total', fmt$(ps.gp.totalComp));
+  setText('lb_gp_promote', gpPromote); setText('lb_gp_promote_x', gpPromote);
+  setText('lb_gp_total', gpTotal); setText('lb_gp_total_x', gpTotal);
 };
 
 window._updateLiveBarLender = function(){
   var s = window.S; if(!s) return;
   var setText = function(id, val){ var e = document.getElementById(id); if(e) e.textContent = val; };
+  var setBoth = function(idA, idB, val){ setText(idA, val); setText(idB, val); };
   var loanAmt = s.loan || (s.price && s.dp ? s.price - s.dp : 0);
   var dy = (loanAmt > 0 && s.noi > 0) ? (s.noi/loanAmt) : 0;
   var ltv = (s.price > 0 && loanAmt > 0) ? (loanAmt/s.price) : 0;
   setText('lb_dy', dy ? (dy*100).toFixed(2)+'%' : '0%');
-  setText('lb_ltv', ltv ? (ltv*100).toFixed(1)+'%' : '0%');
+  setBoth('lb_ltv','lb_ltv_x', ltv ? (ltv*100).toFixed(1)+'%' : '0%');
+  // Also mirror DSCR + Cap into expanded ids
+  if(s.dscr !== undefined){ setText('lb_dscr_x', (s.dscr||0).toFixed(2)+'x'); }
+  if(s.capRate !== undefined){ setText('lb_cap_x', ((s.capRate||0)*100).toFixed(2)+'%'); }
+  if(s.cf !== undefined){ setText('lb_cf_x', '$'+Math.round((s.cf||0)*1).toLocaleString()); }
+  if(s.totalRoi !== undefined){ setText('lb_roi_x', ((s.totalRoi||0)*100).toFixed(1)+'%'); }
+  if(s.irr !== undefined){ setText('lb_irr_x', ((s.irr||0)*100).toFixed(1)+'%'); }
 };
+
+window.livebarToggle = function(){
+  var wrap = document.getElementById('livebarWrap');
+  var exp = document.getElementById('livebarExpanded');
+  var btn = document.getElementById('livebarToggleBtn');
+  if(!exp || !btn) return;
+  var isOpen = exp.style.display !== 'none';
+  if(isOpen){
+    exp.style.display = 'none';
+    btn.classList.remove('is-open');
+    try { localStorage.setItem('jp_livebar_expanded','0'); } catch(_){}
+  } else {
+    exp.style.display = 'flex';
+    btn.classList.add('is-open');
+    try { localStorage.setItem('jp_livebar_expanded','1'); } catch(_){}
+    // Force a refresh of values when expanded
+    if(typeof window._updateLiveBarLender === 'function') window._updateLiveBarLender();
+    if(typeof window._updateLiveBarFromPartners === 'function') window._updateLiveBarFromPartners();
+  }
+};
+
+// Restore persisted state on first paint
+(function(){
+  if(typeof window === 'undefined' || !document) return;
+  document.addEventListener('DOMContentLoaded', function(){
+    try {
+      if(localStorage.getItem('jp_livebar_expanded') === '1'){
+        var exp = document.getElementById('livebarExpanded');
+        var btn = document.getElementById('livebarToggleBtn');
+        if(exp && btn){ exp.style.display = 'flex'; btn.classList.add('is-open'); }
+      }
+    } catch(_){}
+  });
+})();
 
 function ST(i) {
   window.scrollTo({top:0,behavior:'instant'});
