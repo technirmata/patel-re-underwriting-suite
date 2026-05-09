@@ -4007,9 +4007,17 @@ function fcSwitch(panelIdx){
   const target = document.getElementById('panel' + panelIdx);
   const hubContent = document.getElementById('fcHubContent');
   if(!target || !hubContent) return;
-  // Move panel under the hub if it's not already there
+  // Move panel under the hub if it's not already there.
+  // BUG FIX: previously cleared the hub via destructive markup-blank — that
+  // deleted the outgoing panel from the DOM, so subsequent switches silently
+  // failed because getElementById('panel2') etc. returned null. Instead,
+  // evict the current occupant(s) back to <body> so they're preserved.
   if(target.parentNode !== hubContent){
-    hubContent.innerHTML = '';
+    Array.prototype.slice.call(hubContent.children).forEach(function(child){
+      if(child !== target){
+        try { document.body.appendChild(child); child.style.display = 'none'; child.classList.remove('fc-in-hub'); } catch(_){}
+      }
+    });
     hubContent.appendChild(target);
   }
   // Force visible inside the hub regardless of .panel.active CSS
