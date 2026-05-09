@@ -41,6 +41,18 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .topbar-actions{display:flex;gap:8px}
 /* ── live bar ── */
 .livebar{background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;position:sticky;top:var(--topbar-h);z-index:99}
+.livebar.livebar-segmented{flex-direction:column;gap:8px;align-items:stretch;padding:10px 16px}
+.lm-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.lm-box-label{font-size:11px;font-weight:800;color:var(--text);letter-spacing:.4px;text-transform:uppercase;flex-shrink:0;min-width:80px}
+.lm-box-lender{border-left:3px solid #fbbf24}
+.lm-box-lp{border-left:3px solid #10b981}
+.lm-box-gp{border-left:3px solid #a5b4fc}
+.lm-box-overall{border-left:3px solid var(--accent)}
+.lm-box-grid{display:flex;gap:14px;flex-wrap:wrap;flex:1;min-width:0}
+.lm-box-grid .lm{padding:0 8px;border-right:1px solid var(--border)}
+.lm-box-grid .lm:last-child{border-right:none}
+@media(max-width:900px){.lm-box{flex-direction:column;align-items:flex-start}.lm-box-label{min-width:auto}}
+
 .lm{background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:5px 12px;min-width:90px;text-align:center;flex-shrink:0}
 .lm-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
 .lm-val{font-size:15px;font-weight:700;color:var(--text);white-space:nowrap}
@@ -1382,19 +1394,56 @@ strong { color: #e2e8f0; }
   </div>
 </div>
 
-<!-- LIVE BAR -->
-<div class="livebar">
-  <div class="lm"><div class="lm-label">NOI/yr</div><div class="lm-val" id="lb_noi">$0</div></div>
-  <div class="lm"><div class="lm-label">Cash Flow/mo</div><div class="lm-val" id="lb_cf">$0</div></div>
-  <div class="lm"><div class="lm-label">CoC Return</div><div class="lm-val" id="lb_coc">0%</div></div>
-  <div class="lm"><div class="lm-label">DSCR</div><div class="lm-val" id="lb_dscr">0.00x</div></div>
-  <div class="lm"><div class="lm-label">IRR (5yr)</div><div class="lm-val" id="lb_irr">0%</div></div>
-  <div class="lm"><div class="lm-label">Cap Rate</div><div class="lm-val" id="lb_cap">0%</div></div>
-  <div class="lm"><div class="lm-label">GRM</div><div class="lm-val" id="lb_grm">0x</div></div>
-  <div class="lm"><div class="lm-label">Equity Mult</div><div class="lm-val" id="lb_em">0x</div></div>
-  <div class="lm" style="border-color:rgba(134,239,172,.3)"><div class="lm-label" style="color:#86efac">Total ROI</div><div class="lm-val" id="lb_roi" style="color:#86efac">0%</div></div>
-  <span class="verdict-badge vrd-m" id="lb_verdict">Enter Deal Info</span>
-  <div class="lm-grade"><div class="lm-label">Grade</div><div class="grade-val g-none" id="lb_grade">—</div></div>
+<!-- LIVE BAR — segmented into Lender / LP / GP boxes -->
+<div class="livebar livebar-segmented">
+  <!-- Lender box (deal-level: what the bank cares about) -->
+  <div class="lm-box lm-box-lender" title="What the lender underwrites: cash flow vs debt service, leverage, market price">
+    <div class="lm-box-label">🏦 Lender</div>
+    <div class="lm-box-grid">
+      <div class="lm"><div class="lm-label">DSCR</div><div class="lm-val" id="lb_dscr">0.00x</div></div>
+      <div class="lm"><div class="lm-label">Cap Rate</div><div class="lm-val" id="lb_cap">0%</div></div>
+      <div class="lm"><div class="lm-label">NOI/yr</div><div class="lm-val" id="lb_noi">$0</div></div>
+      <div class="lm"><div class="lm-label">Debt Yield</div><div class="lm-val" id="lb_dy">0%</div></div>
+      <div class="lm"><div class="lm-label">LTV</div><div class="lm-val" id="lb_ltv">0%</div></div>
+    </div>
+  </div>
+  <!-- LP box (what passive investors evaluate against their hurdle) -->
+  <div class="lm-box lm-box-lp" title="What LPs underwrite against their hurdle rate. From Partners tab waterfall.">
+    <div class="lm-box-label">💼 LP</div>
+    <div class="lm-box-grid">
+      <div class="lm"><div class="lm-label">LP IRR</div><div class="lm-val" id="lb_lp_irr">—</div></div>
+      <div class="lm"><div class="lm-label">LP CoC</div><div class="lm-val" id="lb_lp_coc">—</div></div>
+      <div class="lm"><div class="lm-label">LP Mult</div><div class="lm-val" id="lb_lp_em">—</div></div>
+      <div class="lm"><div class="lm-label">LP Cap</div><div class="lm-val" id="lb_lp_cap">$0</div></div>
+      <div class="lm"><div class="lm-label">Pref Met</div><div class="lm-val" id="lb_lp_pref">—</div></div>
+    </div>
+  </div>
+  <!-- GP box (sponsor-side economics) -->
+  <div class="lm-box lm-box-gp" title="GP/sponsor economics: total comp from fees + promote">
+    <div class="lm-box-label">🏢 GP</div>
+    <div class="lm-box-grid">
+      <div class="lm"><div class="lm-label">GP IRR</div><div class="lm-val" id="lb_gp_irr">—</div></div>
+      <div class="lm"><div class="lm-label">GP Mult</div><div class="lm-val" id="lb_gp_em">—</div></div>
+      <div class="lm"><div class="lm-label">Acq+AM Fees</div><div class="lm-val" id="lb_gp_fees">$0</div></div>
+      <div class="lm"><div class="lm-label">Promote</div><div class="lm-val" id="lb_gp_promote">$0</div></div>
+      <div class="lm"><div class="lm-label">Total Comp</div><div class="lm-val" id="lb_gp_total">$0</div></div>
+    </div>
+  </div>
+  <!-- Overall verdict (cross-cutting) -->
+  <div class="lm-box lm-box-overall">
+    <div class="lm-box-label">📊 Deal</div>
+    <div class="lm-box-grid">
+      <div class="lm"><div class="lm-label">Cash Flow/mo</div><div class="lm-val" id="lb_cf">$0</div></div>
+      <div class="lm"><div class="lm-label">Total ROI</div><div class="lm-val" id="lb_roi" style="color:#86efac">0%</div></div>
+      <div class="lm"><div class="lm-label">Equity Mult</div><div class="lm-val" id="lb_em">0x</div></div>
+      <div class="lm"><div class="lm-label">CoC</div><div class="lm-val" id="lb_coc">0%</div></div>
+      <div class="lm"><div class="lm-label">IRR</div><div class="lm-val" id="lb_irr">0%</div></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:6px">
+      <span class="verdict-badge vrd-m" id="lb_verdict">Enter Deal Info</span>
+      <div class="lm-grade"><div class="lm-label">Grade</div><div class="grade-val g-none" id="lb_grade">—</div></div>
+    </div>
+  </div>
 </div>
 
 <!-- TABS — workflow order: Intake → Analyze → Finance Calculators → Capital → Deal → Pitch -->
@@ -2737,6 +2786,31 @@ strong { color: #e2e8f0; }
 </div>
 </div>
 <div>
+<div>
+<div class="card" data-exec-section="negotiation" data-exec-label="Negotiation Strategy" id="execNegotiationCard">
+  <div class="card-title">🤝 Negotiation Strategy</div>
+  <div id="execNegotiation" style="font-size:12.5px;color:var(--text);line-height:1.7"></div>
+</div>
+</div>
+<div>
+<div class="card" data-exec-section="dealkillers" data-exec-label="Deal-Killer Watchlist" id="execDealKillersCard">
+  <div class="card-title">⚠ Deal-Killer Watchlist</div>
+  <div id="execDealKillers" style="font-size:12.5px;color:var(--text);line-height:1.6"></div>
+</div>
+</div>
+<div>
+<div class="card" data-exec-section="capstack" data-exec-label="Capital Stack" id="execCapStackCard">
+  <div class="card-title">🏗 Capital Stack &amp; Sources</div>
+  <div id="execCapStack" style="font-size:12.5px;color:var(--text);line-height:1.6"></div>
+</div>
+</div>
+<div>
+<div class="card" data-exec-section="exitnarrative" data-exec-label="Exit Strategy" id="execExitNarrativeCard">
+  <div class="card-title">🎯 Exit Strategy &amp; Hold Plan</div>
+  <div id="execExitNarrative" style="font-size:12.5px;color:var(--text);line-height:1.6"></div>
+</div>
+</div>
+<div>
 <div class="card" data-exec-section="projection" data-exec-label="Returns Projection">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
     <div class="card-title" style="margin-bottom:0">📅 Returns Projection</div>
@@ -3514,6 +3588,34 @@ strong { color: #e2e8f0; }
     <div style="overflow-x:auto;max-height:560px;overflow-y:auto"><table class="pn-table" id="adminUsersTable"></table></div>
     <div id="adminError" style="font-size:12px;color:#fca5a5;margin-top:8px;display:none"></div>
     <div style="font-size:11px;color:var(--muted);margin-top:8px">Click any row to drill into that user\'s profile + saved underwriting projects.</div>
+  </div>
+
+  <!-- Add user (admin-create-user Edge Function) -->
+  <div class="card" id="adminCreateUserCard">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <span>➕ Add User Manually</span>
+      <span style="font-size:11px;color:var(--muted)">Bypass signup — admin-only</span>
+    </div>
+    <div style="font-size:11.5px;color:var(--text2);line-height:1.5;margin-bottom:10px">
+      Creates an auth account with email auto-confirmed. The user will receive a one-time magic link you can share. Optionally pre-grant a role (admin / moderator) and mark them as <strong>comp</strong> (free-for-life).
+    </div>
+    <form id="adminCreateUserForm" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px" onsubmit="event.preventDefault();adminCreateUser();">
+      <div class="field" style="flex:2;min-width:220px"><label>Email</label><input type="email" id="adminCreateEmail" placeholder="user@example.com" required></div>
+      <div class="field" style="flex:1;min-width:140px"><label>Full name (optional)</label><input type="text" id="adminCreateName" placeholder="Jane Doe"></div>
+      <div class="field" style="min-width:140px"><label>Initial role</label>
+        <select id="adminCreateRole">
+          <option value="">— none (regular user) —</option>
+          <option value="moderator">moderator</option>
+          <option value="admin">admin</option>
+        </select>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;height:34px;color:var(--text2);cursor:pointer">
+        <input type="checkbox" id="adminCreateComp"> <span>Mark as comp (free-for-life)</span>
+      </label>
+      <button class="btn btn-primary btn-sm" type="submit" style="height:34px">+ Create user</button>
+    </form>
+    <div id="adminCreateError" style="font-size:12px;color:#fca5a5;margin-bottom:8px;display:none"></div>
+    <div id="adminCreateResult" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px;line-height:1.6"></div>
   </div>
 
   <!-- Roles & Permissions -->
@@ -4347,6 +4449,9 @@ function R() {
   if(document.querySelector('#panel7.active')) updateExec();
   // Refresh rent escalator hint whenever gross rent or hold period changes
   if(typeof updateRentEscHint === 'function') updateRentEscHint();
+
+  try { if(typeof window._updateLiveBarLender === 'function') window._updateLiveBarLender(); } catch(_){}
+  try { if(typeof window._updateLiveBarFromPartners === 'function') window._updateLiveBarFromPartners(); } catch(_){}
 }
 
 // ── Live Metrics Bar ──────────────────────────────────────────────────────────
@@ -6730,6 +6835,144 @@ function updateExec() {
     else if(pts>=1){vEl.className='gonogo caution';vEl.innerHTML='⚠️ PROCEED WITH CAUTION — Negotiate better terms or confirm value-add plan before committing.';}
     else{vEl.className='gonogo nogo';vEl.innerHTML='❌ NO-GO — Deal does not meet investment criteria as currently structured.';}
   }
+
+
+  // ── 🤝 Negotiation Strategy ──────────────────────────────────────────────
+  (function(){
+    const el = document.getElementById('execNegotiation');
+    if(!el) return;
+    if(!s.price || !s.noi){ el.innerHTML = '<div style="color:var(--muted);font-style:italic">Fill in price + NOI to surface negotiation levers.</div>'; return; }
+    const tier = gvs('mkt_tier') || 'B';
+    const capT = tier==='A' ? .045 : tier==='B' ? .06 : .075;
+    // Reverse cap solver — at the LENDER's required DSCR (1.25), what's the max price?
+    const debtService = (s.cf || 0) - (s.noi || 0);  // monthly net less NOI ~ debt service approx
+    const maxOfferAtMinDscr = (s.dscr > 0 && s.noi > 0) ? (s.price * (s.dscr / 1.25)) : s.price;
+    const maxOfferAtMarketCap = s.noi / capT;
+    const targetMax = Math.min(maxOfferAtMinDscr, maxOfferAtMarketCap);
+    const askDelta = s.price - targetMax;
+    const askDeltaPct = s.price > 0 ? (askDelta / s.price * 100) : 0;
+    const walkAway = targetMax * 0.95; // 5% buffer
+    const counter1 = Math.round(targetMax * 0.93);
+    const counter2 = Math.round(targetMax * 0.97);
+
+    const sellerFinPct = (gv('sf_amount') || 0) / (s.price || 1) * 100;
+    const sellerFinHigh = sellerFinPct > 10;
+
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px">'
+      + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px"><div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Asking</div><div style="font-size:16px;font-weight:700">'+fd(s.price)+'</div></div>'
+      + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px"><div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Target Max (deal pencils)</div><div style="font-size:16px;font-weight:700;color:var(--accent)">'+fd(targetMax)+'</div><div style="font-size:10.5px;color:var(--muted)">'+(askDeltaPct>0?(askDeltaPct.toFixed(1)+'% below ask'):'at or above ask')+'</div></div>'
+      + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px"><div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Counter Offer #1 (anchor low)</div><div style="font-size:16px;font-weight:700;color:var(--green)">'+fd(counter1)+'</div></div>'
+      + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px"><div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Counter Offer #2 (final)</div><div style="font-size:16px;font-weight:700;color:#fbbf24">'+fd(counter2)+'</div></div>'
+      + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px"><div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Walk-Away Below</div><div style="font-size:16px;font-weight:700;color:var(--red)">'+fd(walkAway)+'</div></div>'
+      + '</div>';
+    html += '<div style="background:var(--surface);border-left:3px solid var(--accent);padding:10px 12px;font-size:12px;line-height:1.65"><strong>Levers to push for:</strong><ul style="margin:6px 0 0 0;padding-left:18px;color:var(--text2)">';
+    html += '<li><strong>Price:</strong> open at '+fd(counter1)+' citing comparable cap rates around '+fp(capT)+'. Final stop at '+fd(counter2)+'.</li>';
+    html += '<li><strong>Closing terms:</strong> longer due-diligence (45-60 days) lets you uncover tax/insurance gaps before commitment.</li>';
+    html += '<li><strong>Earnest money:</strong> propose 1% (vs typical 2-3%) with phased release tied to inspection contingency removal.</li>';
+    if(sellerFinHigh) html += '<li><strong>⚠ Seller carry '+sellerFinPct.toFixed(1)+'%</strong> exceeds typical 10% lender comfort. Reduce or split into 2nd-position lien with 5-7yr balloon.</li>';
+    html += '<li><strong>Repair credits:</strong> after inspection, push for credits at closing rather than price reduction (tax-friendlier for buyer).</li>';
+    html += '<li><strong>Lender contingency:</strong> always keep — protects earnest money if financing fails.</li>';
+    html += '</ul></div>';
+    el.innerHTML = html;
+  })();
+
+  // ── ⚠ Deal-Killer Watchlist (lender/appraiser perspective) ────────────────
+  (function(){
+    const el = document.getElementById('execDealKillers');
+    if(!el) return;
+    const tier = gvs('mkt_tier') || 'B';
+    const killers = [];
+    // Tax mismatch (placeholder — needs Sprint 2 truth-vs-broker comparator wired)
+    killers.push({sev:'medium', label:'Tax-record verification', desc:'Pull county assessor data and compare to seller-stated taxes. ~80-90% of failed CRE deals trace to this gap.'});
+    // Rent vs market
+    const inPlaceRent = gv('inc_actual') || 0;
+    const marketRent = gv('inc_market') || 0;
+    if(inPlaceRent > marketRent && marketRent > 0){
+      const overPct = (inPlaceRent / marketRent - 1) * 100;
+      killers.push({sev:overPct>10?'high':'medium', label:'Rent above market by '+overPct.toFixed(1)+'%', desc:'Appraiser will value below purchase price — appraisal-gap risk. Plan for buy-down, refi-out, or lower offer.'});
+    }
+    // DSCR
+    if(s.dscr && s.dscr < 1.20){
+      killers.push({sev:s.dscr<1.10?'high':'medium', label:'DSCR '+s.dscr.toFixed(2)+'x below lender comfort', desc:'On deals over $1M lenders cap LTV at 65-70% to push DSCR up. Plan for less leverage.'});
+    }
+    // Market tier
+    if(tier === 'C' || tier === 'D'){
+      killers.push({sev:tier==='D'?'high':'medium', label:tier+'-tier / sub-tertiary market', desc:'Lenders strongly prefer Primary > Secondary > Tertiary > Rural. Expect fewer loan options and worse terms.'});
+    }
+    // Seller-finance > 10%
+    const sellerFin = (gv('sf_amount') || 0);
+    if(s.price > 0 && sellerFin > 0){
+      const sfPct = sellerFin / s.price * 100;
+      if(sfPct > 10){
+        killers.push({sev:sfPct>15?'high':'medium', label:'Seller carry '+sfPct.toFixed(1)+'% above lender comfort', desc:'Most institutional lenders dislike seller carry > 10%. Some allow up to 10% as 2nd lien; some forbid entirely.'});
+      }
+    }
+    // KP profile (placeholder)
+    killers.push({sev:'info', label:'KP credit + experience gate', desc:'Loan terms achievable depend on Key Principal\'s credit score + track record. Better KP profile → better leverage + rates.'});
+
+    if(killers.length === 0){
+      el.innerHTML = '<div style="color:var(--green)">✅ No active deal-killers detected at current inputs.</div>';
+      return;
+    }
+    el.innerHTML = killers.map(function(k){
+      const cl = k.sev==='high'?'border-left:3px solid #ef4444':k.sev==='medium'?'border-left:3px solid #fbbf24':'border-left:3px solid var(--muted)';
+      const ic = k.sev==='high'?'🚨':k.sev==='medium'?'⚠':'ℹ';
+      return '<div style="background:var(--surface2);'+cl+';padding:8px 12px;margin-bottom:6px;border-radius:6px"><div style="font-weight:700;color:var(--text);font-size:12.5px">'+ic+' '+k.label+'</div><div style="color:var(--text2);font-size:11.5px;margin-top:3px">'+k.desc+'</div></div>';
+    }).join('');
+  })();
+
+  // ── 🏗 Capital Stack & Sources ──────────────────────────────────────────
+  (function(){
+    const el = document.getElementById('execCapStack');
+    if(!el) return;
+    const ps = window._partnerSummary;
+    const eqNeeded = s.totalCashIn || 0;
+    const loanAmt = (s.price || 0) - (s.dp || 0);
+    const totalDeal = (s.price || 0) + (s.repairs || 0);
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px">';
+    html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px"><div style="font-size:10.5px;color:var(--muted);text-transform:uppercase">Total project</div><div style="font-size:15px;font-weight:700">'+fd(totalDeal)+'</div></div>';
+    html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px"><div style="font-size:10.5px;color:var(--muted);text-transform:uppercase">Senior debt</div><div style="font-size:15px;font-weight:700">'+fd(loanAmt)+'</div><div style="font-size:10.5px;color:var(--muted)">'+(s.price>0?(loanAmt/s.price*100).toFixed(1)+'% LTV':'')+'</div></div>';
+    html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px"><div style="font-size:10.5px;color:var(--muted);text-transform:uppercase">Equity needed</div><div style="font-size:15px;font-weight:700">'+fd(eqNeeded)+'</div></div>';
+    if(ps && ps.lp && ps.gp){
+      html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px"><div style="font-size:10.5px;color:var(--muted);text-transform:uppercase">LP capital</div><div style="font-size:15px;font-weight:700;color:#10b981">'+fd(ps.lp.totalIn)+'</div><div style="font-size:10.5px;color:var(--muted)">'+(ps.overall.totalIn>0?ps.overall.lpRatio.toFixed(1)+'% of equity':'—')+'</div></div>';
+      html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px"><div style="font-size:10.5px;color:var(--muted);text-transform:uppercase">GP capital</div><div style="font-size:15px;font-weight:700;color:var(--accent)">'+fd(ps.gp.totalIn)+'</div><div style="font-size:10.5px;color:var(--muted)">'+(ps.overall.totalIn>0?ps.overall.gpRatio.toFixed(1)+'% of equity':'—')+'</div></div>';
+    } else {
+      html += '<div style="background:var(--surface2);border:1px dashed var(--border);border-radius:8px;padding:10px;color:var(--muted);font-style:italic">Open Partners tab to model LP/GP capital split.</div>';
+    }
+    html += '</div>';
+    // Raise status
+    if(ps && ps.overall.totalIn > 0 && eqNeeded > 0){
+      const raised = ps.overall.totalIn;
+      const pct = raised / eqNeeded * 100;
+      const cls = Math.abs(raised - eqNeeded) < eqNeeded * 0.02 ? 'var(--green)' : Math.abs(raised - eqNeeded) < eqNeeded * 0.10 ? '#fbbf24' : 'var(--red)';
+      html += '<div style="font-size:12px;color:'+cls+';font-weight:600">'+pct.toFixed(1)+'% of equity raised ('+fd(raised)+' on '+fd(eqNeeded)+')</div>';
+    }
+    el.innerHTML = html;
+  })();
+
+  // ── 🎯 Exit Strategy Narrative ──────────────────────────────────────────
+  (function(){
+    const el = document.getElementById('execExitNarrative');
+    if(!el) return;
+    if(!s.price || !s.noi){ el.innerHTML = '<div style="color:var(--muted);font-style:italic">Fill in financials to surface exit paths.</div>'; return; }
+    const hold = s.hold || 5;
+    const exitNoi = s.noi * Math.pow(1 + ((gv('mkt_rent_growth')||3)/100), hold);
+    const exitCap = (gv('mkt_exit_cap') || 6) / 100;
+    const exitVal = exitNoi / exitCap;
+    const exitGain = exitVal - s.price;
+    const refiYr = 3;
+    const refiNoi = s.noi * Math.pow(1+((gv('mkt_rent_growth')||3)/100), refiYr);
+    const refiVal = refiNoi / exitCap;
+    const refiCashOut = Math.max(0, refiVal*0.70 - (s.price - s.dp));  // assume new 70% LTV refi
+
+    let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">';
+    html += '<div style="background:var(--surface2);border-left:3px solid #10b981;padding:10px;border-radius:6px"><div style="font-weight:700;font-size:12.5px;color:var(--text);margin-bottom:4px">📊 Hold &amp; Cash Flow</div><div style="font-size:11.5px;color:var(--text2);line-height:1.55">Hold for '+hold+' years, collect annual cash flow of '+fd(s.cf*12)+'. Best for: stable Class B in growing markets. Risk: capex surprises, rent regression.</div></div>';
+    html += '<div style="background:var(--surface2);border-left:3px solid #fbbf24;padding:10px;border-radius:6px"><div style="font-weight:700;font-size:12.5px;color:var(--text);margin-bottom:4px">🔁 Refi &amp; Pull Out @ Year '+refiYr+'</div><div style="font-size:11.5px;color:var(--text2);line-height:1.55">After year '+refiYr+', refi at 70% LTV pulls '+fd(refiCashOut)+' tax-free if value grew to '+fd(refiVal)+'. Best for: value-add forced appreciation. Risk: exit cap creeps up.</div></div>';
+    html += '<div style="background:var(--surface2);border-left:3px solid var(--accent);padding:10px;border-radius:6px"><div style="font-weight:700;font-size:12.5px;color:var(--text);margin-bottom:4px">💰 Sell @ Year '+hold+'</div><div style="font-size:11.5px;color:var(--text2);line-height:1.55">Sell at '+fd(exitVal)+' (NOI '+fd(exitNoi)+' / cap '+fp(exitCap)+'). Net gain over basis: '+fd(exitGain)+'. Best for: 1031-into-bigger-deal. Risk: market timing, transfer-tax states.</div></div>';
+    html += '</div>';
+    el.innerHTML = html;
+  })();
+
 }
 
 // ── parseOM ───────────────────────────────────────────────────────────────────
@@ -9940,6 +10183,67 @@ function _adminRenderLogsTable(){
     t.innerHTML = html;
   }
 }
+
+
+// ════════════════════════════════════════════════════════════════════════
+// Add User Manually — invokes the admin-create-user Edge Function
+// ════════════════════════════════════════════════════════════════════════
+async function adminCreateUser(){
+  const errEl = document.getElementById('adminCreateError');
+  const resEl = document.getElementById('adminCreateResult');
+  if(errEl){ errEl.style.display='none'; errEl.textContent=''; }
+  if(resEl){ resEl.style.display='none'; resEl.innerHTML=''; }
+
+  const email = (document.getElementById('adminCreateEmail').value||'').trim().toLowerCase();
+  const fullName = (document.getElementById('adminCreateName').value||'').trim() || null;
+  const role = document.getElementById('adminCreateRole').value || '';
+  const comp = !!document.getElementById('adminCreateComp').checked;
+  if(!email){ return; }
+
+  const submitBtn = document.querySelector('#adminCreateUserForm button[type="submit"]');
+  if(submitBtn){ submitBtn.disabled=true; submitBtn.textContent='Creating…'; }
+
+  try {
+    const sb = _sbClient();
+    const { data, error } = await sb.functions.invoke('admin-create-user', {
+      body: { email, full_name: fullName, role, comp }
+    });
+    if(error){ throw new Error(error.message || 'edge function error'); }
+    if(data && data.error){
+      throw new Error(data.error + (data.detail ? ': '+data.detail : ''));
+    }
+    // Success: show result + magic link
+    document.getElementById('adminCreateEmail').value = '';
+    document.getElementById('adminCreateName').value = '';
+    document.getElementById('adminCreateRole').value = '';
+    document.getElementById('adminCreateComp').checked = false;
+    if(resEl){
+      let html = '<div style="font-weight:700;color:var(--text);margin-bottom:6px">✅ User created</div>';
+      html += '<div><strong>Email:</strong> ' + _e(data.email) + '</div>';
+      html += '<div><strong>User ID:</strong> <code style="font-size:11px">' + _e(data.user_id) + '</code></div>';
+      if(data.full_name) html += '<div><strong>Name:</strong> ' + _e(data.full_name) + '</div>';
+      if(data.role) html += '<div><strong>Role:</strong> ' + _e(data.role) + '</div>';
+      if(data.magic_link){
+        html += '<div style="margin-top:8px"><strong>One-time magic link</strong> (share via Slack/text — click signs them in instantly):<br>'
+          + '<input type="text" readonly style="width:100%;margin-top:4px;background:var(--surface3);border:1px solid var(--border);color:var(--text);font-family:ui-monospace,monospace;font-size:10.5px;padding:6px;border-radius:6px" value="' + _e(data.magic_link) + '" onclick="this.select()"></div>';
+      }
+      if(data.temp_password){
+        html += '<div style="margin-top:8px;color:var(--muted);font-size:11px"><strong>Temp password</strong> (alternative to magic link — share securely): <code style="font-size:11px">' + _e(data.temp_password) + '</code></div>';
+      }
+      resEl.innerHTML = html;
+      resEl.style.display = 'block';
+    }
+    // Refresh user list
+    await window._adminRender_orig(true);
+    if(typeof _adminLoadGrants === 'function'){ await _adminLoadGrants(); _adminRenderGrantsTable(); }
+    if(typeof adminLoadLogs === 'function'){ await adminLoadLogs(true); }
+  } catch(e){
+    if(errEl){ errEl.style.display='block'; errEl.textContent = 'Create failed: ' + (e.message || e); }
+  } finally {
+    if(submitBtn){ submitBtn.disabled=false; submitBtn.textContent='+ Create user'; }
+  }
+}
+window.adminCreateUser = adminCreateUser;
 
 if(!window._adminRender_orig){ window._adminRender_orig = window.adminRender; }
 window.adminRender = async function(force){
@@ -14297,6 +14601,33 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
     var sumIn  = invs.reduce(function(a,b){return a+(b.totalIn||0);},0);
     var os = _id('pn_overall_summary');
     if(os) os.innerHTML = hold+'-yr hold · LP avg IRR <strong style="color:#10b981">'+_pct(avgLpIrr)+'</strong> · GP avg IRR <strong style="color:var(--accent)">'+_pct(avgGpIrr)+'</strong> · Total returned '+_$(sumOut)+' on '+_$(sumIn);
+
+    // Compute LP/GP summary for the segmented live bar
+    var lpTotalIn = lpInvs.reduce(function(a,b){return a+(b.totalIn||0);},0);
+    var lpTotalOut = lpInvs.reduce(function(a,b){return a+(b.totalOut||0);},0);
+    var gpTotalIn = gpInvs.reduce(function(a,b){return a+(b.totalIn||0);},0);
+    var gpTotalOut = gpInvs.reduce(function(a,b){return a+(b.totalOut||0);},0);
+    var lpEm = lpTotalIn > 0 ? lpTotalOut / lpTotalIn : 0;
+    var gpEm = gpTotalIn > 0 ? gpTotalOut / gpTotalIn : 0;
+    // CoC: LP year-1 cashflow / LP capital in
+    var lpCoC1 = (lpTotalIn>0 && lpInvs[0]) ? (lpInvs.reduce(function(a,b){return a+(b.cf && b.cf[1] || 0);},0) / lpTotalIn) : 0;
+    var gpCoC1 = (gpTotalIn>0 && gpInvs[0]) ? (gpInvs.reduce(function(a,b){return a+(b.cf && b.cf[1] || 0);},0) / gpTotalIn) : 0;
+    // Pref met: did LPs earn at least their preferred return over the hold?
+    var prefRate = (s.pref || 0) / 100;
+    var prefMet = prefRate <= 0 ? null : (avgLpIrr >= prefRate);
+    // GP fees (exclude promote) — sum of acq+AM+capx+disp paid to GPs
+    var gpFeesEarned = gpInvs.reduce(function(a,b){return a + (b.feesEarned || 0);}, 0);
+    var gpPromote = Math.max(0, gpTotalOut - gpTotalIn - gpFeesEarned);
+
+    window._partnerSummary = {
+      hold: hold,
+      lp: {totalIn: lpTotalIn, totalOut: lpTotalOut, em: lpEm, irr: avgLpIrr, coc: lpCoC1, prefMet: prefMet, prefRate: prefRate},
+      gp: {totalIn: gpTotalIn, totalOut: gpTotalOut, em: gpEm, irr: avgGpIrr, coc: gpCoC1, feesEarned: gpFeesEarned, promote: gpPromote, totalComp: gpTotalOut - gpTotalIn},
+      overall: {totalIn: sumIn, totalOut: sumOut, lpRatio: ratioLp, gpRatio: ratioGp}
+    };
+    if(typeof window._updateLiveBarFromPartners === 'function'){
+      try { window._updateLiveBarFromPartners(); } catch(_){}
+    }
   };
 
   // ── Roster CRUD ─────────────────────────────────────────────────────
