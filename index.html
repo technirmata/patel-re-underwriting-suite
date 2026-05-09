@@ -109,6 +109,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .field{margin-bottom:10px}
 .field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500;text-transform:uppercase;letter-spacing:.4px}
 .field input,.field select,.field textarea{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:7px;font-size:13px;transition:var(--trans)}
+/* H3: Don't let sticky topbar+livebar hide focused inputs */
+.panel input,.panel select,.panel textarea{scroll-margin-top:120px}
 .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);background:var(--surface3)}
 .field textarea{resize:vertical;min-height:80px}
 .field input.locked{background:#1a2810;border-color:#166534;color:#86efac}
@@ -1531,7 +1533,7 @@ strong { color: #e2e8f0; }
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Analyze</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="1" onclick="ST(1)">✅ Recommendation</div>
     <!-- Phase: Finance Calculators — single hub with sub-nav inside (Conv / Creative / Morby / Velocity) -->
-  <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Finance Calculators</div><div class="tab-phase-line"></div></div>
+  
   <div class="tab" data-tab="13" onclick="ST(13)">💰 Finance Calculators</div>
   <!-- Phase: Capital -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Capital</div><div class="tab-phase-line"></div></div>
@@ -1869,7 +1871,7 @@ strong { color: #e2e8f0; }
         <span class="dual-unit">%</span>
         <span class="dual-or">or</span>
         <span class="dual-unit">$</span>
-        <input type="number" id="fin_capex" placeholder="1200" title="CapEx $/yr">
+        <span class="ymo-pair-wrap"><input type="number" id="fin_capex" placeholder="1200" title="CapEx $/yr" class="ymo-yr"><span class="ymo-suffix">/yr</span><span class="ymo-divider"></span><input type="number" id="fin_capex_mo" placeholder="100" title="CapEx $/mo" class="ymo-mo"><span class="ymo-suffix">/mo</span></span>
       </div>
       <div class="pct-hint" id="hint_capex"></div>
     </div>
@@ -8811,26 +8813,28 @@ function setupYrMoPairs(){
     {yr:'fin_ins',      mo:'fin_ins_mo'},
     {yr:'fin_maint',    mo:'fin_maint_mo'},
     {yr:'fin_util',     mo:'fin_util_mo'},
-    {yr:'fin_hoa',      mo:'fin_hoa_mo'}
+    {yr:'fin_hoa',      mo:'fin_hoa_mo'},
+    {yr:'fin_capex',    mo:'fin_capex_mo'}
   ];
   pairs.forEach(function(p){
     const yrEl = document.getElementById(p.yr);
     const moEl = document.getElementById(p.mo);
     if(!yrEl || !moEl) return;
-    function num(v){ var n = parseFloat(v); return isFinite(n) ? n : 0; }
+    function parse(v){ if(v==='' || v==null) return null; var n = parseFloat(v); return isFinite(n) ? n : null; }
+    function fmt(n){ if(n===null||!isFinite(n)) return ''; if(n===0) return '0'; var rounded = Math.round(n); return Math.abs(n-rounded) < 0.005 ? String(rounded) : n.toFixed(2); }
     var syncing = false;
     function syncFromYr(){
       if(syncing) return; syncing = true;
-      const yv = num(yrEl.value);
-      moEl.value = yv ? Math.round(yv/12) : '';
-      // Trigger downstream recalc on the canonical input
+      var yv = parse(yrEl.value);
+      moEl.value = yv === null ? '' : fmt(yv/12);
+      // Trigger downstream recalc on the canonical input (mo for gross/other, yr for the rest)
       try { var canonicalMo = (moEl.id === 'fin_gross' || moEl.id === 'fin_other'); (canonicalMo ? moEl : yrEl).dispatchEvent(new Event('input',{bubbles:true})); } catch(_){}
       syncing = false;
     }
     function syncFromMo(){
       if(syncing) return; syncing = true;
-      const mv = num(moEl.value);
-      yrEl.value = mv ? Math.round(mv*12) : '';
+      var mv = parse(moEl.value);
+      yrEl.value = mv === null ? '' : fmt(mv*12);
       try { var canonicalMo = (moEl.id === 'fin_gross' || moEl.id === 'fin_other'); (canonicalMo ? moEl : yrEl).dispatchEvent(new Event('input',{bubbles:true})); } catch(_){}
       syncing = false;
     }
