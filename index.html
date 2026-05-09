@@ -9334,16 +9334,64 @@ function trialClosePaywall(){
   const ov = document.getElementById('paywallOverlay');
   if(ov) ov.classList.remove('open');
 }
-function trialOpenCheckout(){
-  // Placeholder: Stripe checkout key not yet provided.
-  // Once Parth pastes a Stripe Price ID + publishable key, this routes to a
-  // real checkout session via a Supabase Edge Function.
-  alert('Stripe checkout will live here.\n\nNext step: paste a Stripe publishable key + a price ID and I wire the checkout flow + webhook.');
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TDGvpERtTXWbYh3UMdUrCAQQtcAhP3VmzOUskZI5OsbYMYXovOkGO69mI3JyAst70kYxmOJyVBhgoFkDAR0uaLA00kb64ynzQ';
+const STRIPE_PRICE_MONTHLY = 'price_1TV37fERtTXWbYh3apty4pe2';
+async function trialOpenCheckout(){
+  // Get current user to attach customer_email to the Checkout Session
+  const sb = window._supabase || _sbClient && _sbClient();
+  if(!sb){ alert('Sign in first to subscribe.'); return; }
+  const { data:{ user } } = await sb.auth.getUser();
+  if(!user){ alert('Sign in first to subscribe.'); return; }
+  // Stripe Checkout Session via direct redirect (no backend needed for MVP)
+  // Uses Stripe's stripe.js to create + redirect
+  if(!window.Stripe){
+    // Load Stripe.js if not already loaded
+    await new Promise((res,rej)=>{
+      const sc = document.createElement('script');
+      sc.src='https://js.stripe.com/v3/';
+      sc.onload = res; sc.onerror = rej;
+      document.head.appendChild(sc);
+    });
+  }
+  const stripe = window.Stripe(STRIPE_PUBLISHABLE_KEY);
+  const successUrl = window.location.origin + window.location.pathname + '?stripe_checkout=success&session_id={CHECKOUT_SESSION_ID}';
+  const cancelUrl  = window.location.origin + window.location.pathname + '?stripe_checkout=cancel';
+  const { error } = await stripe.redirectToCheckout({
+    lineItems: [{ price: STRIPE_PRICE_MONTHLY, quantity: 1 }],
+    mode: 'subscription',
+    customerEmail: user.email,
+    clientReferenceId: user.id,
+    successUrl, cancelUrl
+  });
+  if(error){ alert('Checkout error: '+error.message); console.error(error); }
 }
 window.trialUpdateBanner = trialUpdateBanner;
 window.trialOpenPaywall = trialOpenPaywall;
 window.trialClosePaywall = trialClosePaywall;
 window.trialOpenCheckout = trialOpenCheckout;
+// Handle return from Stripe Checkout
+(async function handleStripeReturn(){
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get('stripe_checkout');
+  if(!status) return;
+  if(status === 'success'){
+    // Optimistically flip subscription_status to 'active' (webhook should also do this server-side later)
+    try {
+      const sb = window._supabase || _sbClient && _sbClient();
+      if(sb){
+        const { data:{user} } = await sb.auth.getUser();
+        if(user){
+          await sb.from('profiles').update({ subscription_status:'active' }).eq('user_id', user.id);
+        }
+      }
+    } catch(e){ console.warn('post-checkout profile update failed', e); }
+    alert('Subscription activated! Refreshing…');
+    window.location.search = '';  // strip query params + reload
+  } else if(status === 'cancel'){
+    history.replaceState({}, '', window.location.pathname);
+  }
+})();
+
 
 // Refresh banner on every auth-state change
 function _trialHook(){ try { trialUpdateBanner(); } catch(e){} }
