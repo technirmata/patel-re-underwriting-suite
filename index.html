@@ -6433,68 +6433,6 @@ body{font-family:'Times New Roman',Times,serif;color:#1a1a2e;background:#fff}
 .loi-sig-label{font-size:9pt;color:#555}
 .loi-footer{font-size:9pt;color:#777;text-align:center;margin-top:22pt;border-top:1pt solid #dde3ed;padding-top:8pt;font-style:italic}
 </style></head><body>${content}<div id="tmPopup" style="display:none"></div>
-<script>
-(function(){
-  // ── Casual-copy deterrent. NOT a security boundary. ──────────────────────
-  // Logged-in app pages disable convenient copy paths (right-click,
-  // Cmd-Option-I, Ctrl-U). Determined scrapers will still get the source
-  // by viewing the GitHub repo, opening DevTools the long way, or fetching
-  // the URL with curl. The real protection is server-side (Edge Functions,
-  // Supabase RLS, Stripe). This script just slows down low-effort copying.
-  try {
-    var IS_LANDING = /landing\.html$/.test(location.pathname);
-    if(IS_LANDING) return;  // Marketing landing must remain crawlable
-
-    // Block right-click context menu inside the app
-    document.addEventListener('contextmenu', function(e){
-      if(e.target && /input|textarea|select/i.test(e.target.tagName)) return;
-      e.preventDefault();
-    }, {capture:true});
-
-    // Block common view-source / devtools shortcuts
-    document.addEventListener('keydown', function(e){
-      // F12, Cmd/Ctrl+Shift+I, Cmd/Ctrl+Shift+J, Cmd/Ctrl+Shift+C, Ctrl+U
-      var k = (e.key||'').toLowerCase();
-      var blocked = (e.key === 'F12') ||
-                    ((e.metaKey||e.ctrlKey) && e.shiftKey && (k==='i'||k==='j'||k==='c')) ||
-                    ((e.ctrlKey||e.metaKey) && k==='u');
-      if(blocked){ e.preventDefault(); e.stopPropagation(); return false; }
-    }, {capture:true});
-
-    // Disable text selection on chrome (NOT inputs/textareas/numbers)
-    var s = document.createElement('style');
-    s.textContent = 'body, .panel, .topbar, .tabs, .card, .um-menu { -webkit-user-select:none; -moz-user-select:none; user-select:none } '+
-                    'input, textarea, select, .ai-chat-msgs, [data-allow-copy] { -webkit-user-select:text; user-select:text }';
-    document.documentElement.appendChild(s);
-
-    // Console banner — discourage copy-pasting from DevTools
-    var banner = '%c⚠ STOP — proprietary application. ' +
-                 'Copying or reverse-engineering this code violates terms of use ' +
-                 'and may result in account termination. ' +
-                 '© Patel RE Underwriting Suite — all rights reserved.';
-    setTimeout(function(){
-      try { console.log('%c'+banner, 'color:#fff;background:#dc2626;font-size:14px;font-weight:700;padding:8px 12px'); } catch(_){}
-      try { console.log('%cIf you came here for a job, please email parthusarealestate@gmail.com instead.','color:#6366f1;font-size:13px'); } catch(_){}
-    }, 800);
-
-    // DevTools open detector — slows console-snooping
-    var threshold = 160;
-    var devOpen = false;
-    setInterval(function(){
-      var w = window.outerWidth - window.innerWidth;
-      var h = window.outerHeight - window.innerHeight;
-      var open = (w > threshold) || (h > threshold);
-      if(open && !devOpen){
-        devOpen = true;
-        try { document.title = '⚠ ' + document.title; } catch(_){}
-      } else if(!open && devOpen){
-        devOpen = false;
-        try { document.title = document.title.replace(/^⚠ /,''); } catch(_){}
-      }
-    }, 2000);
-  } catch(_){}
-})();
-</script>
 </body></html>`);
   w.document.close();
   setTimeout(()=>{ w.print(); }, 400);
@@ -17778,5 +17716,67 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 })();
 </script>
 
+<script>
+(function(){
+  // ── Casual-copy deterrent. NOT a security boundary. ──────────────────────
+  // Logged-in app pages disable convenient copy paths (right-click,
+  // Cmd-Option-I, Ctrl-U). Determined scrapers will still get the source
+  // by viewing the GitHub repo, opening DevTools the long way, or fetching
+  // the URL with curl. The real protection is server-side (Edge Functions,
+  // Supabase RLS, Stripe). This script just slows down low-effort copying.
+  try {
+    var IS_LANDING = /landing\.html$/.test(location.pathname);
+    if(IS_LANDING) return;  // Marketing landing must remain crawlable
+
+    // Block right-click context menu inside the app
+    document.addEventListener('contextmenu', function(e){
+      if(e.target && /input|textarea|select/i.test(e.target.tagName)) return;
+      e.preventDefault();
+    }, {capture:true});
+
+    // Block common view-source / devtools shortcuts
+    document.addEventListener('keydown', function(e){
+      // F12, Cmd/Ctrl+Shift+I, Cmd/Ctrl+Shift+J, Cmd/Ctrl+Shift+C, Ctrl+U
+      var k = (e.key||'').toLowerCase();
+      var blocked = (e.key === 'F12') ||
+                    ((e.metaKey||e.ctrlKey) && e.shiftKey && (k==='i'||k==='j'||k==='c')) ||
+                    ((e.ctrlKey||e.metaKey) && k==='u');
+      if(blocked){ e.preventDefault(); e.stopPropagation(); return false; }
+    }, {capture:true});
+
+    // Disable text selection on chrome (NOT inputs/textareas/numbers)
+    var s = document.createElement('style');
+    s.textContent = 'body, .panel, .topbar, .tabs, .card, .um-menu { -webkit-user-select:none; -moz-user-select:none; user-select:none } '+
+                    'input, textarea, select, .ai-chat-msgs, [data-allow-copy] { -webkit-user-select:text; user-select:text }';
+    document.documentElement.appendChild(s);
+
+    // Console banner — discourage copy-pasting from DevTools
+    var banner = '%c⚠ STOP — proprietary application. ' +
+                 'Copying or reverse-engineering this code violates terms of use ' +
+                 'and may result in account termination. ' +
+                 '© Patel RE Underwriting Suite — all rights reserved.';
+    setTimeout(function(){
+      try { console.log('%c'+banner, 'color:#fff;background:#dc2626;font-size:14px;font-weight:700;padding:8px 12px'); } catch(_){}
+      try { console.log('%cIf you came here for a job, please email parthusarealestate@gmail.com instead.','color:#6366f1;font-size:13px'); } catch(_){}
+    }, 800);
+
+    // DevTools open detector — slows console-snooping
+    var threshold = 160;
+    var devOpen = false;
+    setInterval(function(){
+      var w = window.outerWidth - window.innerWidth;
+      var h = window.outerHeight - window.innerHeight;
+      var open = (w > threshold) || (h > threshold);
+      if(open && !devOpen){
+        devOpen = true;
+        try { document.title = '⚠ ' + document.title; } catch(_){}
+      } else if(!open && devOpen){
+        devOpen = false;
+        try { document.title = document.title.replace(/^⚠ /,''); } catch(_){}
+      }
+    }, 2000);
+  } catch(_){}
+})();
+</script>
 </body>
 </html>
