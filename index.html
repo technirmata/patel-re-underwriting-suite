@@ -1787,8 +1787,8 @@ strong { color: #e2e8f0; }
   </div>
 
   <div class="g2">
-    <div class="field"><label id="gross_rent_label">Gross Rent</label><span class="ymo-pair-wrap"><input type="number" id="fin_gross" placeholder="2500" class="ymo-mo"><span class="ymo-suffix">/mo</span><span class="ymo-divider"></span><input type="number" id="fin_gross_yr" placeholder="30000" title="Gross rent $/yr" class="ymo-yr"><span class="ymo-suffix">/yr</span></span></div>
-    <div class="field"><label>Other Income</label><span class="ymo-pair-wrap"><input type="number" id="fin_other" placeholder="0" class="ymo-mo"><span class="ymo-suffix">/mo</span><span class="ymo-divider"></span><input type="number" id="fin_other_yr" placeholder="0" title="Other income $/yr" class="ymo-yr"><span class="ymo-suffix">/yr</span></span></div>
+    <div class="field"><label id="gross_rent_label">Gross Rent</label><span class="ymo-pair-wrap"><input type="number" id="fin_gross_yr" placeholder="30000" title="Gross rent $/yr" class="ymo-yr"><span class="ymo-suffix">/yr</span><span class="ymo-divider"></span><input type="number" id="fin_gross" placeholder="2500" class="ymo-mo"><span class="ymo-suffix">/mo</span></span></div>
+    <div class="field"><label>Other Income</label><span class="ymo-pair-wrap"><input type="number" id="fin_other_yr" placeholder="0" title="Other income $/yr" class="ymo-yr"><span class="ymo-suffix">/yr</span><span class="ymo-divider"></span><input type="number" id="fin_other" placeholder="0" class="ymo-mo"><span class="ymo-suffix">/mo</span></span></div>
   </div>
   <div class="g2">
     <div class="field">
@@ -4604,7 +4604,7 @@ function R() {
   if(document.querySelector('#panel4.active')) calcMorby();
   // Dashboard & Exec
   updateDashPITI();   // always refresh PITI card when active structure changes
-  if(document.querySelector('#panel5.active')) updateDash();
+  if(document.querySelector('#panel15.active')) updateDash();
   if(document.querySelector('#panel7.active')) updateExec();
   // Refresh rent escalator hint whenever gross rent or hold period changes
   if(typeof updateRentEscHint === 'function') updateRentEscHint();
@@ -8523,7 +8523,7 @@ function updatePropertyType() {
   const unitLbl = el('units_label');
   if(unitLbl) unitLbl.textContent = cfg.unitLabel || 'Units';
   const grossLbl = el('gross_rent_label');
-  if(grossLbl) grossLbl.textContent = cfg.grossLabel || 'Gross Monthly Rent ($)';
+  if(grossLbl) grossLbl.textContent = cfg.grossLabel || 'Gross Rent';
 
   if(cfg.calc && calcBlock) {
     if(el('spec_calc_title')) el('spec_calc_title').textContent = cfg.title || 'Income Calculator';
@@ -8806,6 +8806,7 @@ function toggleNOILock() {
 function setupYrMoPairs(){
   const pairs = [
     {yr:'fin_gross_yr', mo:'fin_gross'},
+    {yr:'fin_other_yr', mo:'fin_other'},
     {yr:'fin_taxes',    mo:'fin_taxes_mo'},
     {yr:'fin_ins',      mo:'fin_ins_mo'},
     {yr:'fin_maint',    mo:'fin_maint_mo'},
@@ -8823,14 +8824,14 @@ function setupYrMoPairs(){
       const yv = num(yrEl.value);
       moEl.value = yv ? Math.round(yv/12) : '';
       // Trigger downstream recalc on the canonical input
-      try { (moEl.id === 'fin_gross' ? moEl : yrEl).dispatchEvent(new Event('input',{bubbles:true})); } catch(_){}
+      try { var canonicalMo = (moEl.id === 'fin_gross' || moEl.id === 'fin_other'); (canonicalMo ? moEl : yrEl).dispatchEvent(new Event('input',{bubbles:true})); } catch(_){}
       syncing = false;
     }
     function syncFromMo(){
       if(syncing) return; syncing = true;
       const mv = num(moEl.value);
       yrEl.value = mv ? Math.round(mv*12) : '';
-      try { (moEl.id === 'fin_gross' ? moEl : yrEl).dispatchEvent(new Event('input',{bubbles:true})); } catch(_){}
+      try { var canonicalMo = (moEl.id === 'fin_gross' || moEl.id === 'fin_other'); (canonicalMo ? moEl : yrEl).dispatchEvent(new Event('input',{bubbles:true})); } catch(_){}
       syncing = false;
     }
     yrEl.addEventListener('input', syncFromYr);
@@ -13415,10 +13416,8 @@ async function generatePitchDeck() {
   const _origST = window.ST;
   window.ST = function(i) {
     _origST(i);
-    if (i === 5) {
-      // Dashboard tab: seed snowball from S
-      buildSnowball();
-    }
+    // (panel5 was merged into panel15; the ST(5)→ST(15) redirect inside _origST handles legacy callers,
+    //  and panel15 onactivate already runs buildSnowball + seedNCP + updateDash + mxRender)
     if (i === 8) {
       const holdEl = el('pur_hold');   // intake hold period field id
       const projYEl = el('proj_years');
