@@ -9319,6 +9319,26 @@ async function _fetchProfile(force){
     return data;
   } catch(e){ console.warn('profile fetch ex:', e); return null; }
 }
+
+// Returns true if the current user has admin/moderator/viewer role (admin tab visibility)
+async function _userHasPanelAccess(){
+  const profile = await _fetchProfile();
+  if(!profile) return false;
+  if(profile.is_admin) return true;
+  // Check user_role_grants for active grant
+  try {
+    const sb = _sbClient();
+    const { data, error } = await sb.from('user_role_grants')
+      .select('role')
+      .eq('grantee_user_id', profile.user_id)
+      .is('revoked_at', null)
+      .in('role', ['admin','moderator','viewer'])
+      .limit(1);
+    return !error && data && data.length > 0;
+  } catch(e){ return false; }
+}
+window._userHasPanelAccess = _userHasPanelAccess;
+
 window._fetchProfile = _fetchProfile;
 
 async function trialUpdateBanner(){
@@ -9330,10 +9350,17 @@ async function trialUpdateBanner(){
   const profile = await _fetchProfile();
   if(!profile){ bar.style.display='none'; return; }
 
-  // Show admin tab BEFORE any early returns so comp/active admins see it
+  // Show admin tab BEFORE any early returns so comp/active admins/moderators/viewers see it
   try {
     const adminTab = document.querySelector('.tab[data-tab="17"]');
-    if(adminTab) adminTab.style.display = profile.is_admin ? '' : 'none';
+    if(adminTab){
+      if(profile.is_admin){
+        adminTab.style.display = '';
+      } else {
+        // Check role grants async — defer flip if found
+        _userHasPanelAccess().then(has => { if(has && adminTab) adminTab.style.display = ''; }).catch(()=>{});
+      }
+    }
   } catch(_){}
 
   // Comp + active hide the banner entirely
@@ -9462,8 +9489,10 @@ async function adminRender(force){
   const session = _getSession();
   if(!session){ return; }
   const profile = await _fetchProfile();
-  if(!profile || !profile.is_admin){
-    // Should never happen — RLS would reject too — but defense in depth
+  if(!profile){ return; }
+  // Admin OR moderator/viewer (RLS handles fine-grained gating)
+  const hasAccess = profile.is_admin || (typeof _userHasPanelAccess === 'function' && await _userHasPanelAccess());
+  if(!hasAccess){
     const e = document.getElementById('adminError');
     if(e){ e.style.display='block'; e.textContent='Admin access required.'; }
     return;
