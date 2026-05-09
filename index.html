@@ -4013,16 +4013,16 @@ strong { color: #e2e8f0; }
   </div>
 
   <div class="g2" style="margin-top:8px">
-    <div class="field"><label>Loan Balance ($)</label><input type="number" id="sb_bal" step="1000" placeholder="240000" oninput="sbCompute()"></div>
-    <div class="field"><label>Annual Rate (%)</label><input type="number" id="sb_rate" step=".125" placeholder="7.0" oninput="sbCompute()"></div>
+    <div class="field"><label>Loan Balance ($)</label><input type="number" id="sba_bal" step="1000" placeholder="240000" oninput="sbCompute()"></div>
+    <div class="field"><label>Annual Rate (%)</label><input type="number" id="sba_rate" step=".125" placeholder="7.0" oninput="sbCompute()"></div>
   </div>
   <div class="g2">
-    <div class="field"><label>Remaining Term (yrs)</label><input type="number" id="sb_term" placeholder="30" value="30" oninput="sbCompute()"></div>
-    <div class="field"><label>Base Monthly P&amp;I ($) <span class="info" title="Auto-calculated from balance, rate, and term if blank">?</span></label><input type="number" id="sb_pmt" step="10" placeholder="auto" oninput="sbCompute()"></div>
+    <div class="field"><label>Remaining Term (yrs)</label><input type="number" id="sba_term" placeholder="30" value="30" oninput="sbCompute()"></div>
+    <div class="field"><label>Base Monthly P&amp;I ($) <span class="info" title="Auto-calculated from balance, rate, and term if blank">?</span></label><input type="number" id="sba_pmt" step="10" placeholder="auto" oninput="sbCompute()"></div>
   </div>
   <div class="g2">
-    <div class="field"><label>Extra Principal / month ($)</label><input type="number" id="sb_extra" step="50" placeholder="500" oninput="sbCompute()"></div>
-    <div class="field"><label>One-time Lump Sum ($) <span class="info" title="Optional. Applied at month 1 (e.g., tax refund, bonus, refi cash-out)">?</span></label><input type="number" id="sb_lump" step="500" placeholder="0" oninput="sbCompute()"></div>
+    <div class="field"><label>Extra Principal / month ($)</label><input type="number" id="sba_extra" step="50" placeholder="500" oninput="sbCompute()"></div>
+    <div class="field"><label>One-time Lump Sum ($) <span class="info" title="Optional. Applied at month 1 (e.g., tax refund, bonus, refi cash-out)">?</span></label><input type="number" id="sba_lump" step="500" placeholder="0" oninput="sbCompute()"></div>
   </div>
 
   <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
@@ -4031,15 +4031,15 @@ strong { color: #e2e8f0; }
   </div>
 </div>
 
-<div class="card" id="sbResult">
+<div class="card" id="sbaResult">
   <div class="card-title">⏳ Payoff Comparison</div>
-  <div id="sbResultBody" style="font-size:12px;color:var(--muted)">Enter loan balance, rate, term, and extra principal to see how many years and dollars you save.</div>
+  <div id="sbaResultBody" style="font-size:12px;color:var(--muted)">Enter loan balance, rate, term, and extra principal to see how many years and dollars you save.</div>
 </div>
 </div>
 
 <div class="card">
   <div class="card-title">📅 Year-by-Year Balance</div>
-  <div class="amort-wrap"><table><thead><tr><th style="text-align:left">Year</th><th>Standard Balance</th><th>With Extra Balance</th><th>Standard Int (yr)</th><th>With Extra Int (yr)</th><th>Status</th></tr></thead><tbody id="sbTableBody"></tbody></table></div>
+  <div class="amort-wrap"><table><thead><tr><th style="text-align:left">Year</th><th>Standard Balance</th><th>With Extra Balance</th><th>Standard Int (yr)</th><th>With Extra Int (yr)</th><th>Status</th></tr></thead><tbody id="sbaTableBody"></tbody></table></div>
 </div>
 </div><!-- end panel18 -->
 
@@ -17511,14 +17511,14 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
   }
 
   window.sbCompute = function(){
-    var bal = _v('sb_bal');
-    var rate = _v('sb_rate') / 100;
-    var termY = _v('sb_term') || 30;
-    var pmtIn = _v('sb_pmt');
-    var extra = _v('sb_extra');
-    var lump = _v('sb_lump');
-    var body = _id('sbResultBody');
-    var tbody = _id('sbTableBody');
+    var bal = _v('sba_bal');
+    var rate = _v('sba_rate') / 100;
+    var termY = _v('sba_term') || 30;
+    var pmtIn = _v('sba_pmt');
+    var extra = _v('sba_extra');
+    var lump = _v('sba_lump');
+    var body = _id('sbaResultBody');
+    var tbody = _id('sbaTableBody');
     if(tbody) tbody.innerHTML = '';
     if(!body) return;
 
@@ -17531,7 +17531,7 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     var n = termY * 12;
     var basePmt = pmtIn > 0 ? pmtIn : _calcPmt(bal, monthlyR, n);
     // Update placeholder to show auto-calculated P&I
-    var pmtEl = _id('sb_pmt');
+    var pmtEl = _id('sba_pmt');
     if(pmtEl && pmtIn === 0) pmtEl.placeholder = basePmt.toFixed(2);
 
     var std = _amortize(bal, monthlyR, basePmt, 0, 0);
@@ -17591,16 +17591,16 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
       alert('No active financing structure yet. Fill out the Deal Intake first (purchase price + down payment).');
       return;
     }
-    var balEl = _id('sb_bal'); if(balEl) balEl.value = Math.round(S.activeLoan);
-    var rateEl = _id('sb_rate'); if(rateEl) rateEl.value = ((S.activeRate || S.convRate || 0.07) * 100).toFixed(3);
-    var termEl = _id('sb_term'); if(termEl && !termEl.value) termEl.value = 30;
-    var pmtEl = _id('sb_pmt'); if(pmtEl) pmtEl.value = '';  // auto-calc
+    var balEl = _id('sba_bal'); if(balEl) balEl.value = Math.round(S.activeLoan);
+    var rateEl = _id('sba_rate'); if(rateEl) rateEl.value = ((S.activeRate || S.convRate || 0.07) * 100).toFixed(3);
+    var termEl = _id('sba_term'); if(termEl && !termEl.value) termEl.value = 30;
+    var pmtEl = _id('sba_pmt'); if(pmtEl) pmtEl.value = '';  // auto-calc
     sbCompute();
   };
 
   window.sbReset = function(){
-    ['sb_bal','sb_rate','sb_pmt','sb_extra','sb_lump'].forEach(function(id){var e=_id(id); if(e) e.value='';});
-    var termEl = _id('sb_term'); if(termEl) termEl.value = 30;
+    ['sba_bal','sba_rate','sba_pmt','sba_extra','sba_lump'].forEach(function(id){var e=_id(id); if(e) e.value='';});
+    var termEl = _id('sba_term'); if(termEl) termEl.value = 30;
     sbCompute();
   };
 })();
