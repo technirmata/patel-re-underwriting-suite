@@ -9949,7 +9949,7 @@ async function trialUpdateBanner(){
   if(profile.subscription_status === 'past_due' || profile.subscription_status === 'canceled'){
     bar.className = 'trial-banner trial-expired';
     bar.style.display='flex';
-    bar.innerHTML = '⛔ <strong>Subscription '+profile.subscription_status.replace('_',' ')+'.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Update billing →</a>';
+    bar.innerHTML = '⛔ <strong>Subscription '+profile.subscription_status.replace('_',' ')+'.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenBillingPortal()">Update billing →</a>';
     return;
   }
 
@@ -9957,19 +9957,37 @@ async function trialUpdateBanner(){
   const endMs = new Date(profile.trial_ends_at).getTime();
   if(!isFinite(endMs)){ bar.style.display='none'; return; }
   const daysLeft = Math.max(0, Math.ceil((endMs - Date.now()) / 86400000));
+  // 'trialing' = card on file via Stripe; 'free' = no card yet
+  const cardOnFile = (profile.subscription_status === 'trialing');
+  const fmtDay = function(){
+    var d = new Date(endMs);
+    return d.toLocaleDateString(undefined, {month:'short', day:'numeric'});
+  };
 
   if(daysLeft <= 0){
     bar.className = 'trial-banner trial-expired';
-    bar.innerHTML = '⛔ <strong>Trial expired.</strong> Subscribe to keep using the suite. &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Subscribe →</a>';
+    if(cardOnFile){
+      bar.innerHTML = '⏳ <strong>Trial ended — card charged today.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenBillingPortal()">Manage billing →</a>';
+    } else {
+      bar.innerHTML = '⛔ <strong>Trial expired.</strong> Add a card to keep using the suite. &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Add card →</a>';
+      setTimeout(trialOpenPaywall, 300);
+    }
     bar.style.display='flex';
-    setTimeout(trialOpenPaywall, 300);
   } else if(daysLeft <= 2){
     bar.className = 'trial-banner trial-warn';
-    bar.innerHTML = '⚠ <strong>'+daysLeft+' day'+(daysLeft===1?'':'s')+' left in your trial.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Upgrade now →</a>';
+    if(cardOnFile){
+      bar.innerHTML = '⚠ <strong>'+daysLeft+' day'+(daysLeft===1?'':'s')+' left — card charges on '+fmtDay()+'.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenBillingPortal()">Cancel or manage billing →</a>';
+    } else {
+      bar.innerHTML = '⚠ <strong>'+daysLeft+' day'+(daysLeft===1?'':'s')+' left — add a card to continue.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Add card →</a>';
+    }
     bar.style.display='flex';
   } else {
     bar.className = 'trial-banner trial-active';
-    bar.innerHTML = '🎁 <strong>'+daysLeft+' days left in your trial.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Upgrade →</a>';
+    if(cardOnFile){
+      bar.innerHTML = '🎁 <strong>'+daysLeft+' days left in your trial.</strong> Charges on '+fmtDay()+' unless you cancel. &nbsp;<a class="trial-cta" onclick="trialOpenBillingPortal()">Manage billing →</a>';
+    } else {
+      bar.innerHTML = '🎁 <strong>'+daysLeft+' days left in your trial.</strong> Add a card to keep going. &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Add card →</a>';
+    }
     bar.style.display='flex';
   }
 
@@ -9984,41 +10002,78 @@ function trialClosePaywall(){
   const ov = document.getElementById('paywallOverlay');
   if(ov) ov.classList.remove('open');
 }
-const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TDGvpERtTXWbYh3UMdUrCAQQtcAhP3VmzOUskZI5OsbYMYXovOkGO69mI3JyAst70kYxmOJyVBhgoFkDAR0uaLA00kb64ynzQ';
-const STRIPE_PRICE_MONTHLY = 'price_1TV37fERtTXWbYh3apty4pe2';
+// Stripe Checkout via Supabase Edge Function — server creates the session
+// with trial_period_days:7 and payment_method_collection:'always' so the
+// customer must enter a card upfront. Card isn't charged until day 8 unless
+// they cancel via the Customer Portal first.
 async function trialOpenCheckout(){
-  // Get current user to attach customer_email to the Checkout Session
-  const sb = window._supabase || _sbClient && _sbClient();
+  const sb = window._supabase || (_sbClient && _sbClient());
   if(!sb){ alert('Sign in first to subscribe.'); return; }
-  const { data:{ user } } = await sb.auth.getUser();
-  if(!user){ alert('Sign in first to subscribe.'); return; }
-  // Stripe Checkout Session via direct redirect (no backend needed for MVP)
-  // Uses Stripe's stripe.js to create + redirect
-  if(!window.Stripe){
-    // Load Stripe.js if not already loaded
-    await new Promise((res,rej)=>{
-      const sc = document.createElement('script');
-      sc.src='https://js.stripe.com/v3/';
-      sc.onload = res; sc.onerror = rej;
-      document.head.appendChild(sc);
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ alert('Sign in first to subscribe.'); return; }
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/create-checkout-session`, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + session.access_token,
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON
+      },
+      body: JSON.stringify({
+        return_url: window.location.origin + window.location.pathname
+      })
     });
+    const body = await resp.json();
+    if(!resp.ok || !body.url){
+      alert('Could not start checkout: ' + (body.detail || body.error || 'unknown error'));
+      console.error('checkout error:', body); return;
+    }
+    window.location.href = body.url;
+  } catch(e){
+    alert('Network error starting checkout: ' + e.message);
+    console.error(e);
   }
-  const stripe = window.Stripe(STRIPE_PUBLISHABLE_KEY);
-  const successUrl = window.location.origin + window.location.pathname + '?stripe_checkout=success&session_id={CHECKOUT_SESSION_ID}';
-  const cancelUrl  = window.location.origin + window.location.pathname + '?stripe_checkout=cancel';
-  const { error } = await stripe.redirectToCheckout({
-    lineItems: [{ price: STRIPE_PRICE_MONTHLY, quantity: 1 }],
-    mode: 'subscription',
-    customerEmail: user.email,
-    clientReferenceId: user.id,
-    successUrl, cancelUrl
-  });
-  if(error){ alert('Checkout error: '+error.message); console.error(error); }
 }
+
+// Stripe-hosted Customer Portal — user can update card / cancel / view invoices.
+// Used by the "Manage Billing" button in the user-chip dropdown.
+async function trialOpenBillingPortal(){
+  const sb = window._supabase || (_sbClient && _sbClient());
+  if(!sb){ alert('Sign in first.'); return; }
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ alert('Sign in first.'); return; }
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/customer-portal`, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + session.access_token,
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON
+      },
+      body: JSON.stringify({
+        return_url: window.location.origin + window.location.pathname
+      })
+    });
+    const body = await resp.json();
+    if(!resp.ok || !body.url){
+      if(body.error === 'no_customer'){
+        alert('No subscription yet — start a trial first.');
+        return;
+      }
+      alert('Could not open billing portal: ' + (body.detail || body.error || 'unknown error'));
+      return;
+    }
+    window.location.href = body.url;
+  } catch(e){
+    alert('Network error: ' + e.message);
+  }
+}
+
 window.trialUpdateBanner = trialUpdateBanner;
 window.trialOpenPaywall = trialOpenPaywall;
 window.trialClosePaywall = trialClosePaywall;
 window.trialOpenCheckout = trialOpenCheckout;
+window.trialOpenBillingPortal = trialOpenBillingPortal;
 // Handle return from Stripe Checkout
 (async function handleStripeReturn(){
   const params = new URLSearchParams(window.location.search);
@@ -10759,6 +10814,12 @@ function _userChipRender(){
   html += '<div class="um-action" onclick="_userChipClose();(typeof openTeams===\'function\')&&openTeams()">'
     + '<span class="um-item-icon">⚙</span>'
     + '<span class="um-item-text">Manage workspace</span></div>';
+  // Manage Billing — Stripe Customer Portal (update card / cancel / invoices)
+  if(s){
+    html += '<div class="um-item" onclick="_userChipClose();(typeof trialOpenBillingPortal===\'function\')&&trialOpenBillingPortal()">'
+      + '<span class="um-item-icon">💳</span>'
+      + '<span class="um-item-text">Manage billing</span></div>';
+  }
   // Admin Controls — only shown if the chip's user has admin/moderator/viewer access
   if(s){
     html += '<div class="um-item" id="umAdminItem" style="display:none" onclick="_userChipClose();_openAdminPanel()">'
