@@ -8466,46 +8466,46 @@ function clearAll(){
 // ── Init ──────────────────────────────────────────────────────────────────────
 // ── Property Type Config & Dynamic Income Calculator ─────────────────────────
 const PROP_TYPE_CONFIG = {
-  sfr:        { calc:false, unitLabel:'Bedrooms',    grossLabel:'Monthly Rent ($)' },
-  multifamily:{ calc:true,  unitLabel:'Units',       grossLabel:'Total Gross Monthly Rent ($)',
+  sfr:        { calc:false, unitLabel:'Bedrooms',    grossLabel:'Rent' },
+  multifamily:{ calc:true,  unitLabel:'Units',       grossLabel:'Total Gross Rent',
                 nLabel:'# Units',       rLabel:'Avg Rent / Unit / mo ($)', oLabel:'Occupancy %',
                 divisor:1, syncUnits:true,
                 title:'Multifamily Income Calculator' },
-  rvpark:     { calc:true,  unitLabel:'Total Pads',  grossLabel:'Total Gross Monthly Rent ($)',
+  rvpark:     { calc:true,  unitLabel:'Total Pads',  grossLabel:'Total Gross Rent',
                 nLabel:'Total RV Pads', rLabel:'Avg Pad Rent / mo ($)',    oLabel:'Occupancy %',
                 divisor:1, syncUnits:true,
                 title:'RV Park Calculator  ( pads × pad rent × occ% )' },
-  mhp:        { calc:true,  unitLabel:'Total Lots',  grossLabel:'Total Gross Monthly Rent ($)',
+  mhp:        { calc:true,  unitLabel:'Total Lots',  grossLabel:'Total Gross Rent',
                 nLabel:'Total MH Lots', rLabel:'Avg Lot Rent / mo ($)',    oLabel:'Occupancy %',
                 divisor:1, syncUnits:true,
                 title:'Mobile Home Park Calculator  ( lots × lot rent × occ% )' },
-  storage:    { calc:true,  unitLabel:'Storage Units',grossLabel:'Total Gross Monthly Rent ($)',
+  storage:    { calc:true,  unitLabel:'Storage Units',grossLabel:'Total Gross Rent',
                 nLabel:'# Storage Units',rLabel:'Avg Monthly Rate ($)',    oLabel:'Occupancy %',
                 divisor:1, syncUnits:true,
                 title:'Self Storage Calculator  ( units × rate × occ% )' },
-  str:        { calc:true,  unitLabel:'Bedrooms',    grossLabel:'Avg Monthly Gross Revenue ($)',
+  str:        { calc:true,  unitLabel:'Bedrooms',    grossLabel:'Avg Gross Revenue',
                 nLabel:'Nights Avail / mo',rLabel:'Avg Nightly Rate ($)', oLabel:'Avg Occ %',
                 divisor:1,
                 title:'STR Calculator  ( nights avail × nightly rate × occ% )' },
-  commercial: { calc:true,  unitLabel:'Tenants',     grossLabel:'Total Gross Monthly Rent ($)',
+  commercial: { calc:true,  unitLabel:'Tenants',     grossLabel:'Total Gross Rent',
                 nLabel:'Leasable Sqft', rLabel:'NNN Rent / sqft / yr ($)', oLabel:'Occupancy %',
                 divisor:12,
                 title:'Commercial NNN Calculator  ( sqft × $/sqft/yr ÷ 12 × occ% )' },
-  office:     { calc:true,  unitLabel:'Tenants',     grossLabel:'Total Gross Monthly Rent ($)',
+  office:     { calc:true,  unitLabel:'Tenants',     grossLabel:'Total Gross Rent',
                 nLabel:'Leasable Sqft', rLabel:'Rent / sqft / yr ($)',     oLabel:'Occupancy %',
                 divisor:12,
                 title:'Office Calculator  ( sqft × $/sqft/yr ÷ 12 × occ% )' },
-  retail:     { calc:true,  unitLabel:'Tenants',     grossLabel:'Total Gross Monthly Rent ($)',
+  retail:     { calc:true,  unitLabel:'Tenants',     grossLabel:'Total Gross Rent',
                 nLabel:'Leasable Sqft', rLabel:'Rent / sqft / yr ($)',     oLabel:'Occupancy %',
                 divisor:12,
                 title:'Retail Strip Calculator  ( sqft × $/sqft/yr ÷ 12 × occ% )' },
-  mixed:      { calc:false, unitLabel:'Units',       grossLabel:'Total Gross Monthly Rent ($)' },
-  land:       { calc:false, unitLabel:'Parcels',     grossLabel:'Monthly Ground Lease / Income ($)' },
+  mixed:      { calc:false, unitLabel:'Units',       grossLabel:'Total Gross Rent' },
+  land:       { calc:false, unitLabel:'Parcels',     grossLabel:'Ground Lease / Income' },
 };
 
 function updatePropertyType() {
   const type = gvs('prop_type');
-  const cfg = PROP_TYPE_CONFIG[type] || { calc:false, unitLabel:'Units', grossLabel:'Gross Monthly Rent ($)' };
+  const cfg = PROP_TYPE_CONFIG[type] || { calc:false, unitLabel:'Units', grossLabel:'Gross Rent' };
   const calcBlock = el('spec-income-calc');
 
   // Show / hide calculator block
