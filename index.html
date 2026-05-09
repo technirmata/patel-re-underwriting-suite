@@ -17281,25 +17281,50 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 })();
 </script>
 
-<!-- ── Defensive: move AI FAB, backdrop, chat to <body> so they aren't trapped inside any panel's display:none ── -->
+<!-- ── Defensive: heal malformed div nesting at runtime ─────────────────────────
+   ROOT-CAUSE: panel7 has a missing </div> in source HTML; the browser parses
+   panels 8/9/11/13/14/15/16/17 as DIRECT CHILDREN of panel7 (display:none),
+   making 8 of ~12 tabs render at 0×0 even when marked .active. The same bug
+   trapped the AI chat FAB. Until source is repaired we re-parent at runtime.
+   ────────────────────────────────────────────────────────────────────────────── -->
 <script>
 (function(){
-  function moveToBody(){
-    ['aiFab','aiChatBackdrop','aiChat'].forEach(function(id){
+  function reparentStraySiblings(){
+    var panel7 = document.getElementById('panel7');
+    if(!panel7 || !panel7.parentNode) return;
+    var dest = panel7.parentNode;
+    // Any panel that became a direct child of panel7 (other than panel7 itself)
+    // gets pulled out to be a sibling of panel7
+    Array.prototype.slice.call(panel7.querySelectorAll(':scope > .panel')).forEach(function(p){
+      try { dest.insertBefore(p, panel7.nextSibling); } catch(_){}
+    });
+    // Also catch ANY .panel.active that's a descendant (deeper nesting)
+    Array.prototype.slice.call(panel7.querySelectorAll('.panel')).forEach(function(p){
+      if(p === panel7) return;
+      try { dest.insertBefore(p, panel7.nextSibling); } catch(_){}
+    });
+  }
+  function moveOverlayToBody(){
+    ['aiFab','aiChatBackdrop','aiChat','authOverlay','paywallOverlay','adminUserOverlay','settingsOverlay','projOverlay'].forEach(function(id){
       var el = document.getElementById(id);
       if(!el) return;
       if(el.parentElement !== document.body) document.body.appendChild(el);
     });
   }
-  if(document.readyState !== 'loading') moveToBody();
-  else document.addEventListener('DOMContentLoaded', moveToBody);
-  // Also re-run after any panel switch — defends against future nesting regressions
+  function heal(){
+    try { reparentStraySiblings(); } catch(_){}
+    try { moveOverlayToBody(); } catch(_){}
+  }
+  if(document.readyState !== 'loading') heal();
+  else document.addEventListener('DOMContentLoaded', heal);
+  // Re-run after any panel switch — defends against future regressions
   if(typeof window !== 'undefined'){
     var origST = window.ST;
     if(typeof origST === 'function'){
       window.ST = function(){
+        try { heal(); } catch(_){}
         var r = origST.apply(this, arguments);
-        try { moveToBody(); } catch(_){}
+        try { heal(); } catch(_){}
         return r;
       };
     }
