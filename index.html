@@ -1416,7 +1416,6 @@ strong { color: #e2e8f0; }
   <div class="tab" data-tab="11" onclick="ST(11);partnerInit();partnerCompute()">👥 Partners</div>
   <div class="tab" data-tab="15" onclick="ST(15);mxRender()">📊 Metrics</div>
   <div class="tab" data-tab="16" onclick="ST(16);dscInit()">🛡 Discipline</div>
-  <div class="tab" data-tab="17" onclick="ST(17);adminRender()" style="display:none">🛠 Admin</div>
   <!-- Phase: Deal -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Deal</div><div class="tab-phase-line"></div></div>
   <div class="tab" data-tab="8" onclick="ST(8);seedFA();buildProjection()">📈 Projections</div>
@@ -3540,6 +3539,24 @@ strong { color: #e2e8f0; }
     </form>
     <div id="adminGrantError" style="font-size:12px;color:#fca5a5;margin-bottom:8px;display:none"></div>
     <div style="overflow-x:auto"><table class="pn-table" id="adminGrantsTable"></table></div>
+  </div>
+
+  <!-- Activity Logs -->
+  <div class="card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <span>📜 Activity Logs</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <div role="tablist" style="display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:2px">
+          <button class="btn btn-sm" id="logsTabAdmin" onclick="adminSwitchLogsTab('admin')" style="font-size:11px;padding:4px 10px;background:var(--accent);color:#fff;border:none;border-radius:6px">Admin actions</button>
+          <button class="btn btn-sm" id="logsTabAuth" onclick="adminSwitchLogsTab('auth')" style="font-size:11px;padding:4px 10px;background:transparent;color:var(--muted);border:none;border-radius:6px">Auth events</button>
+          <button class="btn btn-sm" id="logsTabGrants" onclick="adminSwitchLogsTab('grants')" style="font-size:11px;padding:4px 10px;background:transparent;color:var(--muted);border:none;border-radius:6px">Grant history</button>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="adminLoadLogs(true)" title="Reload logs">↻</button>
+      </div>
+    </div>
+    <div style="font-size:11.5px;color:var(--text2);line-height:1.5;margin-bottom:10px" id="adminLogsHelp">Every privileged write (grant role, change subscription, toggle admin) is auto-recorded. Admin actions log shows app-level events; Auth events show Supabase sign-ins / password resets / token refreshes; Grant history shows the full lifecycle of role grants (including revoked).</div>
+    <div style="overflow-x:auto;max-height:480px;overflow-y:auto"><table class="pn-table" id="adminLogsTable"></table></div>
+    <div id="adminLogsError" style="font-size:12px;color:#fca5a5;margin-top:8px;display:none"></div>
   </div>
 </div><!-- end panel17 -->
 
@@ -9339,6 +9356,14 @@ async function _userHasPanelAccess(){
 }
 window._userHasPanelAccess = _userHasPanelAccess;
 
+// Open the admin panel (panel17) directly from the user-chip dropdown.
+// ST() routes by panel id — works without a corresponding tab bar entry.
+function _openAdminPanel(){
+  if(typeof ST === 'function') ST(17);
+  if(typeof adminRender === 'function') adminRender();
+}
+window._openAdminPanel = _openAdminPanel;
+
 window._fetchProfile = _fetchProfile;
 
 async function trialUpdateBanner(){
@@ -9350,18 +9375,7 @@ async function trialUpdateBanner(){
   const profile = await _fetchProfile();
   if(!profile){ bar.style.display='none'; return; }
 
-  // Show admin tab BEFORE any early returns so comp/active admins/moderators/viewers see it
-  try {
-    const adminTab = document.querySelector('.tab[data-tab="17"]');
-    if(adminTab){
-      if(profile.is_admin){
-        adminTab.style.display = '';
-      } else {
-        // Check role grants async — defer flip if found
-        _userHasPanelAccess().then(has => { if(has && adminTab) adminTab.style.display = ''; }).catch(()=>{});
-      }
-    }
-  } catch(_){}
+  // (admin entry now lives in the user-chip dropdown, not the tab bar)
 
   // Comp + active hide the banner entirely
   if(profile.subscription_status === 'active' || profile.subscription_status === 'comp'){
@@ -9786,11 +9800,128 @@ function _adminRenderGrantsTable(){
   t.innerHTML = html;
 }
 
+
+// ════════════════════════════════════════════════════════════════════════
+// Activity Logs — admin actions, auth events, role-grant history
+// ════════════════════════════════════════════════════════════════════════
+let _adminLogs = { admin: [], auth: [], grants: [] };
+let _adminLogsTab = 'admin';
+
+window.adminSwitchLogsTab = function(tab){
+  _adminLogsTab = tab;
+  ['Admin','Auth','Grants'].forEach(function(k){
+    var btn = document.getElementById('logsTab'+k);
+    if(!btn) return;
+    var on = (k.toLowerCase() === tab);
+    btn.style.background = on ? 'var(--accent)' : 'transparent';
+    btn.style.color = on ? '#fff' : 'var(--muted)';
+  });
+  _adminRenderLogsTable();
+};
+
+async function adminLoadLogs(force){
+  const errEl = document.getElementById('adminLogsError');
+  if(errEl) { errEl.style.display='none'; errEl.textContent=''; }
+  try {
+    const sb = _sbClient();
+    const [adm, ev, grt] = await Promise.all([
+      sb.from('admin_audit_log').select('id,actor_email,action,target_email,before_value,after_value,notes,created_at').order('created_at',{ascending:false}).limit(150),
+      sb.rpc('recent_auth_events', { p_limit: 100 }),
+      sb.from('user_role_grants').select('id,role,granted_by,grantee_user_id,granted_at,revoked_at,revoked_by,notes').order('granted_at',{ascending:false}).limit(150)
+    ]);
+    if(adm.error) throw adm.error;
+    _adminLogs.admin = adm.data || [];
+    _adminLogs.auth = ev.error ? [] : (ev.data || []);
+    _adminLogs.grants = grt.error ? [] : (grt.data || []);
+    _adminRenderLogsTable();
+  } catch(e){
+    if(errEl) { errEl.style.display='block'; errEl.textContent = 'Logs load failed: ' + (e.message || e); }
+  }
+}
+window.adminLoadLogs = adminLoadLogs;
+
+function _adminFmtRel(s){
+  if(!s) return '—';
+  try {
+    const d = new Date(s); const ms = Date.now() - d.getTime();
+    const m = Math.round(ms/60000); if(m < 1) return 'just now';
+    if(m < 60) return m+'m ago';
+    const h = Math.round(m/60); if(h < 24) return h+'h ago';
+    const dy = Math.round(h/24); if(dy < 30) return dy+'d ago';
+    return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  } catch(e){ return s; }
+}
+
+function _adminRenderLogsTable(){
+  const t = document.getElementById('adminLogsTable'); if(!t) return;
+  const userByUid = {};
+  (_adminUsers||[]).forEach(function(u){ userByUid[u.user_id] = u; });
+  if(_adminLogsTab === 'admin'){
+    const rows = _adminLogs.admin || [];
+    if(!rows.length){ t.innerHTML = '<tbody><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:18px;font-style:italic">No admin actions logged yet.</td></tr></tbody>'; return; }
+    let html = '<thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Target</th><th>Before → After</th><th>Notes</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      const beforeAfter = (r.before_value !== null && r.before_value !== undefined ? JSON.stringify(r.before_value) : '—') + ' → ' + (r.after_value !== null && r.after_value !== undefined ? JSON.stringify(r.after_value) : '—');
+      const actCls = {
+        'profile.is_admin':'#a5b4fc',
+        'profile.subscription_status':'#fbbf24',
+        'role_grant.create':'#86efac',
+        'role_grant.revoke':'#fca5a5'
+      }[r.action] || '#94a3b8';
+      html += '<tr>'
+        + '<td style="font-size:11px;white-space:nowrap" title="'+_e(r.created_at)+'">'+_adminFmtRel(r.created_at)+'</td>'
+        + '<td style="font-family:ui-monospace,monospace;font-size:11px">'+_e(r.actor_email||'—')+'</td>'
+        + '<td><span style="color:'+actCls+';font-weight:700;font-size:10.5px">'+_e(r.action)+'</span></td>'
+        + '<td style="font-family:ui-monospace,monospace;font-size:11px">'+_e(r.target_email||'—')+'</td>'
+        + '<td style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--text2);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+_e(beforeAfter)+'">'+_e(beforeAfter)+'</td>'
+        + '<td style="font-size:11px;color:var(--text2)">'+_e(r.notes||'')+'</td>'
+        + '</tr>';
+    });
+    html += '</tbody>';
+    t.innerHTML = html;
+  } else if(_adminLogsTab === 'auth'){
+    const rows = _adminLogs.auth || [];
+    if(!rows.length){ t.innerHTML = '<tbody><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:18px;font-style:italic">No auth events in the window.</td></tr></tbody>'; return; }
+    let html = '<thead><tr><th>When</th><th>Action</th><th>Actor</th><th>IP</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      html += '<tr>'
+        + '<td style="font-size:11px;white-space:nowrap">'+_adminFmtRel(r.event_at)+'</td>'
+        + '<td style="font-size:11px;color:#a5b4fc;font-weight:700">'+_e(r.action||'?')+'</td>'
+        + '<td style="font-family:ui-monospace,monospace;font-size:11px">'+_e(r.actor_email||'—')+'</td>'
+        + '<td style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--muted)">'+_e(r.ip_address||'')+'</td>'
+        + '</tr>';
+    });
+    html += '</tbody>';
+    t.innerHTML = html;
+  } else {
+    const rows = _adminLogs.grants || [];
+    if(!rows.length){ t.innerHTML = '<tbody><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:18px;font-style:italic">No grant history yet.</td></tr></tbody>'; return; }
+    let html = '<thead><tr><th>Granted</th><th>Grantee</th><th>Role</th><th>Granted by</th><th>Status</th><th>Notes</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      const grantee = userByUid[r.grantee_user_id];
+      const granter = userByUid[r.granted_by];
+      const status = r.revoked_at ? '<span style="color:#fca5a5">revoked '+_adminFmtRel(r.revoked_at)+'</span>' : '<span style="color:#86efac">active</span>';
+      const roleClr = {admin:'#a5b4fc',moderator:'#fbbf24',viewer:'#94a3b8'}[r.role] || '#94a3b8';
+      html += '<tr>'
+        + '<td style="font-size:11px;white-space:nowrap">'+_adminFmtRel(r.granted_at)+'</td>'
+        + '<td style="font-family:ui-monospace,monospace;font-size:11px">'+(grantee?_e(grantee.email):_e(r.grantee_user_id))+'</td>'
+        + '<td><span style="color:'+roleClr+';font-weight:700;text-transform:uppercase;font-size:10.5px">'+_e(r.role)+'</span></td>'
+        + '<td style="font-family:ui-monospace,monospace;font-size:11px">'+(granter?_e(granter.email):'—')+'</td>'
+        + '<td style="font-size:11px">'+status+'</td>'
+        + '<td style="font-size:11px;color:var(--text2)">'+_e(r.notes||'')+'</td>'
+        + '</tr>';
+    });
+    html += '</tbody>';
+    t.innerHTML = html;
+  }
+}
+
 if(!window._adminRender_orig){ window._adminRender_orig = window.adminRender; }
 window.adminRender = async function(force){
   await window._adminRender_orig(force);
   await _adminLoadGrants();
   _adminRenderGrantsTable();
+  await adminLoadLogs(force);
 };
 
 function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
@@ -9995,6 +10126,23 @@ function _userChipRender(){
   html += '<div class="um-action" onclick="_userChipClose();(typeof openTeams===\'function\')&&openTeams()">'
     + '<span class="um-item-icon">⚙</span>'
     + '<span class="um-item-text">Manage workspace</span></div>';
+  // Admin Controls — only shown if the chip's user has admin/moderator/viewer access
+  if(s){
+    html += '<div class="um-item" id="umAdminItem" style="display:none" onclick="_userChipClose();_openAdminPanel()">'
+      + '<span class="um-item-icon">🛠</span>'
+      + '<span class="um-item-text">Admin Controls</span></div>';
+    // Async permission check — flip to flex if user has access
+    setTimeout(function(){
+      try {
+        if(typeof _userHasPanelAccess === 'function'){
+          _userHasPanelAccess().then(function(has){
+            var n = document.getElementById('umAdminItem');
+            if(n && has) n.style.display = 'flex';
+          }).catch(function(){});
+        }
+      } catch(_){}
+    }, 30);
+  }
   if(s){
     html += '<div class="um-divider"></div>';
     html += '<div class="um-action danger" onclick="_userChipClose();(typeof authLogout===\'function\')&&authLogout()">'
