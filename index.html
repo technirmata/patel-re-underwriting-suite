@@ -124,18 +124,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .dual-wrap input{min-width:0;flex:1}
 .dual-pct{max-width:72px!important;flex:0 0 72px!important}
 
-/* Dual yr/mo input pairs — visually segmented, single field shape */
-.ymo-pair-wrap{display:inline-flex;align-items:stretch;width:100%;gap:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .12s}
+/* Dual yr/mo input pairs — clean inline-segmented field shape */
+.ymo-pair-wrap{display:inline-flex;align-items:stretch;width:100%;gap:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .12s;min-width:0}
 .ymo-pair-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px rgba(99,102,241,.15)}
-.ymo-pair-wrap input.ymo-yr,.ymo-pair-wrap input.ymo-mo{flex:1;min-width:0;background:transparent !important;border:none !important;border-radius:0 !important;padding:6px 10px !important;font-size:12.5px;color:var(--text);outline:none}
-.ymo-pair-wrap input.ymo-yr::placeholder,.ymo-pair-wrap input.ymo-mo::placeholder{color:var(--muted);opacity:.55}
-.ymo-pair-wrap .ymo-divider{align-self:center;padding:0 6px;color:var(--muted);font-size:13px;font-weight:300;user-select:none}
-.ymo-pair-wrap input.ymo-yr::after,.ymo-pair-wrap input.ymo-mo::after{content:attr(title);font-size:9px;color:var(--muted)}
-/* Tiny unit hint suffix */
-.ymo-pair-wrap input.ymo-yr{position:relative}
-.ymo-pair-wrap{position:relative}
-.ymo-pair-wrap::before{content:"yr";position:absolute;left:8px;top:-7px;font-size:8.5px;color:var(--muted);background:var(--bg);padding:0 4px;letter-spacing:.5px;font-weight:600;text-transform:uppercase;pointer-events:none;z-index:1}
-.ymo-pair-wrap::after{content:"mo";position:absolute;right:8px;top:-7px;font-size:8.5px;color:var(--muted);background:var(--bg);padding:0 4px;letter-spacing:.5px;font-weight:600;text-transform:uppercase;pointer-events:none;z-index:1}
+.ymo-pair-wrap input.ymo-yr,.ymo-pair-wrap input.ymo-mo{flex:1 1 0;min-width:40px;width:0;background:transparent !important;border:none !important;border-radius:0 !important;padding:6px 4px 6px 10px !important;font-size:12.5px;color:var(--text);outline:none;text-align:right}
+.ymo-pair-wrap input.ymo-yr::placeholder,.ymo-pair-wrap input.ymo-mo::placeholder{color:var(--muted);opacity:.45}
+.ymo-pair-wrap .ymo-suffix{align-self:center;padding:0 6px 0 2px;color:var(--muted);font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;user-select:none;flex-shrink:0}
+.ymo-pair-wrap .ymo-divider{align-self:stretch;width:1px;background:var(--border);user-select:none;flex-shrink:0;margin:4px 0}
 
 .dual-unit{font-size:12px;color:var(--muted);font-weight:700;flex-shrink:0;user-select:none}
 .dual-or{font-size:10px;color:var(--border);font-weight:700;flex-shrink:0;padding:0 2px}
@@ -1790,7 +1785,7 @@ strong { color: #e2e8f0; }
   </div>
 
   <div class="g2">
-    <div class="field"><label id="gross_rent_label">Gross Monthly Rent ($)</label><span class="ymo-pair-wrap"><input type="number" id="fin_gross" placeholder="2500" class="ymo-mo"><span class="ymo-divider">·</span><input type="number" id="fin_gross_yr" placeholder="30000" title="Gross rent $/yr" class="ymo-yr"></span></div>
+    <div class="field"><label id="gross_rent_label">Gross Rent</label><span class="ymo-pair-wrap"><input type="number" id="fin_gross" placeholder="2500" class="ymo-mo"><span class="ymo-suffix">/mo</span><span class="ymo-divider"></span><input type="number" id="fin_gross_yr" placeholder="30000" title="Gross rent $/yr" class="ymo-yr"><span class="ymo-suffix">/yr</span></span></div>
     <div class="field"><label>Other Income / mo ($)</label><input type="number" id="fin_other" placeholder="0"></div>
   </div>
   <div class="g2">
@@ -1840,7 +1835,7 @@ strong { color: #e2e8f0; }
         <span class="dual-unit">%</span>
         <span class="dual-or">or</span>
         <span class="dual-unit">$</span>
-        <span class="ymo-pair-wrap"><input type="number" id="fin_ins" placeholder="1800" title="Insurance $/yr" class="ymo-yr"><span class="ymo-divider">/</span><input type="number" id="fin_ins_mo" placeholder="150" title="Insurance $/mo" class="ymo-mo"></span>
+        <span class="ymo-pair-wrap"><input type="number" id="fin_ins" placeholder="1800" title="Insurance $/yr" class="ymo-yr"><span class="ymo-suffix">/yr</span><span class="ymo-divider"></span><input type="number" id="fin_ins_mo" placeholder="150" title="Insurance $/mo" class="ymo-mo"><span class="ymo-suffix">/mo</span></span>
       </div>
     </div>
     <div class="field">
@@ -1850,7 +1845,7 @@ strong { color: #e2e8f0; }
         <span class="dual-unit">%</span>
         <span class="dual-or">or</span>
         <span class="dual-unit">$</span>
-        <span class="ymo-pair-wrap"><input type="number" id="fin_taxes" placeholder="3600" title="Taxes $/yr" class="ymo-yr"><span class="ymo-divider">/</span><input type="number" id="fin_taxes_mo" placeholder="300" title="Taxes $/mo" class="ymo-mo"></span>
+        <span class="ymo-pair-wrap"><input type="number" id="fin_taxes" placeholder="3600" title="Taxes $/yr" class="ymo-yr"><span class="ymo-suffix">/yr</span><span class="ymo-divider"></span><input type="number" id="fin_taxes_mo" placeholder="300" title="Taxes $/mo" class="ymo-mo"><span class="ymo-suffix">/mo</span></span>
       </div>
     </div>
     <div class="field">
@@ -1860,7 +1855,7 @@ strong { color: #e2e8f0; }
         <span class="dual-unit">%</span>
         <span class="dual-or">or</span>
         <span class="dual-unit">$</span>
-        <span class="ymo-pair-wrap"><input type="number" id="fin_maint" placeholder="1200" title="Maintenance $/yr" class="ymo-yr"><span class="ymo-divider">/</span><input type="number" id="fin_maint_mo" placeholder="100" title="Maintenance $/mo" class="ymo-mo"></span>
+        <span class="ymo-pair-wrap"><input type="number" id="fin_maint" placeholder="1200" title="Maintenance $/yr" class="ymo-yr"><span class="ymo-suffix">/yr</span><span class="ymo-divider"></span><input type="number" id="fin_maint_mo" placeholder="100" title="Maintenance $/mo" class="ymo-mo"><span class="ymo-suffix">/mo</span></span>
       </div>
     </div>
   </div>
@@ -1876,8 +1871,8 @@ strong { color: #e2e8f0; }
       </div>
       <div class="pct-hint" id="hint_capex"></div>
     </div>
-    <div class="field"><label>Utilities / yr ($)</label><span class="ymo-pair-wrap"><input type="number" id="fin_util" placeholder="0" title="Utilities $/yr" class="ymo-yr"><span class="ymo-divider">/</span><input type="number" id="fin_util_mo" placeholder="0" title="Utilities $/mo" class="ymo-mo"></span></div>
-    <div class="field"><label>HOA / yr ($)</label><span class="ymo-pair-wrap"><input type="number" id="fin_hoa" placeholder="0" title="HOA $/yr" class="ymo-yr"><span class="ymo-divider">/</span><input type="number" id="fin_hoa_mo" placeholder="0" title="HOA $/mo" class="ymo-mo"></span></div>
+    <div class="field"><label>Utilities</label><span class="ymo-pair-wrap"><input type="number" id="fin_util" placeholder="0" title="Utilities $/yr" class="ymo-yr"><span class="ymo-suffix">/yr</span><span class="ymo-divider"></span><input type="number" id="fin_util_mo" placeholder="0" title="Utilities $/mo" class="ymo-mo"><span class="ymo-suffix">/mo</span></span></div>
+    <div class="field"><label>HOA</label><span class="ymo-pair-wrap"><input type="number" id="fin_hoa" placeholder="0" title="HOA $/yr" class="ymo-yr"><span class="ymo-suffix">/yr</span><span class="ymo-divider"></span><input type="number" id="fin_hoa_mo" placeholder="0" title="HOA $/mo" class="ymo-mo"><span class="ymo-suffix">/mo</span></span></div>
   </div>
   <!-- Total Expenses summary -->
   <div class="fin-sumrow">
