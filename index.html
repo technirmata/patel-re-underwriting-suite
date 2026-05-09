@@ -3940,6 +3940,39 @@ function fcInit(){
   fcSwitch(_fcCurrentSub || 2);
 }
 
+window._updateLiveBarFromPartners = function(){
+  var ps = window._partnerSummary;
+  var setText = function(id, val){ var e = document.getElementById(id); if(e) e.textContent = val; };
+  var fmtPct = function(n){ if(n===null||n===undefined||!isFinite(n)) return '—'; return (n*100).toFixed(1)+'%'; };
+  var fmt$  = function(n){ if(n===null||n===undefined||!isFinite(n)) return '—'; return '$'+Math.round(n).toLocaleString(); };
+  var fmtX  = function(n){ if(n===null||n===undefined||!isFinite(n)) return '—'; return n.toFixed(2)+'x'; };
+  if(!ps){
+    ['lb_lp_irr','lb_lp_coc','lb_lp_em','lb_lp_pref','lb_gp_irr','lb_gp_em'].forEach(function(id){ setText(id,'—'); });
+    setText('lb_lp_cap','$0'); setText('lb_gp_fees','$0'); setText('lb_gp_promote','$0'); setText('lb_gp_total','$0');
+    return;
+  }
+  setText('lb_lp_irr', fmtPct(ps.lp.irr));
+  setText('lb_lp_coc', fmtPct(ps.lp.coc));
+  setText('lb_lp_em', fmtX(ps.lp.em));
+  setText('lb_lp_cap', fmt$(ps.lp.totalIn));
+  setText('lb_lp_pref', ps.lp.prefMet === null ? 'n/a' : (ps.lp.prefMet ? '✓ ' + fmtPct(ps.lp.prefRate) : '✗ ' + fmtPct(ps.lp.prefRate)));
+  setText('lb_gp_irr', fmtPct(ps.gp.irr));
+  setText('lb_gp_em', fmtX(ps.gp.em));
+  setText('lb_gp_fees', fmt$(ps.gp.feesEarned));
+  setText('lb_gp_promote', fmt$(ps.gp.promote));
+  setText('lb_gp_total', fmt$(ps.gp.totalComp));
+};
+
+window._updateLiveBarLender = function(){
+  var s = window.S; if(!s) return;
+  var setText = function(id, val){ var e = document.getElementById(id); if(e) e.textContent = val; };
+  var loanAmt = s.loan || (s.price && s.dp ? s.price - s.dp : 0);
+  var dy = (loanAmt > 0 && s.noi > 0) ? (s.noi/loanAmt) : 0;
+  var ltv = (s.price > 0 && loanAmt > 0) ? (loanAmt/s.price) : 0;
+  setText('lb_dy', dy ? (dy*100).toFixed(2)+'%' : '0%');
+  setText('lb_ltv', ltv ? (ltv*100).toFixed(1)+'%' : '0%');
+};
+
 function ST(i) {
   window.scrollTo({top:0,behavior:'instant'});
   // FC panels are absorbed into the hub — route through it instead
@@ -6604,6 +6637,11 @@ function buildLOI_old() { /* retired — kept as stub to avoid reference errors 
 // ── Executive Summary ─────────────────────────────────────────────────────────
 function updateExec() {
   const s = S;
+  // Set placeholder content for the new exec cards regardless of deal-loaded state
+  ['execNegotiation','execDealKillers','execCapStack','execExitNarrative'].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e && !s.price) e.innerHTML = '<div style="color:var(--muted);font-style:italic;padding:8px">Complete the Intake tab to populate this section.</div>';
+  });
   if(!s.price){
     si('exec_title','No Deal Loaded');
     si('exec_thesis','Complete the Intake tab to generate your executive summary.');
