@@ -9501,10 +9501,30 @@ function _sbClient() {
       if(event === 'SIGNED_IN' && session?.user) {
         const u = session.user;
         const cached = _getSession();
-        if(!cached || cached.userId !== u.id) {
+        const isNewUser = !cached || cached.userId !== u.id;
+        if(isNewUser) {
           _setSession({ userId: u.id, username: u.user_metadata?.username || u.email.split('@')[0], email: u.email, loginTime: new Date().toISOString() });
           _authUpdateTopbar();
         }
+        // CARD AT SIGNUP — when an OAuth user (Google) lands here for the first
+        // time AND has no Stripe subscription yet, push them to Checkout. This
+        // covers Google sign-up which never hits authRegister().
+        (async function autoCheckoutNewUser(){
+          if(!isNewUser) return;
+          try {
+            const { data: profile } = await _sbClient().from('profiles')
+              .select('subscription_status, stripe_customer_id')
+              .eq('user_id', u.id).maybeSingle();
+            if(!profile) return;
+            // Already paid / comp / trialing with card — leave them be
+            if(['active','comp','trialing','past_due'].includes(profile.subscription_status)) return;
+            if(profile.stripe_customer_id) return;  // Stripe customer already exists
+            // No card on file yet — redirect to Stripe Checkout
+            setTimeout(function(){
+              if(typeof window.trialOpenCheckout === 'function') window.trialOpenCheckout();
+            }, 800);
+          } catch(_){}
+        })();
       } else if(event === 'SIGNED_OUT') {
         _clearSession();
         _authUpdateTopbar();
@@ -9687,8 +9707,19 @@ async function authRegister() {
       _setSession({ userId, username, email, loginTime: new Date().toISOString() });
       _authDismiss();
       _authUpdateTopbar();
-      if(!data.session) showProjToast('📧 Check your email to confirm your account!');
-      else showProjToast(`👋 Welcome, ${username}!`);
+      if(!data.session) {
+        showProjToast('📧 Check your email to confirm your account, then we\'ll collect payment.');
+      } else {
+        // CARD AT SIGNUP — immediately redirect to Stripe Checkout (mandatory).
+        // The trial doesn't start until the card is on file.
+        showProjToast(`👋 Welcome ${username} — redirecting to Stripe to start your 7-day trial…`);
+        // Small delay so the toast is visible before the redirect kicks in
+        setTimeout(function(){
+          if (typeof window.trialOpenCheckout === 'function') {
+            window.trialOpenCheckout();
+          }
+        }, 600);
+      }
 
     } else {
       // ── localStorage-only fallback ──
