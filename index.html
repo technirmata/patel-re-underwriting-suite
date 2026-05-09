@@ -3,6 +3,21 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Patel RE Underwriting Suite v4</title>
+<script>
+(function(){
+  const errs = [];
+  window.addEventListener('error', e => {
+    errs.push({t:'error', msg:e.message, src:(e.filename||'').slice(-80), line:e.lineno, col:e.colno, stack:(e.error&&e.error.stack||'').slice(0,500)});
+    try{localStorage.setItem('__pageDiagErrs', JSON.stringify(errs));}catch(_){}
+  });
+  window.addEventListener('unhandledrejection', e => {
+    errs.push({t:'rejection', msg:String(e.reason && e.reason.message || e.reason).slice(0,200), stack:String(e.reason && e.reason.stack||'').slice(0,500)});
+    try{localStorage.setItem('__pageDiagErrs', JSON.stringify(errs));}catch(_){}
+  });
+  // Reset on each load
+  try{localStorage.removeItem('__pageDiagErrs');}catch(_){}
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
