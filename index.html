@@ -2231,6 +2231,10 @@ strong { color: #e2e8f0; }
 <div class="g2">
 <div class="card">
   <div class="card-title">🏦 Conventional Loan</div>
+  <div class="highlight-box">
+    <div style="font-size:11px;color:var(--accent2);font-weight:700;margin-bottom:4px">HOW IT WORKS</div>
+    <div style="font-size:12px;color:var(--text2)">Standard 30-year amortizing mortgage from a bank. You put down a percentage, the lender finances the rest. Predictable monthly payment, requires income/credit qualification. PMI applies if down payment &lt; 20%.</div>
+  </div>
   <div class="g2">
     <div class="field"><label>Purchase Price ($)</label><input type="number" id="c_price" placeholder="300000"></div>
     <div class="field"><label>Down Payment (%)</label><input type="number" id="c_down_pct" value="20" step=".5"></div>
@@ -2249,8 +2253,8 @@ strong { color: #e2e8f0; }
   </div>
 </div>
 <div id="convResult" class="card"></div>
-<div id="convCumSummary"></div>
 </div>
+<div id="convCumSummary"></div>
 <div class="card"><div class="card-title">📅 Amortization Schedule</div>
   <div class="amort-wrap"><table><thead id="convAmortHead"></thead><tbody id="convAmortBody"></tbody></table></div></div>
 
@@ -2296,6 +2300,10 @@ strong { color: #e2e8f0; }
 <div class="g2">
 <div class="card">
   <div class="card-title">🏛 FHA / 203k Loan</div>
+  <div class="highlight-box">
+    <div style="font-size:11px;color:var(--accent2);font-weight:700;margin-bottom:4px">HOW IT WORKS</div>
+    <div style="font-size:12px;color:var(--text2)">Government-insured loan with a low 3.5% down payment. The 203k version rolls rehab funds into the same loan. Owner-occupancy required. Mortgage insurance lasts the life of the loan, but qualifying credit/income bar is lower than conventional.</div>
+  </div>
   <div class="g2">
     <div class="field"><label>Purchase Price ($)</label><input type="number" id="fha_price" placeholder="300000"></div>
     <div class="field"><label>Down Payment (%)</label><input type="number" id="fha_down_pct" value="3.5" step=".5"></div>
@@ -2320,6 +2328,10 @@ strong { color: #e2e8f0; }
 <div class="g2">
 <div class="card">
   <div class="card-title">⚡ Hard Money / Bridge</div>
+  <div class="highlight-box">
+    <div style="font-size:11px;color:var(--accent2);font-weight:700;margin-bottom:4px">HOW IT WORKS</div>
+    <div style="font-size:12px;color:var(--text2)">Short-term asset-based loan from private lenders. High rate (10–12%), low LTV (65–75%), 6–24 month term. No income docs — they underwrite the deal, not you. Used for fix-and-flip or quick close, then refinance into conventional/DSCR at exit.</div>
+  </div>
   <div class="g2">
     <div class="field"><label>Purchase Price ($)</label><input type="number" id="hm_price" placeholder="200000"></div>
     <div class="field"><label>Rehab Budget ($)</label><input type="number" id="hm_rehab" placeholder="40000"></div>
@@ -2351,6 +2363,10 @@ strong { color: #e2e8f0; }
 <div class="g2">
 <div class="card">
   <div class="card-title">📊 DSCR Loan <span class="info" title="No income doc — property cash flow qualifies">?</span></div>
+  <div class="highlight-box">
+    <div style="font-size:11px;color:var(--accent2);font-weight:700;margin-bottom:4px">HOW IT WORKS</div>
+    <div style="font-size:12px;color:var(--text2)">Loan qualified on the property's rental income (Debt Service Coverage Ratio), not your personal income. No W-2 / tax returns needed. Requires DSCR ≥ 1.0–1.25 (rent covers debt service). Rate runs ~0.5–1% higher than conventional, LLC vesting allowed.</div>
+  </div>
   <div class="g2">
     <div class="field"><label>Purchase Price ($)</label><input type="number" id="dscr_price" placeholder="300000"></div>
     <div class="field"><label>LTV (%)</label><input type="number" id="dscr_ltv" value="75" step="1"></div>
@@ -2419,15 +2435,18 @@ strong { color: #e2e8f0; }
 
 <!-- Seller Finance — MULTI-LOAN -->
 <div class="cpanel" id="creative-sf">
-<div class="highlight-box" style="margin-bottom:14px">
-  <div style="font-size:11px;color:var(--accent2);font-weight:700;margin-bottom:4px">SELLER FINANCE — STACKED LOANS</div>
-  <div style="font-size:12px;color:var(--text2)">Seller carries notes in one or more positions. Add up to 3 loans (e.g., 1st position bank loan + 2nd position seller carry, or all-seller-finance). Each loan has its own rate, amort period, and balloon term.</div>
-</div>
 <div class="g2">
-  <div class="field"><label>Property Purchase Price ($)</label><input type="number" id="sf_price" placeholder="300000"></div>
-  <div class="field"><label>Monthly Rent ($)</label><input type="number" id="sf_rent" placeholder="2500"></div>
-</div>
-<div class="field"><label>Monthly Operating Expenses ($)</label><input type="number" id="sf_expenses" placeholder="500"></div>
+<div class="card">
+  <div class="card-title">📋 Seller Finance — Stacked Loans</div>
+  <div class="highlight-box">
+    <div style="font-size:11px;color:var(--accent2);font-weight:700;margin-bottom:4px">HOW IT WORKS</div>
+    <div style="font-size:12px;color:var(--text2)">Seller carries notes in one or more positions. Add up to 3 loans (e.g., 1st position bank loan + 2nd position seller carry, or all-seller-finance). Each loan has its own rate, amort period, and balloon term.</div>
+  </div>
+  <div class="g2">
+    <div class="field"><label>Property Purchase Price ($)</label><input type="number" id="sf_price" placeholder="300000"></div>
+    <div class="field"><label>Monthly Rent ($)</label><input type="number" id="sf_rent" placeholder="2500"></div>
+  </div>
+  <div class="field"><label>Monthly Operating Expenses ($)</label><input type="number" id="sf_expenses" placeholder="500"></div>
 
 <!-- LOAN 1 -->
 <div class="card2">
@@ -2477,7 +2496,9 @@ strong { color: #e2e8f0; }
   </div>
 </div>
 
-<div id="sfResult" style="margin-top:14px"></div>
+</div><!-- end sf left card -->
+<div id="sfResult" class="card"></div>
+</div><!-- end sf .g2 -->
 
 </div><!-- end sf cpanel -->
 
