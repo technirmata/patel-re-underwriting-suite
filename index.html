@@ -40,9 +40,9 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .logo{font-size:16px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .topbar-actions{display:flex;gap:8px}
 /* ── live bar ── */
-.livebar{background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;position:sticky;top:var(--topbar-h);z-index:99}
+.livebar{background:var(--surface2);padding:8px 20px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 /* Compact horizontal segmented livebar — single row by default, expandable on demand */
-.livebar-wrap{display:flex;flex-direction:column}
+.livebar-wrap{display:flex;flex-direction:column;position:sticky;top:var(--topbar-h);z-index:99;background:var(--surface2);border-bottom:1px solid var(--border)}
 .livebar.livebar-compact{display:flex;flex-direction:row;align-items:center;gap:10px;flex-wrap:nowrap;overflow-x:auto;padding:6px 14px;min-height:48px}
 .lm-chip{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;flex-shrink:0;border-left-width:3px}
 .lm-chip-lender{border-left-color:#fbbf24}
@@ -123,6 +123,20 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .dual-wrap{display:flex;align-items:center;gap:5px;margin-top:4px}
 .dual-wrap input{min-width:0;flex:1}
 .dual-pct{max-width:72px!important;flex:0 0 72px!important}
+
+/* Dual yr/mo input pairs — visually segmented, single field shape */
+.ymo-pair-wrap{display:inline-flex;align-items:stretch;width:100%;gap:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .12s}
+.ymo-pair-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px rgba(99,102,241,.15)}
+.ymo-pair-wrap input.ymo-yr,.ymo-pair-wrap input.ymo-mo{flex:1;min-width:0;background:transparent !important;border:none !important;border-radius:0 !important;padding:6px 10px !important;font-size:12.5px;color:var(--text);outline:none}
+.ymo-pair-wrap input.ymo-yr::placeholder,.ymo-pair-wrap input.ymo-mo::placeholder{color:var(--muted);opacity:.55}
+.ymo-pair-wrap .ymo-divider{align-self:center;padding:0 6px;color:var(--muted);font-size:13px;font-weight:300;user-select:none}
+.ymo-pair-wrap input.ymo-yr::after,.ymo-pair-wrap input.ymo-mo::after{content:attr(title);font-size:9px;color:var(--muted)}
+/* Tiny unit hint suffix */
+.ymo-pair-wrap input.ymo-yr{position:relative}
+.ymo-pair-wrap{position:relative}
+.ymo-pair-wrap::before{content:"yr";position:absolute;left:8px;top:-7px;font-size:8.5px;color:var(--muted);background:var(--bg);padding:0 4px;letter-spacing:.5px;font-weight:600;text-transform:uppercase;pointer-events:none;z-index:1}
+.ymo-pair-wrap::after{content:"mo";position:absolute;right:8px;top:-7px;font-size:8.5px;color:var(--muted);background:var(--bg);padding:0 4px;letter-spacing:.5px;font-weight:600;text-transform:uppercase;pointer-events:none;z-index:1}
+
 .dual-unit{font-size:12px;color:var(--muted);font-weight:700;flex-shrink:0;user-select:none}
 .dual-or{font-size:10px;color:var(--border);font-weight:700;flex-shrink:0;padding:0 2px}
 /* ── Property-type income calculator ── */
@@ -1776,7 +1790,7 @@ strong { color: #e2e8f0; }
   </div>
 
   <div class="g2">
-    <div class="field"><label id="gross_rent_label">Gross Monthly Rent ($)</label><input type="number" id="fin_gross" placeholder="2500"></div>
+    <div class="field"><label id="gross_rent_label">Gross Monthly Rent ($)</label><span class="ymo-pair-wrap"><input type="number" id="fin_gross" placeholder="2500"></div>
     <div class="field"><label>Other Income / mo ($)</label><input type="number" id="fin_other" placeholder="0"></div>
   </div>
   <div class="g2">
@@ -1826,7 +1840,7 @@ strong { color: #e2e8f0; }
         <span class="dual-unit">%</span>
         <span class="dual-or">or</span>
         <span class="dual-unit">$</span>
-        <input type="number" id="fin_ins" placeholder="1800" title="Insurance $/yr">
+        <span class="ymo-pair-wrap"><input type="number" id="fin_ins" placeholder="1800" title="Insurance $/yr" class="ymo-yr"><span class="ymo-divider">/</span><input type="number" id="fin_ins_mo" placeholder="150" title="Insurance $/mo" class="ymo-mo"></span>
       </div>
     </div>
     <div class="field">
@@ -1836,7 +1850,7 @@ strong { color: #e2e8f0; }
         <span class="dual-unit">%</span>
         <span class="dual-or">or</span>
         <span class="dual-unit">$</span>
-        <input type="number" id="fin_taxes" placeholder="3600" title="Taxes $/yr">
+        <span class="ymo-pair-wrap"><input type="number" id="fin_taxes" placeholder="3600" title="Taxes $/yr" class="ymo-yr"><span class="ymo-divider">/</span><input type="number" id="fin_taxes_mo" placeholder="300" title="Taxes $/mo" class="ymo-mo"></span>
       </div>
     </div>
     <div class="field">
@@ -1846,7 +1860,7 @@ strong { color: #e2e8f0; }
         <span class="dual-unit">%</span>
         <span class="dual-or">or</span>
         <span class="dual-unit">$</span>
-        <input type="number" id="fin_maint" placeholder="1200" title="Maintenance $/yr">
+        <span class="ymo-pair-wrap"><input type="number" id="fin_maint" placeholder="1200" title="Maintenance $/yr" class="ymo-yr"><span class="ymo-divider">/</span><input type="number" id="fin_maint_mo" placeholder="100" title="Maintenance $/mo" class="ymo-mo"></span>
       </div>
     </div>
   </div>
@@ -1862,8 +1876,8 @@ strong { color: #e2e8f0; }
       </div>
       <div class="pct-hint" id="hint_capex"></div>
     </div>
-    <div class="field"><label>Utilities / yr ($)</label><input type="number" id="fin_util" placeholder="0"></div>
-    <div class="field"><label>HOA / yr ($)</label><input type="number" id="fin_hoa" placeholder="0"></div>
+    <div class="field"><label>Utilities / yr ($)</label><span class="ymo-pair-wrap"><input type="number" id="fin_util" placeholder="0" title="Utilities $/yr" class="ymo-yr"><span class="ymo-divider">/</span><input type="number" id="fin_util_mo" placeholder="0" title="Utilities $/mo" class="ymo-mo"></span></div>
+    <div class="field"><label>HOA / yr ($)</label><span class="ymo-pair-wrap"><input type="number" id="fin_hoa" placeholder="0" title="HOA $/yr" class="ymo-yr"><span class="ymo-divider">/</span><input type="number" id="fin_hoa_mo" placeholder="0" title="HOA $/mo" class="ymo-mo"></span></div>
   </div>
   <!-- Total Expenses summary -->
   <div class="fin-sumrow">
@@ -8785,6 +8799,46 @@ function toggleNOILock() {
 // Pairs: when user edits %, $ auto-fills; when user edits $, % auto-fills.
 // Base field changes cascade to $ fields (if % already populated).
 // Must be called BEFORE the R() event listeners so sync fires first.
+// Bidirectional yr/mo input sync — typing in either auto-fills the other
+function setupYrMoPairs(){
+  const pairs = [
+    {yr:'fin_gross_yr', mo:'fin_gross'},
+    {yr:'fin_taxes',    mo:'fin_taxes_mo'},
+    {yr:'fin_ins',      mo:'fin_ins_mo'},
+    {yr:'fin_maint',    mo:'fin_maint_mo'},
+    {yr:'fin_util',     mo:'fin_util_mo'},
+    {yr:'fin_hoa',      mo:'fin_hoa_mo'}
+  ];
+  pairs.forEach(function(p){
+    const yrEl = document.getElementById(p.yr);
+    const moEl = document.getElementById(p.mo);
+    if(!yrEl || !moEl) return;
+    function num(v){ var n = parseFloat(v); return isFinite(n) ? n : 0; }
+    var syncing = false;
+    function syncFromYr(){
+      if(syncing) return; syncing = true;
+      const yv = num(yrEl.value);
+      moEl.value = yv ? Math.round(yv/12) : '';
+      // Trigger downstream recalc on the canonical input
+      try { (moEl.id === 'fin_gross' ? moEl : yrEl).dispatchEvent(new Event('input',{bubbles:true})); } catch(_){}
+      syncing = false;
+    }
+    function syncFromMo(){
+      if(syncing) return; syncing = true;
+      const mv = num(moEl.value);
+      yrEl.value = mv ? Math.round(mv*12) : '';
+      try { (moEl.id === 'fin_gross' ? moEl : yrEl).dispatchEvent(new Event('input',{bubbles:true})); } catch(_){}
+      syncing = false;
+    }
+    yrEl.addEventListener('input', syncFromYr);
+    moEl.addEventListener('input', syncFromMo);
+    // Seed: if yr has value but mo doesn't, sync once
+    if(yrEl.value && !moEl.value) syncFromYr();
+    else if(moEl.value && !yrEl.value) syncFromMo();
+  });
+}
+window.setupYrMoPairs = setupYrMoPairs;
+
 function setupDualInputs() {
   function num(id){ const e=document.getElementById(id); return e?parseFloat(e.value)||0:0; }
   function put(id, val){ const e=document.getElementById(id); if(e&&val!==null&&val!==undefined) e.value=val; }
@@ -8931,6 +8985,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 
   // Dual % / $ inputs — attach BEFORE R() listeners so sync runs first
   setupDualInputs();
+  if(typeof setupYrMoPairs === 'function') setupYrMoPairs();
 
   // Bidirectional price sync — attach BEFORE R() so pur_price is up-to-date
   setupPriceSync();
