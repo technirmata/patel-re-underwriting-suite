@@ -13174,24 +13174,94 @@ function showProjToast(msg, isWarn) {
         }).join('')
       : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:18px;font-size:12px">No referrals yet. Share your link to start.</td></tr>';
 
+    // ── Payout / Connect state ───────────────────────────────────────────
+    var po = data.payouts || {};
+    var statusPill, statusBlock;
+    switch (po.connect_status) {
+      case 'complete':
+        statusPill = '<span style="font-size:10.5px;font-weight:800;background:rgba(34,197,94,.18);color:#86efac;border:1px solid rgba(34,197,94,.4);padding:3px 9px;border-radius:5px;text-transform:uppercase;letter-spacing:.5px">✓ Payouts ready</span>';
+        statusBlock = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">'
+          + (po.payouts_paused
+              ? '<button class="refBtn" onclick="referralPausePayouts(false)" style="background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.5);color:#86efac">▶ Resume payouts</button>'
+              : '<button class="refBtn" onclick="referralPausePayouts(true)" style="background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.5);color:#fbbf24">⏸ Pause payouts</button>'
+            )
+          + (po.threshold_met && !po.payouts_paused
+              ? '<button class="refBtn" onclick="referralTriggerPayout()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-color:transparent;color:#fff;font-weight:700">⚡ Trigger payout now ('+fmtUSD(e.pending_cents)+')</button>'
+              : ''
+            )
+          + '<button class="refBtn" onclick="referralRefreshConnect()" style="font-size:11px">↻ Refresh status</button>'
+          + '</div>';
+        break;
+      case 'onboarding':
+        statusPill = '<span style="font-size:10.5px;font-weight:800;background:rgba(245,158,11,.18);color:#fbbf24;border:1px solid rgba(245,158,11,.4);padding:3px 9px;border-radius:5px;text-transform:uppercase;letter-spacing:.5px">Onboarding incomplete</span>';
+        statusBlock = '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="refBtn" onclick="referralConnectSetup()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-color:transparent;font-weight:700">→ Continue Stripe setup</button><button class="refBtn" onclick="referralRefreshConnect()" style="font-size:11px">↻ Refresh status</button></div>';
+        break;
+      case 'restricted':
+      case 'disabled':
+        statusPill = '<span style="font-size:10.5px;font-weight:800;background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.4);padding:3px 9px;border-radius:5px;text-transform:uppercase;letter-spacing:.5px">Action needed</span>';
+        statusBlock = '<div style="margin-top:8px;font-size:12px;color:var(--text2)">Stripe needs more information before payouts can resume. <button class="refBtn" onclick="referralConnectSetup()" style="background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.5);color:#fca5a5;margin-left:6px">Open Stripe</button></div>';
+        break;
+      default:
+        statusPill = '<span style="font-size:10.5px;font-weight:800;background:rgba(255,255,255,.06);color:var(--text2);border:1px solid var(--border);padding:3px 9px;border-radius:5px;text-transform:uppercase;letter-spacing:.5px">Set up needed</span>';
+        statusBlock = '<div style="margin-top:8px"><button class="refBtn" onclick="referralConnectSetup()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-color:transparent;font-weight:700">💳 Set up automatic payouts</button><div style="font-size:11px;color:var(--muted);margin-top:6px">One-time Stripe identity verification. Bank or debit-card. Payouts auto-fire whenever you cross the $'+(((po.threshold_cents||5000)/100).toFixed(0))+' threshold.</div></div>';
+    }
+
+    // ── Recent payouts table ──────────────────────────────────────────────
+    var payoutsHtml = '';
+    if (po.recent && po.recent.length) {
+      payoutsHtml = '<div style="font-size:11.5px;color:var(--muted);margin:18px 0 6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Recent payouts</div>'
+        + '<table class="refTbl"><thead><tr><th>Date</th><th>Amount</th><th>Status</th><th>Earnings</th></tr></thead><tbody>'
+        + po.recent.map(function(pay){
+            var when = pay.succeeded_at || pay.attempted_at;
+            var color = pay.status === 'succeeded' ? '#86efac' : (pay.status === 'failed' ? '#fca5a5' : '#fbbf24');
+            return '<tr>'
+              + '<td>' + esc(fmtDate(when)) + '</td>'
+              + '<td style="font-family:monospace;font-weight:700">' + fmtUSD(pay.amount_cents) + '</td>'
+              + '<td><span class="refPill" style="background:rgba(255,255,255,.06);color:'+color+';border:1px solid '+color+'33">'+esc(pay.status)+'</span></td>'
+              + '<td style="color:var(--muted);font-size:11.5px">' + (pay.earnings_count || 0) + ' credits' + (pay.failure_reason ? ' · '+esc(pay.failure_reason).slice(0,50) : '') + '</td>'
+              + '</tr>';
+          }).join('')
+        + '</tbody></table>';
+    }
+
     var html = ''
+      // Code + URL row
       + '<div class="refRow"><div class="refCode">'+esc(p.code||'------')+'</div>'
       + '<div class="refUrl" id="refUrlField">'+esc(p.url||'')+'</div>'
       + '<button class="refBtn" onclick="referralCopyLink()">Copy link</button></div>'
+      // Payout state card
+      + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin:12px 0;display:flex;flex-direction:column;gap:6px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+          + '<div style="font-size:13px;font-weight:700;color:var(--text)">💸 Payouts</div>'
+          + statusPill
+        + '</div>'
+        + '<div style="font-size:11.5px;color:var(--muted);margin-top:2px">'
+          + 'Threshold: <strong style="color:var(--text2)">'+fmtUSD(po.threshold_cents||5000)+'</strong>'
+          + ' &middot; Pending: <strong style="color:'+(po.threshold_met?'#86efac':'#fbbf24')+'">'+fmtUSD(e.pending_cents)+'</strong>'
+          + (po.last_payout_at ? ' &middot; Last paid: '+esc(fmtDate(po.last_payout_at)) : ' &middot; No payouts yet')
+        + '</div>'
+        + statusBlock
+      + '</div>'
+      // Funnel stats
       + '<div class="refStats">'
         + '<div class="refStat"><div class="lbl">Total</div><div class="val">'+(s.total||0)+'</div></div>'
         + '<div class="refStat"><div class="lbl">Trialing</div><div class="val" style="color:#fbbf24">'+(s.trialing||0)+'</div></div>'
         + '<div class="refStat"><div class="lbl">Active</div><div class="val" style="color:#34d399">'+(s.active||0)+'</div></div>'
         + '<div class="refStat"><div class="lbl">Churned</div><div class="val" style="color:#f87171">'+(s.churned||0)+'</div></div>'
       + '</div>'
+      // Earnings
       + '<div class="refEarn">'
         + '<div><div class="blk">Pending</div><div class="amt">'+fmtUSD(e.pending_cents)+'</div></div>'
         + '<div><div class="blk">Paid out</div><div class="amt">'+fmtUSD(e.paid_cents)+'</div></div>'
         + '<div><div class="blk">Lifetime</div><div class="amt">'+fmtUSD(e.lifetime_cents)+'</div></div>'
       + '</div>'
+      // Referrals table
       + '<div style="font-size:11.5px;color:var(--muted);margin:14px 0 6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Recent referrals</div>'
       + '<table class="refTbl"><thead><tr><th>User</th><th>Joined</th><th>Status</th><th>Note</th></tr></thead><tbody>'+rowsHtml+'</tbody></table>'
-      + '<div class="refNote">Commissions: 30% of the first $49 + 10% per month for 12 months. Refunds claw back the matching credits. Earnings will be paid out monthly via Stripe Connect or PayPal — contact billing for now.</div>';
+      // Payouts table
+      + payoutsHtml
+      // Commission terms
+      + '<div class="refNote">Commissions: <strong>30%</strong> of the first $49 + <strong>10%</strong> per month for 12 months. Refunds claw back matching credits. Auto-payout fires whenever Pending crosses the threshold and your Stripe Connect account is active.</div>';
     setHTML(b, html);
   }
 
@@ -13223,10 +13293,76 @@ function showProjToast(msg, isWarn) {
     } catch(_e){ alert('Copy failed; select manually:\n'+txt); }
   }
 
-  window.openReferrals    = openReferrals;
-  window.closeReferrals   = closeReferrals;
-  window.referralApply    = referralApply;
-  window.referralCopyLink = referralCopyLink;
+  // ── Stripe Connect onboarding ──────────────────────────────────────────
+  async function referralConnectSetup(){
+    try {
+      var data = await _post('referral-connect-start', {});
+      if (data.status === 'complete') {
+        await _loadStats();
+        if (typeof showProjToast==='function') showProjToast('Payouts already set up.');
+        return;
+      }
+      if (data.onboarding_url) {
+        // Open Stripe-hosted onboarding in a new tab. User completes, comes back, hits Refresh.
+        window.open(data.onboarding_url, '_blank', 'noopener,noreferrer');
+      } else if (data.error) {
+        _renderError(data.detail || data.error);
+      } else {
+        _renderError('No onboarding URL returned.');
+      }
+    } catch(e){ _renderError(e.message || String(e)); }
+  }
+
+  async function referralRefreshConnect(){
+    try {
+      await _post('referral-connect-status', {});
+      await _loadStats();
+      if (typeof showProjToast==='function') showProjToast('Status refreshed');
+    } catch(e){ _renderError(e.message || String(e)); }
+  }
+
+  async function referralTriggerPayout(){
+    if (!confirm('Trigger an immediate payout for your pending earnings?\n\nStripe will transfer the full pending amount to your connected bank account. This may take 1-2 business days to appear.')) return;
+    try {
+      var data = await _post('referral-payout-trigger', {});
+      if (data.ok) {
+        if (typeof showProjToast==='function') showProjToast('Payout sent ($'+(((data.amount_cents||0)/100).toFixed(2))+')');
+      } else {
+        alert('Payout failed: '+(data.detail || data.error || 'unknown'));
+      }
+      await _loadStats();
+    } catch(e){ alert('Payout failed: '+(e.message||String(e))); }
+  }
+
+  async function referralPausePayouts(paused){
+    try {
+      // Reuses referral-apply payload to POST {pause:true|false} — but we need a dedicated endpoint.
+      // Server-side: referral-pause-toggle (TODO ship as part of payout fns). For now, no-op safely.
+      var data = await _post('referral-payout-pause', { paused: !!paused });
+      if (data && data.ok) {
+        if (typeof showProjToast==='function') showProjToast(paused ? 'Payouts paused' : 'Payouts resumed');
+        await _loadStats();
+      } else {
+        alert(data && (data.detail || data.error) || 'Could not update pause state.');
+      }
+    } catch(e){
+      // Endpoint not deployed yet — give the user a useful message
+      if (/404/.test(e.message||'')) {
+        alert('Pause/resume endpoint is not deployed yet. Coming soon.');
+      } else {
+        alert('Failed: '+(e.message||String(e)));
+      }
+    }
+  }
+
+  window.openReferrals          = openReferrals;
+  window.closeReferrals         = closeReferrals;
+  window.referralApply          = referralApply;
+  window.referralCopyLink       = referralCopyLink;
+  window.referralConnectSetup   = referralConnectSetup;
+  window.referralRefreshConnect = referralRefreshConnect;
+  window.referralTriggerPayout  = referralTriggerPayout;
+  window.referralPausePayouts   = referralPausePayouts;
 })();
 
 </script>
