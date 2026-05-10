@@ -1715,7 +1715,7 @@ strong { color: #e2e8f0; }
         <option value="mixed">🔀 Mixed Use</option>
         <option value="land">🌿 Land / Development</option>
       </select></div>
-    <div class="field"><label id="units_label">Units / Count</label><input type="number" id="prop_units" value="1" min="1" oninput="syncUnitsToSpec()"></div>
+    <div class="field"><label id="units_label">Units / Count</label><input type="number" id="prop_units" value="1" min="1" oninput="syncUnitsToSpec();if(typeof broadcastAssetClassChange==='function')broadcastAssetClassChange('unit count');"></div>
     <div class="field"><label>Sqft</label><input type="number" id="prop_sqft" placeholder="1800"></div>
   </div>
   <div class="g2">
@@ -4009,15 +4009,17 @@ strong { color: #e2e8f0; }
       <div id="riSub" style="font-size:11.5px;color:var(--muted);margin-top:3px">Generates a custom due-diligence checklist based on this deal's asset class, size, and market. Researches each item with web-grounded sources.</div>
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0;align-items:center;flex-wrap:wrap">
-      <select id="ri_asset_class" class="wm-role-select" style="font-size:12px;padding:7px 10px" onchange="riOnAssetClassChange()" title="Asset class — auto-detected from Intake; override here if needed">
-        <option value="auto">⚙ Auto-detect from Intake</option>
+      <select id="ri_asset_class" class="wm-role-select" style="font-size:12px;padding:7px 10px" onchange="riOnAssetClassChange()" title="Asset class — auto-synced from Intake; override here only if you want to test a different asset class">
+        <option value="auto">⚙ Auto-sync from Intake</option>
         <option value="multifamily_small_5_to_49">Multifamily — small (5-49 units)</option>
         <option value="multifamily_syndication_50plus">Multifamily — syndication (50+ units)</option>
         <option value="sfr_1_to_4">SFR / 1-4 units</option>
+        <option value="str_short_term">Short-term rental (STR / Airbnb)</option>
+        <option value="rvpark">RV Park</option>
+        <option value="mhp">Mobile Home Park</option>
+        <option value="self_storage">Self-storage</option>
         <option value="mixed_use">Mixed-use</option>
         <option value="retail_office_industrial">Retail / Office / Industrial</option>
-        <option value="self_storage">Self-storage</option>
-        <option value="mhp">Mobile Home Park</option>
         <option value="land_development">Land / development site</option>
       </select>
       <button class="btn btn-primary btn-sm" onclick="riGenerateChecklist()" id="riGenBtn">⚡ Generate Custom Checklist</button>
@@ -8740,7 +8742,34 @@ function updatePropertyType() {
   if (presetLbl && typeof PRESET_TYPE_NAMES !== 'undefined') {
     presetLbl.textContent = PRESET_TYPE_NAMES[type] || type;
   }
+  // Broadcast asset-class change to AI Research & Strategy panel
+  if (typeof broadcastAssetClassChange === 'function') broadcastAssetClassChange('property type');
 }
+
+// Global asset-class broadcaster — keeps panel14 (AI Research & Strategy) in lockstep
+// with intake. Called whenever prop_type or prop_units changes. Resets the panel14
+// override dropdown to 'auto' so it re-derives from intake (unless the user has explicitly
+// overridden, in which case we leave it alone).
+function broadcastAssetClassChange(source){
+  try {
+    var sel = document.getElementById('ri_asset_class');
+    var wasManualOverride = sel && sel.value && sel.value !== 'auto';
+    // If user is on auto, just refresh sub-line + scores. If they manually overrode,
+    // an intake change SHOULD probably reset to auto — but we respect the override and
+    // just flag agents as stale + refresh the sub-line so they can see the auto-derived
+    // class alongside their override.
+    if (typeof window._riUpdateSubLine === 'function') window._riUpdateSubLine();
+    if (typeof runRecommendation === 'function') runRecommendation();
+    if (typeof window._markAgentsStale === 'function') {
+      var derived = (typeof window._detectAssetClass === 'function') ? window._detectAssetClass() : null;
+      var reason = source ? ('Intake ' + source + ' changed' + (derived ? ' → ' + derived.replace(/_/g,' ') : '') + '.') : 'Deal context changed.';
+      if (wasManualOverride) reason += ' (Your dropdown override is still active.)';
+      reason += ' Agent verdicts may be stale.';
+      window._markAgentsStale(reason);
+    }
+  } catch(_){}
+}
+window.broadcastAssetClassChange = broadcastAssetClassChange;
 
 function syncUnitsToSpec() {
   const type = gvs('prop_type');
@@ -16237,9 +16266,16 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     var u = _gn('prop_units')||0;
     if(/land|lot|development|raw/.test(t)) return 'land_development';
     if(/storage/.test(t)) return 'self_storage';
+    if(/rvpark|rv.?park/.test(t)) return 'rvpark';
     if(/mhp|mobile|manufactured/.test(t)) return 'mhp';
     if(/mixed/.test(t)) return 'mixed_use';
     if(/retail|office|industrial|commercial|nnn|warehouse/.test(t)) return 'retail_office_industrial';
+    if(/^str$|short.?term|airbnb|vrbo/.test(t)) return 'str_short_term';
+    if(/multifamily|mfr|multi.?family/.test(t)){
+      if(u >= 50) return 'multifamily_syndication_50plus';
+      if(u >= 5)  return 'multifamily_small_5_to_49';
+      return 'sfr_1_to_4';
+    }
     if(u >= 50) return 'multifamily_syndication_50plus';
     if(u >= 5)  return 'multifamily_small_5_to_49';
     return 'sfr_1_to_4';
@@ -16322,12 +16358,33 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     _updateSubLine();
     try { if(typeof runRecommendation === 'function') runRecommendation(); } catch(_){ }
   };
-  window.riOnAssetClassChange = function(){ _updateSubLine(); };
+  window.riOnAssetClassChange = function(){
+    _updateSubLine();
+    // User explicit override of asset class — refresh quick score + mark agents stale.
+    try { if(typeof runRecommendation==='function') runRecommendation(); } catch(_){}
+    _markAgentsStale('Asset class changed manually — agent verdicts may be stale.');
+  };
+  window._activeAssetClass = _activeAssetClass;
+  window._detectAssetClass = _detectAssetClass;
+  window._riUpdateSubLine = _updateSubLine;
 
   /* ── Strategy Agents — multi-agent simulator ───────────────────────── */
   var _agentsState = { running:false, agents:[] };
   function _agentsWarn(msg){ var w=_id('agentsWarn'); if(w){ w.style.display='block'; w.className='vb-warn bad'; w.innerHTML=msg; } }
   function _agentsClearWarn(){ var w=_id('agentsWarn'); if(w){ w.style.display='none'; w.innerHTML=''; } }
+  function _markAgentsStale(reason){
+    // Show a yellow banner above the agents grid when the deal context changes
+    // after a simulation has run, so the user knows to re-run for fresh verdicts.
+    if(!_agentsState.agents || !_agentsState.agents.length) return;
+    var box = _id('agentsCards'); if(!box) return;
+    if(box.querySelector('.agents-stale-banner')) return; // don't double-stack
+    var b = document.createElement('div');
+    b.className = 'agents-stale-banner';
+    b.style.cssText = 'background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);color:#fbbf24;padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+    b.innerHTML = '⚠ <span style="flex:1;color:var(--text2)">' + (reason||'Deal context changed — agent verdicts may be stale.') + '</span> <button class="btn btn-primary btn-sm" style="font-size:11px;background:linear-gradient(135deg,#6366f1,#8b5cf6)" onclick="runStrategyAgentsSimulation()">⚡ Re-Run</button>';
+    box.insertBefore(b, box.firstChild);
+  }
+  window._markAgentsStale = _markAgentsStale;
   function _agentsLoading(){
     var box=_id('agentsCards'); if(!box) return;
     box.innerHTML = '<div class="agents-loading">⚡ Spawning strategy agents <span class="pulse"></span><span class="pulse"></span><span class="pulse"></span><div style="font-size:11px;margin-top:8px;color:var(--muted)">Each agent is independently analyzing this deal. 15-45 seconds depending on provider.</div></div>';
@@ -16480,6 +16537,8 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
       multifamily_small_5_to_49:'Multifamily 5-49u',
       multifamily_syndication_50plus:'Multifamily 50+u',
       sfr_1_to_4:'SFR 1-4u',
+      str_short_term:'Short-term rental',
+      rvpark:'RV Park',
       mixed_use:'Mixed-use',
       retail_office_industrial:'Commercial',
       self_storage:'Self-storage',
