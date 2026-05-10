@@ -35,6 +35,54 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <style>
+/* ===== referral-system v1 ===== */
+.refOv{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);
+  z-index:99997;display:none;align-items:center;justify-content:center;padding:24px}
+.refOv.open{display:flex}
+.refMod{background:var(--surface,#0f1320);border:1px solid var(--border,#2a2d3e);border-radius:18px;
+  width:min(720px,100%);max-height:90vh;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.55);
+  color:var(--text,#e2e8f0);padding:24px 24px 28px;position:relative}
+.refMod h2{margin:0 0 4px;font-size:20px;font-weight:800;letter-spacing:-.01em}
+.refMod .refSub{color:var(--muted,#9aa3c6);font-size:13px;margin-bottom:18px}
+.refMod .refClose{position:absolute;top:14px;right:18px;background:transparent;border:0;
+  color:var(--muted,#9aa3c6);font-size:22px;cursor:pointer;line-height:1}
+.refMod .refClose:hover{color:var(--text,#e2e8f0)}
+.refRow{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.refCode{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:18px;font-weight:800;
+  background:var(--surface2,#161b2c);border:1px solid var(--border,#232842);border-radius:10px;
+  padding:8px 14px;letter-spacing:1.5px;color:var(--text,#f2f4ff)}
+.refUrl{flex:1;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11.5px;
+  background:var(--surface2,#161b2c);border:1px solid var(--border,#232842);border-radius:10px;
+  padding:8px 12px;color:var(--text2,#d3daf2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.refBtn{background:var(--accent,#6366f1);color:#fff;border:0;border-radius:10px;padding:8px 14px;
+  font-weight:700;font-size:12.5px;cursor:pointer;transition:.15s}
+.refBtn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.refBtn.ghost{background:transparent;color:var(--text2,#d3daf2);border:1px solid var(--border,#232842)}
+.refBtn.ghost:hover{background:var(--surface2,#161b2c)}
+.refStats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0 8px}
+.refStat{background:var(--surface2,#161b2c);border:1px solid var(--border,#232842);border-radius:12px;padding:12px}
+.refStat .lbl{font-size:11px;color:var(--muted,#9aa3c6);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.refStat .val{font-size:22px;font-weight:800;letter-spacing:-.01em}
+.refEarn{background:linear-gradient(135deg,rgba(99,102,241,.18),rgba(139,92,246,.12));
+  border:1px solid rgba(139,92,246,.35);border-radius:14px;padding:14px;margin:14px 0 8px;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.refEarn .blk{font-size:11px;color:var(--muted,#9aa3c6);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.refEarn .amt{font-size:18px;font-weight:800;color:var(--text,#f2f4ff)}
+.refTbl{width:100%;border-collapse:collapse;margin-top:8px;font-size:12.5px}
+.refTbl th{text-align:left;font-weight:700;color:var(--muted,#9aa3c6);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;border-bottom:1px solid var(--border,#232842)}
+.refTbl td{padding:9px 10px;border-bottom:1px solid var(--border,#232842);color:var(--text2,#d3daf2)}
+.refTbl tr:last-child td{border-bottom:0}
+.refPill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.refPill.trialing{background:rgba(251,191,36,.18);color:#fbbf24}
+.refPill.active{background:rgba(52,211,153,.18);color:#34d399}
+.refPill.churned{background:rgba(248,113,113,.18);color:#f87171}
+.refPill.refunded{background:rgba(155,155,155,.22);color:#9aa3c6}
+.refApply{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:14px 18px;border-radius:12px;border:0;font-weight:800;font-size:14px;cursor:pointer;width:100%;margin-top:10px;box-shadow:0 8px 24px rgba(99,102,241,.35)}
+.refApply:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.refApply:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.refNote{font-size:11.5px;color:var(--muted,#9aa3c6);line-height:1.5;margin-top:14px;padding-top:14px;border-top:1px solid var(--border,#232842)}
+
+
 :root{
   --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--surface3:#2a2f45;
   --border:#2e3352;--accent:#6366f1;--accent2:#8b5cf6;--green:#22c55e;
@@ -1670,6 +1718,7 @@ strong { color: #e2e8f0; }
     <button class="ai-btn" onclick="aiAnalyze()" id="aiAnalyzeBtn">
       <span style="font-size:16px">⚡</span> AI Fill All Fields
     </button>
+    <button class="btn btn-outline btn-sm" onclick="aiChatExtractFromPaste()" id="aiChatExtractBtn" style="width:100%;border-color:var(--accent);color:var(--accent)" title="Send the pasted text to the AI chat sidebar for review + approval before filling fields">🤖 Send to AI Chat</button>
     <button class="btn btn-outline btn-sm" onclick="parseOM(el('omPaste').value)" style="width:100%">🔍 Regex Extract (no AI key needed)</button>
   </div>
 
@@ -7427,7 +7476,36 @@ function parseOM(text) {
 }
 
 // ── File Upload ───────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// FILE UPLOAD ENTRYPOINT
+//   1. Image  → aiAnalyzeImage (AI Vision) — unchanged.
+//   2. Doc + AI key configured → aiChatExtractFromFile (chat-driven flow).
+//   3. Doc + no key → _handleFileLegacy (existing parseOM fallback).
+// ══════════════════════════════════════════════════════════════════════════════
 async function handleFile(event) {
+  const file = event && event.target && event.target.files ? event.target.files[0] : event;
+  if (!file) return;
+  const isImage = (file.type && file.type.startsWith('image/')) || /\.(jpg|jpeg|png|webp|heic|gif)$/i.test(file.name||'');
+  if (isImage) return _handleFileLegacy(event);
+  // Non-image: prefer the AI chat flow when a key is configured AND the user hasn't opted out.
+  var hasKey = false;
+  try { hasKey = (typeof _getAIKey === 'function') && !!_getAIKey(_aiProvider || 'anthropic'); } catch(_) { hasKey = false; }
+  if (!hasKey) {
+    var order = ['anthropic','openai','perplexity','groq'];
+    for (var i=0; i<order.length; i++) {
+      try { if (_getAIKey(order[i])) { hasKey = true; break; } } catch(_) {}
+    }
+  }
+  var optOut = false;
+  try { optOut = localStorage.getItem('ai_chat_intake_off') === '1'; } catch(_) {}
+  if (hasKey && !optOut && typeof aiChatExtractFromFile === 'function') {
+    try { return aiChatExtractFromFile(file); }
+    catch(e) { console.warn('[ai-chat-intake] falling back to legacy:', e); return _handleFileLegacy(event); }
+  }
+  return _handleFileLegacy(event);
+}
+
+async function _handleFileLegacy(event) {
   const file = event.target?.files ? event.target.files[0] : event;
   if(!file) return;
 
@@ -8296,6 +8374,671 @@ function handleDrop(e){
   e.preventDefault();el('dropZone').classList.remove('dragover');
   handleFile(e.dataTransfer.files[0]);
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AI CHAT INTAKE FLOW
+//   File upload → chat sidebar → user approval → field fill + finance notes.
+//
+//   All AI-derived strings flow through textContent on programmatically created
+//   DOM nodes — never innerHTML — so a malicious OM cannot inject markup into
+//   the chat bubble. Buttons use addEventListener for click handlers; payloadKey
+//   is held in JS scope, not HTML.
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Per-page payload store keyed by uuid so click handlers can dispatch without
+// serializing the proposal into HTML.
+window._aiChatPayloads = window._aiChatPayloads || {};
+function _aiChatStashPayload(payload) {
+  var key = 'p_' + Date.now().toString(36) + '_' + Math.floor(Math.random() * 1e9).toString(36);
+  window._aiChatPayloads[key] = payload;
+  return key;
+}
+
+// Shared file-text extractor — used by the legacy handleFile path AND the chat flow.
+async function _readFileText(file) {
+  if (!file) throw new Error('No file');
+  var ext = ((file.name || '').toLowerCase().split('.').pop()) || '';
+  var type = file.type || '';
+  if (ext === 'pdf' || type === 'application/pdf') {
+    if (typeof pdfjsLib === 'undefined') throw new Error('pdf.js not loaded');
+    var ab = await file.arrayBuffer();
+    var pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+    var txt = '';
+    for (var i = 1; i <= pdf.numPages; i++) {
+      var pg = await pdf.getPage(i);
+      var c  = await pg.getTextContent();
+      txt += c.items.map(function(s){return s.str;}).join(' ') + '\n';
+    }
+    return txt;
+  }
+  if (ext === 'docx' || ext === 'doc') {
+    if (typeof mammoth === 'undefined') throw new Error('mammoth.js not loaded');
+    var ab2 = await file.arrayBuffer();
+    var res = await mammoth.extractRawText({ arrayBuffer: ab2 });
+    return res.value || '';
+  }
+  if (ext === 'xlsx' || ext === 'xls') {
+    if (typeof XLSX === 'undefined') throw new Error('SheetJS not loaded');
+    var ab3 = await file.arrayBuffer();
+    var wb = XLSX.read(ab3, { type: 'array' });
+    var out = '';
+    wb.SheetNames.forEach(function(name) {
+      out += '--- Sheet: ' + name + ' ---\n';
+      out += XLSX.utils.sheet_to_csv(wb.Sheets[name]) + '\n';
+    });
+    return out;
+  }
+  return await new Promise(function(resolve, reject) {
+    var r = new FileReader();
+    r.onload  = function(e) { resolve(e.target.result || ''); };
+    r.onerror = function()  { reject(new Error('FileReader failed')); };
+    r.readAsText(file);
+  });
+}
+
+// Resolve the best AI provider for the chat flow (prefers Anthropic Opus 4.7).
+function _aiChatPickProvider() {
+  if (typeof window.aiChatProvider === 'function') {
+    var p = window.aiChatProvider();
+    if (p) return p;
+  }
+  var order = ['anthropic', 'openai', 'perplexity', 'groq'];
+  for (var i = 0; i < order.length; i++) {
+    try { if (_getAIKey(order[i])) return order[i]; } catch (_) {}
+  }
+  return null;
+}
+
+// Build the structured proposal prompt.
+function _aiChatBuildProposalPrompt(text, hint) {
+  var currentType = (typeof gvs === 'function' ? gvs('prop_type') : '') || '';
+  var hintLine = hint ? ('\n\nUSER HINT: ' + hint + '\n') : '';
+  return [
+    'You are a senior CRE underwriter reading a deal document inside the Patel RE Underwriting Suite.',
+    'Read the entire document and produce a STRUCTURED PROPOSAL the user will approve in chat before',
+    'any field is filled. Do not invent numbers — when uncertain, mark the field as needs_review.',
+    '',
+    currentType ? ('Current property type in the app: ' + currentType) : 'Property type unknown — infer it.',
+    hintLine,
+    '',
+    'OUTPUT — strict JSON only, NO markdown fences, NO prose outside the JSON:',
+    '{',
+    '  "summary": "2-3 sentence plain-English deal summary",',
+    '  "extracted": {',
+    '    "prop_address": "", "prop_city": "", "prop_state": "", "prop_zip": "",',
+    '    "prop_type": "sfr|duplex|triplex|quadplex|mfr|rvpark|storage|mhp|str|mixed|land|commercial",',
+    '    "prop_units": 0, "prop_sqft": 0, "prop_year": 0, "prop_beds": "",',
+    '    "pur_price": 0, "pur_arv": 0,',
+    '    "pur_down_pct": 0, "pur_down": 0, "pur_close_pct": 0, "pur_close": 0,',
+    '    "pur_rehab_pct": 0, "pur_rehab": 0, "pur_hold": 0, "pur_rate": 0, "pur_appr": 3,',
+    '    "spec_n": 0, "spec_rate": 0, "spec_occ": 0,',
+    '    "fin_gross": 0, "fin_other": 0, "fin_vac": 0, "fin_vac_mo": 0,',
+    '    "fin_mgmt_pct": 0, "fin_mgmt_mo": 0,',
+    '    "fin_ins_pct": 0, "fin_ins": 0, "fin_taxes_pct": 0, "fin_taxes": 0,',
+    '    "fin_maint_pct": 0, "fin_maint": 0, "fin_capex_pct": 0, "fin_capex": 0,',
+    '    "fin_util": 0, "fin_hoa": 0, "fin_noi": 0,',
+    '    "ncp_cap": 0, "ncp_price": 0, "ncp_noi": 0,',
+    '    "mkt_tier": "", "mkt_class": "",',
+    '    "exist_bal": 0, "exist_rate": 0, "exist_pmt": 0, "exist_term": 0,',
+    '    "seller_name": "", "seller_phone": ""',
+    '  },',
+    '  "inferred": {',
+    '    "cap_rate_calc": 0,',
+    '    "noi_calc": 0,',
+    '    "market_tier_guess": "",',
+    '    "asset_class_guess": ""',
+    '  },',
+    '  "confidence": {',
+    '    "pur_price": "high", "fin_gross": "medium", "fin_noi": "low"',
+    '  },',
+    '  "finance_hints": [',
+    '    "Conv 25% down at 7.0% gives DSCR 1.34x — comfortable for agency.",',
+    '    "Subject-To looks viable: existing balance $480k at 4.1% per page 14 of OM."',
+    '  ],',
+    '  "strategy_hints": [',
+    '    "BRRRR-friendly: ARV $X vs all-in $Y = 1.32x — refi recovers most capital."',
+    '  ],',
+    '  "red_flags": {',
+    '    "rf_foundation": false, "rf_roof": false, "rf_mold": false,',
+    '    "rf_electrical": false, "rf_liens": false, "rf_environmental": false,',
+    '    "rf_vacancy": false, "rf_seller_motivated": false,',
+    '    "rf_ai_flags": []',
+    '  },',
+    '  "notes": "step-by-step calc notes the user should keep alongside the deal (saved to Notes field)"',
+    '}',
+    '',
+    'RULES:',
+    '- pur_rate = MORTGAGE rate (default 7.0 if missing), NEVER cap rate.',
+    '- fin_gross = MONTHLY rent, fin_noi = ANNUAL.',
+    '- Use 0 for unknown numbers, "" for unknown strings, false for unchecked flags.',
+    '- Always fill BOTH the % and the $ fields when you compute one.',
+    '- Always set pur_appr = 3 when not stated.',
+    '- ncp_price = pur_price; ncp_noi = fin_noi (mirror these).',
+    '- Numbers raw (450000 not $450,000). Percentages as plain numbers (7 not 0.07).',
+    '',
+    'DOCUMENT:',
+    String(text || '').substring(0, 18000)
+  ].join('\n');
+}
+
+// Build a DOM node for the proposal bubble. AI strings flow through textContent.
+function _aiChatBuildProposalNode(payload, payloadKey) {
+  var ex   = payload.extracted || {};
+  var inf  = payload.inferred  || {};
+  var conf = payload.confidence || {};
+  var rf   = payload.red_flags || {};
+
+  var root = document.createElement('div');
+
+  function fmtMoney(n){ if(!n||isNaN(n)) return ''; var v=Math.round(n); if(v>=1e6) return '$'+(v/1e6).toFixed(2)+'M'; if(v>=1e3) return '$'+(v/1e3).toFixed(0)+'K'; return '$'+v.toLocaleString(); }
+  function fmtPct(n){ if(n==null||n===''||isNaN(n)) return ''; return Number(n).toFixed(2)+'%'; }
+  function makeRow(label, val, fid) {
+    var c = conf[fid] || 'high';
+    var color = (c === 'high') ? 'var(--green)' : (c === 'medium' ? 'var(--yellow)' : (c === 'low' ? '#f59e0b' : 'var(--red)'));
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;justify-content:space-between;gap:8px;font-size:11px;padding:2px 0';
+    var l = document.createElement('span'); l.style.color = 'var(--text2)'; l.textContent = label;
+    var r = document.createElement('span'); r.style.cssText = 'color:var(--text);font-weight:600';
+    r.textContent = val + ' ';
+    var dot = document.createElement('span'); dot.style.cssText = 'color:' + color + ';font-size:9px'; dot.textContent = '●';
+    r.appendChild(dot);
+    row.appendChild(l); row.appendChild(r);
+    return row;
+  }
+  function section(titleText, color, bg) {
+    var box = document.createElement('div');
+    box.style.cssText = 'margin-top:6px;padding:6px 8px;background:' + bg + ';border-left:2px solid ' + color + ';border-radius:4px';
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'font-size:10px;font-weight:700;color:' + color + ';text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px';
+    hdr.textContent = titleText;
+    box.appendChild(hdr);
+    return box;
+  }
+
+  // Summary line.
+  if (payload.summary) {
+    var sumDiv = document.createElement('div');
+    sumDiv.style.cssText = 'font-size:12px;line-height:1.5;color:var(--text);margin-bottom:8px';
+    sumDiv.textContent = String(payload.summary);
+    root.appendChild(sumDiv);
+  }
+
+  // Proposed-fields box.
+  var rows = [];
+  var addr = [ex.prop_address, ex.prop_city, ex.prop_state, ex.prop_zip].filter(Boolean).join(', ');
+  if (addr)            rows.push(makeRow('Address', addr, 'prop_address'));
+  if (ex.prop_type)    rows.push(makeRow('Type', String(ex.prop_type).toUpperCase(), 'prop_type'));
+  if (ex.prop_units)   rows.push(makeRow('Units', String(ex.prop_units), 'prop_units'));
+  if (ex.prop_year)    rows.push(makeRow('Year built', String(ex.prop_year), 'prop_year'));
+  if (ex.pur_price)    rows.push(makeRow('Asking price', fmtMoney(ex.pur_price), 'pur_price'));
+  if (ex.fin_gross)    rows.push(makeRow('Gross rent / mo', fmtMoney(ex.fin_gross), 'fin_gross'));
+  if (ex.fin_noi)      rows.push(makeRow('NOI (annual)', fmtMoney(ex.fin_noi), 'fin_noi'));
+  if (ex.ncp_cap || inf.cap_rate_calc) rows.push(makeRow('Cap rate', fmtPct(ex.ncp_cap || inf.cap_rate_calc), 'ncp_cap'));
+  if (ex.exist_bal)    rows.push(makeRow('Existing loan bal', fmtMoney(ex.exist_bal), 'exist_bal'));
+  if (inf.market_tier_guess) rows.push(makeRow('Market tier (guess)', String(inf.market_tier_guess), 'mkt_tier'));
+
+  if (rows.length) {
+    var fieldsBox = document.createElement('div');
+    fieldsBox.style.cssText = 'margin-top:6px;padding:6px 8px;background:rgba(0,0,0,.15);border:1px solid var(--border);border-radius:6px';
+    var fhdr = document.createElement('div');
+    fhdr.style.cssText = 'font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px';
+    fhdr.textContent = '\u{1F4CB} Proposed fields ';
+    var hint = document.createElement('span');
+    hint.style.cssText = 'color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0';
+    hint.textContent = '— ● = confidence';
+    fhdr.appendChild(hint);
+    fieldsBox.appendChild(fhdr);
+    rows.forEach(function(r){ fieldsBox.appendChild(r); });
+    root.appendChild(fieldsBox);
+  }
+
+  // Finance hints.
+  if (Array.isArray(payload.finance_hints) && payload.finance_hints.length) {
+    var fbox = section('\u{1F4B0} Finance hints', 'var(--accent)', 'rgba(99,102,241,.08)');
+    payload.finance_hints.forEach(function(h){
+      var li = document.createElement('div');
+      li.style.cssText = 'font-size:11px;line-height:1.5;color:var(--text)';
+      li.textContent = '• ' + String(h);
+      fbox.appendChild(li);
+    });
+    root.appendChild(fbox);
+  }
+
+  // Strategy hints.
+  if (Array.isArray(payload.strategy_hints) && payload.strategy_hints.length) {
+    var sbox = section('\u{1F3AF} Strategy', '#10b981', 'rgba(16,185,129,.08)');
+    payload.strategy_hints.forEach(function(h){
+      var li = document.createElement('div');
+      li.style.cssText = 'font-size:11px;line-height:1.5;color:var(--text)';
+      li.textContent = '• ' + String(h);
+      sbox.appendChild(li);
+    });
+    root.appendChild(sbox);
+  }
+
+  // Red flags.
+  if (Array.isArray(rf.rf_ai_flags) && rf.rf_ai_flags.length) {
+    var rbox = section('⚠️ Red flags', '#f87171', 'rgba(239,68,68,.08)');
+    rf.rf_ai_flags.forEach(function(f){
+      var li = document.createElement('div');
+      li.style.cssText = 'font-size:11px;line-height:1.5;color:var(--text)';
+      li.textContent = '• ' + String(f);
+      rbox.appendChild(li);
+    });
+    root.appendChild(rbox);
+  }
+
+  // Buttons.
+  var btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:6px;margin-top:10px';
+  var applyBtn = document.createElement('button');
+  applyBtn.style.cssText = 'flex:1;background:var(--accent);color:#fff;border:none;padding:8px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer';
+  applyBtn.textContent = '✓ Apply all';
+  applyBtn.addEventListener('click', function(){ window.aiChatApplyExtraction(payloadKey); });
+  var editBtn = document.createElement('button');
+  editBtn.style.cssText = 'flex:1;background:transparent;color:var(--accent);border:1px solid var(--accent);padding:8px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer';
+  editBtn.textContent = '✎ Edit before applying';
+  editBtn.addEventListener('click', function(){ window.aiChatEditExtraction(payloadKey); });
+  btnRow.appendChild(applyBtn);
+  btnRow.appendChild(editBtn);
+  root.appendChild(btnRow);
+
+  return root;
+}
+
+// Main entrypoint — extract a file via chat sidebar.
+async function aiChatExtractFromFile(file) {
+  if (!file) return;
+  if (typeof window.aiChatEnsureOpen === 'function') window.aiChatEnsureOpen();
+  else if (typeof aiChatToggle === 'function') {
+    var c = el('aiChat');
+    if (c && !c.classList.contains('open')) aiChatToggle();
+  }
+
+  var fname = file.name || 'file';
+  if (typeof window.aiChatPostMsg === 'function') {
+    window.aiChatPostMsg('user', '\u{1F4CE} Uploaded ' + fname);
+    window.aiChatPostMsg('assistant', '\u{1F50D} Reading ' + fname + '…', { thinking: true });
+  }
+
+  var text = '';
+  try {
+    text = await _readFileText(file);
+  } catch (e) {
+    if (typeof window.aiChatReplaceLastAssistant === 'function') {
+      window.aiChatReplaceLastAssistant('⚠ Could not read ' + fname + ': ' + (e.message || 'unknown error'), { error: true });
+    }
+    try { return _handleFileLegacy(file); } catch(_) { return; }
+  }
+
+  // Mirror text into the paste textarea so legacy buttons still work.
+  try { var ta = el('omPaste'); if (ta) ta.value = text; } catch(_) {}
+
+  if (!text || text.trim().length < 30) {
+    if (typeof window.aiChatReplaceLastAssistant === 'function') {
+      window.aiChatReplaceLastAssistant('⚠ ' + fname + ' looks empty (only ' + (text||'').length + ' chars). Try a different file or paste the OM text manually.', { error: true });
+    }
+    return;
+  }
+
+  var provider = _aiChatPickProvider();
+  if (!provider) {
+    if (typeof window.aiChatReplaceLastAssistant === 'function') {
+      window.aiChatReplaceLastAssistant('⚠ No AI provider configured. Open Settings to add an Anthropic, OpenAI, Perplexity, or Groq key.', { error: true });
+    }
+    return;
+  }
+  var apiKey = '';
+  try { apiKey = _getAIKey(provider); } catch(_) {}
+  if (!apiKey) {
+    if (typeof window.aiChatReplaceLastAssistant === 'function') {
+      window.aiChatReplaceLastAssistant('⚠ No API key for ' + provider + '. Open Settings.', { error: true });
+    }
+    return;
+  }
+
+  if (typeof window.aiChatReplaceLastAssistant === 'function') {
+    window.aiChatReplaceLastAssistant('\u{1F916} Reading the entire deal — ' + (text.length.toLocaleString()) + ' chars · provider: ' + provider + ' …', { thinking: true });
+  }
+
+  var prompt = _aiChatBuildProposalPrompt(text, '');
+  var raw = '';
+  try {
+    raw = await callAI(prompt, apiKey, provider);
+  } catch (e) {
+    if (typeof window.aiChatReplaceLastAssistant === 'function') {
+      window.aiChatReplaceLastAssistant('⚠ AI call failed: ' + (e.message || 'unknown') + '. You can still use AI Fill All Fields manually.', { error: true });
+    }
+    return;
+  }
+
+  var payload = null;
+  try {
+    payload = _extractJSON(raw);
+  } catch (e) {
+    if (typeof window.aiChatReplaceLastAssistant === 'function') {
+      window.aiChatReplaceLastAssistant('⚠ Could not parse AI response: ' + (e.message || 'unknown'), { error: true });
+    }
+    return;
+  }
+  if (!payload || typeof payload !== 'object') {
+    if (typeof window.aiChatReplaceLastAssistant === 'function') {
+      window.aiChatReplaceLastAssistant('⚠ AI returned an unexpected shape. Try again or use AI Fill All Fields.', { error: true });
+    }
+    return;
+  }
+
+  var key = _aiChatStashPayload(payload);
+  var node = _aiChatBuildProposalNode(payload, key);
+  if (typeof window.aiChatReplaceLastAssistant === 'function') {
+    window.aiChatReplaceLastAssistant('', { dom: node });
+  }
+}
+
+// Pulled from the intake panel's "Send to AI Chat" button.
+async function aiChatExtractFromPaste() {
+  var ta = el('omPaste');
+  var txt = (ta && ta.value || '').trim();
+  if (txt.length < 30) {
+    alert('Paste at least a few sentences of OM / listing text first.');
+    return;
+  }
+  var blob = new Blob([txt], { type: 'text/plain' });
+  var pseudo = new File([blob], 'pasted-text.txt', { type: 'text/plain' });
+  return aiChatExtractFromFile(pseudo);
+}
+
+// User clicked "Apply all" inside a proposal bubble.
+window.aiChatApplyExtraction = function(payloadKey) {
+  var payload = (window._aiChatPayloads || {})[payloadKey];
+  if (!payload) {
+    if (typeof window.aiChatPostMsg === 'function') window.aiChatPostMsg('assistant', '⚠ Proposal expired — re-upload the file.', { error: true });
+    return;
+  }
+  var ex  = payload.extracted || {};
+  var rf  = payload.red_flags || {};
+  var inf = payload.inferred  || {};
+  var written = [];
+
+  function setIf(id, val) {
+    if (val === undefined || val === null || val === '' || val === 0) return;
+    var e = el(id);
+    if (e) { e.value = val; written.push(id); }
+  }
+  function setChk(id, val) {
+    var e = el(id);
+    if (e) { e.checked = !!val; if (val) written.push(id); }
+  }
+
+  if (ex.prop_type) {
+    var s = el('prop_type');
+    if (s) { s.value = ex.prop_type; written.push('prop_type'); if (typeof updatePropertyType === 'function') updatePropertyType(); }
+  }
+
+  setIf('prop_address', ex.prop_address);
+  setIf('prop_city',    ex.prop_city);
+  setIf('prop_state',   ex.prop_state);
+  setIf('prop_zip',     ex.prop_zip);
+  setIf('prop_units',   ex.prop_units);
+  setIf('prop_sqft',    ex.prop_sqft);
+  setIf('prop_year',    ex.prop_year);
+  setIf('prop_beds',    ex.prop_beds);
+
+  setIf('pur_price', ex.pur_price);
+  setIf('pur_arv',   ex.pur_arv || ex.pur_price);
+  var dnPct = ex.pur_down_pct || 20;
+  setIf('pur_down_pct', dnPct);
+  setIf('pur_down', ex.pur_down || (ex.pur_price ? Math.round(ex.pur_price * dnPct / 100) : 0));
+  var clPct = ex.pur_close_pct || 2;
+  setIf('pur_close_pct', clPct);
+  setIf('pur_close', ex.pur_close || (ex.pur_price ? Math.round(ex.pur_price * clPct / 100) : 0));
+  setIf('pur_rehab_pct', ex.pur_rehab_pct);
+  setIf('pur_rehab',     ex.pur_rehab);
+  setIf('pur_hold', ex.pur_hold || 5);
+  setIf('pur_rate', ex.pur_rate || 7.0);
+  setIf('pur_appr', ex.pur_appr || 3);
+
+  setIf('spec_n',    ex.spec_n);
+  setIf('spec_rate', ex.spec_rate);
+  setIf('spec_occ',  ex.spec_occ);
+  if ((ex.spec_n||0) > 0 && (ex.spec_rate||0) > 0 && typeof computeSpecIncome === 'function') {
+    computeSpecIncome();
+  } else {
+    setIf('fin_gross', ex.fin_gross);
+  }
+
+  setIf('fin_vac',     ex.fin_vac);
+  setIf('fin_vac_mo',  ex.fin_vac_mo);
+  setIf('fin_other',   ex.fin_other);
+  setIf('fin_mgmt_pct',ex.fin_mgmt_pct);
+  setIf('fin_mgmt_mo', ex.fin_mgmt_mo);
+  setIf('fin_ins_pct', ex.fin_ins_pct);
+  setIf('fin_ins',     ex.fin_ins);
+  setIf('fin_taxes_pct', ex.fin_taxes_pct);
+  setIf('fin_taxes',   ex.fin_taxes);
+  setIf('fin_maint_pct',ex.fin_maint_pct);
+  setIf('fin_maint',   ex.fin_maint);
+  setIf('fin_capex_pct',ex.fin_capex_pct);
+  setIf('fin_capex',   ex.fin_capex);
+  setIf('fin_util',    ex.fin_util);
+  setIf('fin_hoa',     ex.fin_hoa);
+
+  if (ex.fin_noi) { var n = el('fin_noi'); if (n) { n.value = Math.round(ex.fin_noi); written.push('fin_noi'); } }
+  setIf('ncp_cap',   ex.ncp_cap || inf.cap_rate_calc);
+  setIf('ncp_price', ex.ncp_price || ex.pur_price);
+  setIf('ncp_noi',   ex.ncp_noi   || ex.fin_noi);
+
+  setIf('mkt_tier',  ex.mkt_tier  || inf.market_tier_guess);
+  setIf('mkt_class', ex.mkt_class);
+
+  setIf('exist_bal',  ex.exist_bal);
+  setIf('exist_rate', ex.exist_rate);
+  setIf('exist_pmt',  ex.exist_pmt);
+  setIf('exist_term', ex.exist_term);
+
+  setIf('seller_name',  ex.seller_name);
+  setIf('seller_phone', ex.seller_phone);
+
+  setChk('rf_foundation',     rf.rf_foundation);
+  setChk('rf_roof',           rf.rf_roof);
+  setChk('rf_mold',           rf.rf_mold);
+  setChk('rf_electrical',     rf.rf_electrical);
+  setChk('rf_liens',          rf.rf_liens);
+  setChk('rf_environmental',  rf.rf_environmental);
+  setChk('rf_vacancy',        rf.rf_vacancy);
+  setChk('rf_seller_motivated', rf.rf_seller_motivated);
+
+  // AI flags into the dynamic checkbox container (mirrors aiAnalyze).
+  var rfContainer = el('rfAiFlags');
+  if (rfContainer && Array.isArray(rf.rf_ai_flags) && rf.rf_ai_flags.length) {
+    rfContainer.textContent = '';
+    var divider = document.createElement('div');
+    divider.style.cssText = 'font-size:10px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin:8px 0 4px';
+    divider.textContent = '\u{1F916} AI-Identified Flags';
+    rfContainer.appendChild(divider);
+    rf.rf_ai_flags.forEach(function(flagText, i) {
+      if (!flagText || typeof flagText !== 'string') return;
+      var lbl = document.createElement('label');
+      lbl.className = 'scr-row';
+      lbl.style.cursor = 'pointer';
+      var chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.id = 'rf_ai_' + i;
+      chk.checked = true;
+      chk.onchange = function(){ if (typeof R === 'function') R(); };
+      var span = document.createElement('span');
+      span.className = 'scr-label';
+      span.style.color = 'var(--yellow)';
+      span.textContent = flagText;
+      lbl.appendChild(chk);
+      lbl.appendChild(document.createTextNode(' '));
+      lbl.appendChild(span);
+      rfContainer.appendChild(lbl);
+    });
+  }
+
+  // Notes — combine summary + finance hints + strategy hints + math notes.
+  var noteParts = [];
+  if (payload.summary) noteParts.push('\u{1F4CB} ' + payload.summary);
+  if (Array.isArray(payload.finance_hints) && payload.finance_hints.length) noteParts.push('\u{1F4B0} FINANCE: ' + payload.finance_hints.join(' | '));
+  if (Array.isArray(payload.strategy_hints) && payload.strategy_hints.length) noteParts.push('\u{1F3AF} STRATEGY: ' + payload.strategy_hints.join(' | '));
+  if (payload.notes) noteParts.push('\u{1F522} ' + payload.notes);
+  if (noteParts.length) {
+    var nNotes = el('fin_notes');
+    if (nNotes) { nNotes.value = noteParts.join('\n\n'); written.push('fin_notes'); }
+  }
+
+  try { window.S = window.S || {}; window.S.aiChatLastPayload = payload; } catch(_) {}
+
+  if (typeof updateMapLinks === 'function') updateMapLinks();
+  if (typeof R === 'function') R();
+  if (typeof runRecommendation === 'function') runRecommendation();
+
+  // Confirmation summary (DOM-built, no innerHTML).
+  var confirmRoot = document.createElement('div');
+  var head = document.createElement('div');
+  head.style.cssText = 'font-size:12px;line-height:1.5;color:var(--text);margin-bottom:6px';
+  var headPrefix = document.createElement('span'); headPrefix.textContent = '✅ Applied ';
+  var headStrong = document.createElement('strong'); headStrong.textContent = String(written.length);
+  var headSuffix = document.createElement('span'); headSuffix.textContent = ' field' + (written.length===1?'':'s') + ' across the intake panel.';
+  head.appendChild(headPrefix); head.appendChild(headStrong); head.appendChild(headSuffix);
+  confirmRoot.appendChild(head);
+
+  var pillRow = document.createElement('div');
+  pillRow.style.cssText = 'font-size:11px;line-height:1.7;color:var(--text2);margin-bottom:8px';
+  written.slice(0, 24).forEach(function(f, idx) {
+    if (idx > 0) pillRow.appendChild(document.createTextNode(' '));
+    var pill = document.createElement('code');
+    pill.style.cssText = 'font-size:10px;background:rgba(0,0,0,.15);padding:1px 4px;border-radius:3px';
+    pill.textContent = f;
+    pillRow.appendChild(pill);
+  });
+  if (written.length > 24) {
+    var more = document.createElement('span');
+    more.style.cssText = 'color:var(--muted);font-size:10px';
+    more.textContent = ' +' + (written.length - 24) + ' more';
+    pillRow.appendChild(more);
+  }
+  confirmRoot.appendChild(pillRow);
+
+  var ctaRow = document.createElement('div');
+  ctaRow.style.cssText = 'display:flex;gap:6px';
+  var ctaBtn = document.createElement('button');
+  ctaBtn.style.cssText = 'flex:1;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;padding:8px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer';
+  ctaBtn.textContent = '⚡ Open Strategy Agents to verdict this deal';
+  ctaBtn.addEventListener('click', function(){ window.aiChatRunStrategy(); });
+  ctaRow.appendChild(ctaBtn);
+  confirmRoot.appendChild(ctaRow);
+
+  if (typeof window.aiChatPostMsg === 'function') window.aiChatPostMsg('assistant', '', { dom: confirmRoot });
+};
+
+// User clicked "Edit before applying" — turn the proposal into editable inputs.
+window.aiChatEditExtraction = function(payloadKey) {
+  var payload = (window._aiChatPayloads || {})[payloadKey];
+  if (!payload) {
+    if (typeof window.aiChatPostMsg === 'function') window.aiChatPostMsg('assistant', '⚠ Proposal expired — re-upload the file.', { error: true });
+    return;
+  }
+  var ex = payload.extracted || {};
+  var fields = [
+    { id:'prop_address', label:'Address',           type:'text' },
+    { id:'prop_city',    label:'City',              type:'text' },
+    { id:'prop_state',   label:'State',             type:'text' },
+    { id:'prop_zip',     label:'Zip',               type:'text' },
+    { id:'prop_type',    label:'Type',              type:'text' },
+    { id:'prop_units',   label:'Units',             type:'number' },
+    { id:'prop_year',    label:'Year built',        type:'number' },
+    { id:'pur_price',    label:'Purchase price',    type:'number' },
+    { id:'pur_rate',     label:'Mortgage rate (%)', type:'number' },
+    { id:'pur_down_pct', label:'Down payment (%)',  type:'number' },
+    { id:'fin_gross',    label:'Gross rent / mo',   type:'number' },
+    { id:'fin_noi',      label:'NOI / yr',          type:'number' },
+    { id:'exist_bal',    label:'Existing loan bal', type:'number' },
+    { id:'exist_rate',   label:'Existing loan rate (%)', type:'number' }
+  ];
+
+  var root = document.createElement('div');
+  var head = document.createElement('div');
+  head.style.cssText = 'font-size:12px;color:var(--text);margin-bottom:6px';
+  head.textContent = '✎ Edit any field before applying. Untouched fields keep the AI value.';
+  root.appendChild(head);
+
+  var listBox = document.createElement('div');
+  listBox.style.cssText = 'max-height:240px;overflow-y:auto;padding:4px 6px;background:rgba(0,0,0,.15);border:1px solid var(--border);border-radius:6px';
+  var inputRefs = {};
+  fields.forEach(function(f) {
+    var v = ex[f.id];
+    if (v === undefined || v === null) v = '';
+    var lbl = document.createElement('label');
+    lbl.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:11px;padding:3px 0';
+    var nm = document.createElement('span');
+    nm.style.cssText = 'flex:0 0 130px;color:var(--text2)';
+    nm.textContent = f.label;
+    var inp = document.createElement('input');
+    inp.type = f.type;
+    inp.value = String(v);
+    inp.style.cssText = 'flex:1;background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:11px;color:var(--text)';
+    inputRefs[f.id] = inp;
+    lbl.appendChild(nm);
+    lbl.appendChild(inp);
+    listBox.appendChild(lbl);
+  });
+  root.appendChild(listBox);
+
+  var btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:6px;margin-top:8px';
+  var applyEdited = document.createElement('button');
+  applyEdited.style.cssText = 'flex:1;background:var(--accent);color:#fff;border:none;padding:8px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer';
+  applyEdited.textContent = '✓ Apply edited values';
+  applyEdited.addEventListener('click', function() {
+    fields.forEach(function(f) {
+      var inp = inputRefs[f.id];
+      if (!inp) return;
+      var v = inp.value;
+      if (v === '' || v === null) return;
+      if (inp.type === 'number') {
+        var n = parseFloat(v);
+        if (!isNaN(n)) ex[f.id] = n;
+      } else {
+        ex[f.id] = v;
+      }
+    });
+    if (ex.pur_price && !ex.ncp_price) ex.ncp_price = ex.pur_price;
+    if (ex.fin_noi && !ex.ncp_noi)     ex.ncp_noi   = ex.fin_noi;
+    if (ex.fin_noi && ex.pur_price && !ex.ncp_cap) ex.ncp_cap = (ex.fin_noi / ex.pur_price) * 100;
+    payload.extracted = ex;
+    window.aiChatApplyExtraction(payloadKey);
+  });
+  var applyOrig = document.createElement('button');
+  applyOrig.style.cssText = 'flex:0 0 auto;background:transparent;color:var(--text2);border:1px solid var(--border);padding:8px 10px;border-radius:6px;font-size:12px;cursor:pointer';
+  applyOrig.textContent = '↶ Apply original';
+  applyOrig.addEventListener('click', function(){ window.aiChatApplyExtraction(payloadKey); });
+  btnRow.appendChild(applyEdited);
+  btnRow.appendChild(applyOrig);
+  root.appendChild(btnRow);
+
+  if (typeof window.aiChatPostMsg === 'function') window.aiChatPostMsg('assistant', '', { dom: root });
+};
+
+// Switch to panel14 (Strategy Agents) and run the simulation.
+window.aiChatRunStrategy = function() {
+  try {
+    if (typeof aiChatToggle === 'function') {
+      var c = el('aiChat');
+      if (c && c.classList.contains('open')) aiChatToggle();
+    }
+  } catch(_) {}
+  try {
+    if (typeof window.ST === 'function') window.ST(14);
+    setTimeout(function(){
+      if (typeof runStrategyAgentsSimulation === 'function') runStrategyAgentsSimulation();
+    }, 300);
+  } catch(e) {
+    console.warn('[ai-chat-intake] strategy switch failed:', e);
+  }
+};
+
 
 // ── Listing URL Scraper ───────────────────────────────────────────────────────
 async function scrapeListing() {
@@ -10216,7 +10959,8 @@ async function trialOpenCheckout(){
         'apikey': SUPABASE_ANON
       },
       body: JSON.stringify({
-        return_url: window.location.origin + window.location.pathname
+        return_url: window.location.origin + window.location.pathname,
+        ref_code: (function(){ try { return localStorage.getItem('jp_ref_code') || null; } catch(_e){ return null; } })()
       })
     });
     const body = await resp.json();
@@ -11060,6 +11804,10 @@ function _userChipRender(){
     html += '<div class="um-item" onclick="_userChipClose();(typeof trialOpenBillingPortal===\'function\')&&trialOpenBillingPortal()">'
       + '<span class="um-item-icon">💳</span>'
       + '<span class="um-item-text">Manage billing</span></div>';
+    /* referral-system v1 menu item */
+    html += '<div class="um-item" onclick="_userChipClose();openReferrals()">'
+      + '<span class="um-item-icon">💸</span>'
+      + '<span class="um-item-text">Referrals</span></div>';
   }
   // Admin Controls — only shown if the chip's user has admin/moderator/viewer access
   if(s){
@@ -12313,6 +13061,151 @@ function showProjToast(msg, isWarn) {
   clearTimeout(t._to);
   t._to = setTimeout(()=>{ t.style.opacity='0'; }, isWarn ? 3200 : 2500);
 }
+
+
+// ===== referral-system v1 =====
+
+(function(){
+  function fmtUSD(cents){
+    var n = (cents||0)/100;
+    return '$' + n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  function fmtDate(s){
+    if(!s) return '—';
+    try { var d=new Date(s); return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); }
+    catch(_e){ return s; }
+  }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];}); }
+  function setHTML(node, html){ if(node) node.innerHTML = html; }
+
+  async function _post(slug, body){
+    var sb = window._supabase || (typeof _sbClient==='function' && _sbClient());
+    if(!sb) throw new Error('Sign in first.');
+    var sess = await sb.auth.getSession();
+    var token = sess && sess.data && sess.data.session && sess.data.session.access_token;
+    if(!token) throw new Error('Sign in first.');
+    var resp = await fetch(SUPABASE_URL + '/functions/v1/' + slug, {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer '+token, 'Content-Type':'application/json', 'apikey':SUPABASE_ANON },
+      body: JSON.stringify(body||{})
+    });
+    var j = {};
+    try { j = await resp.json(); } catch(_e){}
+    if(!resp.ok) throw new Error((j && (j.detail||j.error)) || ('HTTP '+resp.status));
+    return j;
+  }
+
+  function openReferrals(){
+    var ov = document.getElementById('refOverlay');
+    if(!ov) return;
+    ov.classList.add('open');
+    document.addEventListener('keydown', _refEsc);
+    _renderLoading();
+    _loadStats().catch(function(e){ _renderError(e.message||String(e)); });
+  }
+  function closeReferrals(){
+    var ov = document.getElementById('refOverlay');
+    if(ov) ov.classList.remove('open');
+    document.removeEventListener('keydown', _refEsc);
+  }
+  function _refEsc(e){ if(e.key==='Escape') closeReferrals(); }
+
+  function _renderLoading(){
+    setHTML(document.getElementById('refBody'),
+      '<div style="text-align:center;padding:30px;color:var(--muted)">Loading…</div>');
+  }
+  function _renderError(msg){
+    setHTML(document.getElementById('refBody'),
+      '<div style="text-align:center;padding:24px;color:var(--red,#f87171);font-size:13px">'+esc(msg)+'</div>');
+  }
+
+  async function _loadStats(){
+    var data = await _post('referral-stats', {});
+    var b = document.getElementById('refBody');
+    if(!b) return;
+
+    if(!data.is_partner){
+      var h = ''
+        + '<div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:8px">'
+        +   'You\'re not a referral partner yet. Apply now and you\'ll get a personal link instantly — auto-approved, no waiting.'
+        + '</div>'
+        + '<button class="refApply" id="refApplyBtn" onclick="referralApply()">Become a referral partner →</button>'
+        + '<div class="refNote">Earnings will be paid out monthly. For v1, payouts are manual — contact billing once your balance is ≥$50. Stripe Connect / PayPal coming soon.</div>';
+      setHTML(b, h);
+      return;
+    }
+
+    var p = data.partner || {};
+    var s = data.stats || {};
+    var e = data.earnings || {};
+    var refs = data.recent_referrals || [];
+
+    var rowsHtml = refs.length
+      ? refs.map(function(r){
+          return '<tr>'
+            + '<td><span style="font-family:monospace">'+esc(r.masked_label)+'</span></td>'
+            + '<td>'+esc(fmtDate(r.created_at))+'</td>'
+            + '<td><span class="refPill '+esc(r.status)+'">'+esc(r.status)+'</span></td>'
+            + '<td style="color:var(--muted);font-size:11.5px">'
+            + (r.first_charge_at ? 'Paid '+esc(fmtDate(r.first_charge_at)) : (r.churned_at ? 'Churned '+esc(fmtDate(r.churned_at)) : '—'))
+            + '</td></tr>';
+        }).join('')
+      : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:18px;font-size:12px">No referrals yet. Share your link to start.</td></tr>';
+
+    var html = ''
+      + '<div class="refRow"><div class="refCode">'+esc(p.code||'------')+'</div>'
+      + '<div class="refUrl" id="refUrlField">'+esc(p.url||'')+'</div>'
+      + '<button class="refBtn" onclick="referralCopyLink()">Copy link</button></div>'
+      + '<div class="refStats">'
+        + '<div class="refStat"><div class="lbl">Total</div><div class="val">'+(s.total||0)+'</div></div>'
+        + '<div class="refStat"><div class="lbl">Trialing</div><div class="val" style="color:#fbbf24">'+(s.trialing||0)+'</div></div>'
+        + '<div class="refStat"><div class="lbl">Active</div><div class="val" style="color:#34d399">'+(s.active||0)+'</div></div>'
+        + '<div class="refStat"><div class="lbl">Churned</div><div class="val" style="color:#f87171">'+(s.churned||0)+'</div></div>'
+      + '</div>'
+      + '<div class="refEarn">'
+        + '<div><div class="blk">Pending</div><div class="amt">'+fmtUSD(e.pending_cents)+'</div></div>'
+        + '<div><div class="blk">Paid out</div><div class="amt">'+fmtUSD(e.paid_cents)+'</div></div>'
+        + '<div><div class="blk">Lifetime</div><div class="amt">'+fmtUSD(e.lifetime_cents)+'</div></div>'
+      + '</div>'
+      + '<div style="font-size:11.5px;color:var(--muted);margin:14px 0 6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Recent referrals</div>'
+      + '<table class="refTbl"><thead><tr><th>User</th><th>Joined</th><th>Status</th><th>Note</th></tr></thead><tbody>'+rowsHtml+'</tbody></table>'
+      + '<div class="refNote">Commissions: 30% of the first $49 + 10% per month for 12 months. Refunds claw back the matching credits. Earnings will be paid out monthly via Stripe Connect or PayPal — contact billing for now.</div>';
+    setHTML(b, html);
+  }
+
+  async function referralApply(){
+    var btn = document.getElementById('refApplyBtn');
+    if(btn){ btn.disabled = true; btn.textContent = 'Generating your link…'; }
+    try {
+      await _post('referral-apply', {});
+      await _loadStats();
+    } catch(e){
+      _renderError(e.message||String(e));
+    }
+  }
+
+  function referralCopyLink(){
+    var f = document.getElementById('refUrlField');
+    if(!f) return;
+    var txt = f.textContent || '';
+    try {
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = txt; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+      }
+      if(typeof showProjToast==='function') showProjToast('Link copied');
+      else alert('Copied: '+txt);
+    } catch(_e){ alert('Copy failed; select manually:\n'+txt); }
+  }
+
+  window.openReferrals    = openReferrals;
+  window.closeReferrals   = closeReferrals;
+  window.referralApply    = referralApply;
+  window.referralCopyLink = referralCopyLink;
+})();
 
 </script>
 
@@ -16028,7 +16921,7 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     if(!st.messages.length){
       box.innerHTML = '<div class="ai-chat-empty">'
         + '<div class="ai-chat-empty-icon">💬</div>'
-        + 'Ask anything about this deal.<br><br>'
+        + 'Upload a file or ask anything about this deal.<br><br>'
         + '<span style="opacity:.7">Try:</span><br>'
         + '<em style="opacity:.85">"What\'s a fair cap rate for this submarket?"</em><br>'
         + '<em style="opacity:.85">"Are these rents at, above, or below market?"</em><br>'
@@ -16041,8 +16934,16 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     st.messages.forEach(function(m){
       var d = document.createElement('div');
       d.className = 'ai-chat-msg ' + m.role;
-      var bubbleClass = 'ai-chat-msg-bubble' + (m.thinking?' thinking':'') + (m.error?' error':'');
-      d.innerHTML = '<div class="'+bubbleClass+'">'+_e(m.content)+'</div>';
+      var bubble = document.createElement('div');
+      bubble.className = 'ai-chat-msg-bubble' + (m.thinking?' thinking':'') + (m.error?' error':'');
+      // Rich messages attach a pre-built DOM node (m.dom). Plain messages
+      // use textContent (escaped, like the previous _e-wrapped path).
+      if (m.dom && m.dom.nodeType === 1) {
+        bubble.appendChild(m.dom);
+      } else {
+        bubble.textContent = String(m.content||'');
+      }
+      d.appendChild(bubble);
       box.appendChild(d);
     });
     box.scrollTop = box.scrollHeight;
@@ -16187,6 +17088,36 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
       inp.style.height = Math.min(inp.scrollHeight, 120) + 'px';
     });
   }
+
+  // ── Window-exposed helpers so external code can post chat messages ─────
+  // Used by the file-upload-to-chat flow (aiChatExtractFromFile).
+  window.aiChatPostMsg = function(role, content, opts){
+    var o = opts || {};
+    var m = { role: role, content: content||'', t: Date.now() };
+    if (o.thinking) m.thinking = true;
+    if (o.error)    m.error    = true;
+    if (o.dom && o.dom.nodeType === 1) m.dom = o.dom;
+    st.messages.push(m);
+    _renderMsgs();
+    _save();
+    return m;
+  };
+  // Replace the LAST assistant message (used to swap a 'thinking' bubble for the real result).
+  window.aiChatReplaceLastAssistant = function(content, opts){
+    for (var i = st.messages.length - 1; i >= 0; i--) {
+      if (st.messages[i].role === 'assistant') {
+        st.messages.splice(i, 1);
+        break;
+      }
+    }
+    return window.aiChatPostMsg('assistant', content, opts);
+  };
+  // Force the chat sidebar open if it isn't already.
+  window.aiChatEnsureOpen = function(){
+    if (!st.open) window.aiChatToggle();
+  };
+  // Expose the active provider (resolved with fallback chain).
+  window.aiChatProvider = function(){ return _provider(); };
 
   // Init
   function _init(){
@@ -18109,6 +19040,16 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
   }
 })();
 </script>
+
+<!-- referral-system v1 markup -->
+<div class="refOv" id="refOverlay" onclick="if(event.target===this)closeReferrals()">
+  <div class="refMod" id="refModal" role="dialog" aria-modal="true" aria-labelledby="refTitle">
+    <button class="refClose" onclick="closeReferrals()" aria-label="Close">&times;</button>
+    <h2 id="refTitle">&#128176; Referrals</h2>
+    <div class="refSub">Earn 30% on the first month + 10% recurring (12 months) for every paying user you refer.</div>
+    <div id="refBody"><div style="text-align:center;padding:30px;color:var(--muted)">Loading&hellip;</div></div>
+  </div>
+</div>
 
 <script>
 (function(){
