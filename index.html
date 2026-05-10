@@ -647,15 +647,21 @@ strong { color: #e2e8f0; }
 .proj-list-item.selected .sel-chk,.proj-grid-item.selected .sel-chk{opacity:1;background:var(--accent);border-color:var(--accent)}
 .proj-list-item.selected .sel-chk::after,.proj-grid-item.selected .sel-chk::after{content:"\2713";color:#fff;font-size:10px;font-weight:700;line-height:1}
 .proj-grid-item .sel-chk{position:absolute;top:7px;left:7px;margin-right:0}
-.proj-sel-bar{display:none;align-items:center;gap:8px;padding:8px 13px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.35);border-radius:10px;margin-bottom:8px;font-size:12px;color:var(--text);position:sticky;top:0;z-index:5;backdrop-filter:blur(6px)}
-.proj-sel-bar.active{display:flex}
-.proj-sel-bar .sel-count{font-weight:700;color:var(--accent);white-space:nowrap}
-.proj-sel-bar .sel-hint{font-size:10.5px;color:var(--muted);margin-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Selection bar — floats over content as a bottom toolbar so it doesn't shift
+   layout on first click (which previously broke double-click: the second click
+   of a dblclick landed on whatever moved into the original click position).
+   We always reserve display:flex but use opacity+pointer-events to show/hide,
+   and position:fixed to avoid in-flow shift. */
+.proj-sel-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:rgba(99,102,241,.95);border:1px solid rgba(99,102,241,.6);border-radius:14px;font-size:12px;color:#fff;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:1000;backdrop-filter:blur(10px);box-shadow:0 12px 32px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.05);max-width:min(820px,calc(100vw - 32px));pointer-events:none;opacity:0;visibility:hidden;transition:opacity .14s ease,transform .14s ease;will-change:opacity,transform}
+.proj-sel-bar.active{pointer-events:auto;opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+.proj-sel-bar:not(.active){transform:translateX(-50%) translateY(8px)}
+.proj-sel-bar .sel-count{font-weight:700;color:#fff;white-space:nowrap}
+.proj-sel-bar .sel-hint{font-size:10.5px;color:rgba(255,255,255,.78);margin-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .proj-sel-bar .sel-spacer{flex:1}
-.proj-sel-bar button{background:var(--surface3);border:1px solid var(--border);color:var(--text);padding:4px 11px;border-radius:7px;cursor:pointer;font-size:11.5px;transition:.15s}
-.proj-sel-bar button:hover{border-color:var(--accent);color:var(--accent)}
-.proj-sel-bar button.sel-danger{color:#f87171}
-.proj-sel-bar button.sel-danger:hover{background:rgba(239,68,68,.1);border-color:#f87171}
+.proj-sel-bar button{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.32);color:#fff;padding:5px 12px;border-radius:8px;cursor:pointer;font-size:11.5px;font-weight:600;transition:.12s}
+.proj-sel-bar button:hover{background:#fff;color:#4338ca;border-color:#fff}
+.proj-sel-bar button.sel-danger{background:rgba(239,68,68,.22);border-color:rgba(239,68,68,.55);color:#fee2e2}
+.proj-sel-bar button.sel-danger:hover{background:#fff;color:#dc2626;border-color:#fff}
 .proj-list-item[draggable="true"],.proj-grid-item[draggable="true"]{cursor:pointer}
 .proj-list-item[draggable="true"]:active,.proj-grid-item[draggable="true"]:active{cursor:grabbing}
 /* Custom drag-image ghost — appears next to cursor while dragging */
