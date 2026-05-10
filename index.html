@@ -19371,19 +19371,55 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
   // Replaces the prompt() implementation. User can either:
   //   a) Type a new name and click 'Save as NEW file', or
   //   b) Click 'Overwrite' on any existing project row.
+  // Folder-aware Save As picker — module-level navigation state
+  var _saveAsCurId = null;  // null = root
+
   function _saveAsBuildList(){
     var box = _id('saBody'); if(!box) return;
-    var projects = (typeof _getAllProjects==='function') ? _getAllProjects() : {};
-    var rows = Object.entries(projects)
-      .filter(function(kv){ return !kv[0].startsWith('__'); })
-      .map(function(kv){ return { name: kv[0], savedAt: kv[1].savedAt || '' }; })
-      .sort(function(a,b){ return (b.savedAt||'').localeCompare(a.savedAt||''); });
+    var meta = (typeof _getMeta === 'function') ? _getMeta() : { folders: [] };
+    var allFolders = (meta && meta.folders) || [];
+    var childFolders = (typeof _getChildFolders === 'function') ? _getChildFolders(_saveAsCurId) : [];
+    var projs = (typeof _getProjectsInFolder === 'function') ? _getProjectsInFolder(_saveAsCurId) : [];
+    var crumbs = (typeof _getBreadcrumb === 'function') ? _getBreadcrumb(_saveAsCurId) : [];
+
     var html = '';
-    if(!rows.length){
-      html = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12.5px">No saved projects yet. Use the &quot;Save as new file&quot; field above.</div>';
-    } else {
-      html = '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin:14px 0 8px">Existing projects &mdash; click Overwrite to replace</div>';
-      rows.forEach(function(r, i){
+
+    // ── Breadcrumb ──
+    html += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 0 6px;font-size:12px;color:var(--text2)">';
+    html += '<span style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-right:4px">Folder:</span>';
+    html += '<button class="sa-bc" data-id="" onclick="window.saveProjectAsNavigate(null)" style="background:' + (_saveAsCurId === null ? 'rgba(99,102,241,.22)' : 'transparent') + ';border:1px solid ' + (_saveAsCurId === null ? 'rgba(99,102,241,.5)' : 'var(--border)') + ';color:var(--text);padding:4px 9px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600">🏠 Root</button>';
+    crumbs.forEach(function(f, i){
+      html += '<span style="color:var(--muted);font-size:11px">›</span>';
+      var isLast = (i === crumbs.length - 1);
+      var safeId = String(f.id).replace(/'/g,"\\'");
+      html += '<button class="sa-bc" onclick="window.saveProjectAsNavigate(\'' + safeId + '\')" style="background:' + (isLast ? 'rgba(99,102,241,.22)' : 'transparent') + ';border:1px solid ' + (isLast ? 'rgba(99,102,241,.5)' : 'var(--border)') + ';color:var(--text);padding:4px 9px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600">📁 ' + _saEscape(f.name) + '</button>';
+    });
+    html += '</div>';
+
+    // ── Folders in current location ──
+    if(childFolders.length){
+      html += '<div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin:14px 0 6px">Folders</div>';
+      childFolders.forEach(function(f){
+        var safeId = String(f.id).replace(/'/g,"\\'");
+        // Count items inside (one level deep — quick heuristic for the badge)
+        var subFolderCount = allFolders.filter(function(x){ return x.parentId === f.id; }).length;
+        var subProjs = (typeof _getProjectsInFolder === 'function') ? _getProjectsInFolder(f.id) : [];
+        var inside = subFolderCount + subProjs.length;
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--surface);cursor:pointer;transition:.15s" onclick="window.saveProjectAsNavigate(\'' + safeId + '\')" onmouseover="this.style.borderColor=\'rgba(99,102,241,.5)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'
+          + '<div style="flex:1;min-width:0;overflow:hidden">'
+            + '<div style="font-weight:600;color:var(--text);font-size:13px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">📁 ' + _saEscape(f.name) + '</div>'
+            + (inside ? '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + inside + ' item' + (inside===1?'':'s') + ' inside</div>' : '<div style="font-size:11px;color:var(--muted);margin-top:2px">empty</div>')
+          + '</div>'
+          + '<div style="font-size:11px;color:var(--accent);font-weight:600">Open →</div>'
+          + '</div>';
+      });
+    }
+
+    // ── Projects in current location ──
+    var projRows = projs.slice().sort(function(a,b){ return (b.savedAt||'').localeCompare(a.savedAt||''); });
+    if(projRows.length){
+      html += '<div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin:14px 0 6px">Projects in this folder &mdash; click Overwrite to replace</div>';
+      projRows.forEach(function(r){
         var dt = '';
         try { dt = new Date(r.savedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch(e){}
         var safeName = String(r.name).replace(/'/g,"\\'").replace(/"/g,'&quot;');
@@ -19396,8 +19432,25 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
           + '</div>';
       });
     }
+
+    if(!childFolders.length && !projRows.length){
+      html += '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12.5px;border:1px dashed var(--border);border-radius:8px;margin-top:8px">This folder is empty.<br><span style="font-size:11px">Use the &quot;Save as new file&quot; field above to create a project here.</span></div>';
+    }
+
     box.innerHTML = html;
+
+    // Update the new-file label so the user sees where the file will land
+    var pathLabel = _id('saNewFilePath');
+    if(pathLabel){
+      var location = crumbs.length ? crumbs.map(function(c){ return _saEscape(c.name); }).join(' / ') : 'Root';
+      pathLabel.innerHTML = 'Will save into: <strong style="color:var(--accent)">📁 ' + location + '</strong>';
+    }
   }
+
+  window.saveProjectAsNavigate = function(id){
+    _saveAsCurId = id || null;
+    _saveAsBuildList();
+  };
   function _saEscape(t){ var d=document.createElement('div'); d.textContent=String(t); return d.innerHTML; }
 
   function _saveAsClose(){
@@ -19429,6 +19482,7 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
         + '      <input id="saNewName" type="text" placeholder="e.g. 123 Main St — Duplex Offer" style="flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;font-family:Inter,system-ui,sans-serif">'
         + '      <button class="btn btn-primary" style="font-size:12.5px;padding:9px 16px;font-weight:700;white-space:nowrap" onclick="window.saveProjectAsNew()">💾 Save new</button>'
         + '    </div>'
+        + '    <div id="saNewFilePath" style="font-size:11px;color:var(--muted);margin-top:6px">Will save into: <strong style="color:var(--accent)">📁 Root</strong></div>'
         + '  </div>'
         + '  <div id="saBody" style="flex:1;overflow-y:auto;padding:8px 20px 20px"></div>'
         + '</div>';
@@ -19438,12 +19492,22 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     var current = _getCurrentProjName();
     var input = _id('saNewName');
     if(input){ input.value = current ? (current+' (copy)') : ''; }
+    // Sync nav cursor to wherever the user currently is in the project list
+    _saveAsCurId = (typeof _getCurrentFolderId === 'function') ? (_getCurrentFolderId() || null) : null;
     _saveAsBuildList();
     ov.style.display = 'flex';
     document.addEventListener('keydown', _saveAsEsc);
     setTimeout(function(){ var i=_id('saNewName'); if(i){ i.focus(); i.select(); } }, 80);
   };
   window._saveAsClose = _saveAsClose;
+
+  function _saveAsRunWithFolder(folderId, fn){
+    // Temporarily set the global current-folder so saveProject() uses it.
+    var prev = (typeof _getCurrentFolderId==='function') ? _getCurrentFolderId() : null;
+    if(typeof _setCurrentFolderId === 'function') _setCurrentFolderId(folderId);
+    try { fn(); }
+    finally { if(typeof _setCurrentFolderId === 'function') _setCurrentFolderId(prev); }
+  }
 
   window.saveProjectAsNew = function(){
     var input = _id('saNewName'); if(!input) return;
@@ -19460,17 +19524,25 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     }
     var nameEl = _id('projNameInput'); if(!nameEl) return;
     nameEl.value = name;
-    if(typeof saveProject === 'function') saveProject();
-    if(!nameEl.value) nameEl.value = name;  // saveProject clears on success — restore
+    _saveAsRunWithFolder(_saveAsCurId, function(){
+      if(typeof saveProject === 'function') saveProject();
+    });
+    if(!nameEl.value) nameEl.value = name;
     _saveAsClose();
   };
 
   window.saveProjectAsOverwrite = function(name){
     if(!name) return;
     if(!confirm('Overwrite "' + name + '" with the current deal? The previous content will be replaced.')) return;
+    // Honor the existing project's folder, NOT the navigated folder — overwrite means in-place.
+    var projects = (typeof _getAllProjects==='function') ? _getAllProjects() : {};
+    var existing = projects[name];
+    var keepFolderId = existing ? (existing.folderId || null) : null;
     var nameEl = _id('projNameInput'); if(!nameEl) return;
     nameEl.value = name;
-    if(typeof saveProject === 'function') saveProject();
+    _saveAsRunWithFolder(keepFolderId, function(){
+      if(typeof saveProject === 'function') saveProject();
+    });
     if(!nameEl.value) nameEl.value = name;
     _saveAsClose();
   };
