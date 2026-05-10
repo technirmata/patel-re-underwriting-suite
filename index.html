@@ -11030,6 +11030,25 @@ async function authInit() {
         _setSession({ userId: u.id, username, email: u.email, loginTime: new Date().toISOString() });
       }
       _authUpdateTopbar();
+      // CARD AT EVERY LOGIN — restored sessions don't always fire SIGNED_IN,
+      // so check payment status here too. If no card on file, force paywall.
+      (async function ensurePaymentMethodOnInit(){
+        try {
+          await new Promise(r => setTimeout(r, 1500));  // brief wait for triggers
+          let profile = null;
+          try {
+            const r = await sb.from('profiles')
+              .select('subscription_status, stripe_customer_id, trial_ends_at')
+              .eq('user_id', u.id).maybeSingle();
+            profile = r.data;
+          } catch(_){}
+          const status = profile?.subscription_status || 'free';
+          if(['active','comp'].includes(status)) return;
+          if(typeof window._forcePaywallNoCard === 'function'){
+            window._forcePaywallNoCard(profile);
+          }
+        } catch(e){ console.warn('init payment check error:', e); }
+      })();
       return; // Already signed in — don't show modal
     }
   } else {
