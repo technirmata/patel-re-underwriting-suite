@@ -10377,7 +10377,8 @@ function _adminRenderUserDetail(profile, projects, projectsUpdated, grants){
     + '<button class="btn btn-outline btn-sm" onclick="adminSetSub(\''+_e(profile.user_id)+'\',\'active\')">Mark Active</button>'
     + '<button class="btn btn-outline btn-sm" onclick="adminSetSub(\''+_e(profile.user_id)+'\',\'comp\')">Comp</button>'
     + '<button class="btn btn-outline btn-sm" onclick="adminSetSub(\''+_e(profile.user_id)+'\',\'trialing\')">Reset to Trialing</button>'
-    + '<button class="btn btn-outline btn-sm" onclick="adminSetSub(\''+_e(profile.user_id)+'\',\'canceled\')">Cancel</button>'
+    + '<button class="btn btn-outline btn-sm" onclick="adminSetSub(\''+_e(profile.user_id)+'\',\'canceled\')">Cancel sub</button>'
+    + '<button class="btn btn-sm" style="background:#7f1d1d;border-color:#991b1b;color:#fecaca" onclick="adminDeleteUser(\''+_e(profile.user_id)+'\',\''+_e(profile.email||'')+'\')" title="Permanently delete this user, their profile, deals, and role grants">🗑 Delete user</button>'
     + '</div>';
   if(grants && grants.length){
     html += '<div style="margin-bottom:18px"><div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:6px">Active role grants for this user</div><div style="display:flex;gap:6px;flex-wrap:wrap">';
@@ -10717,6 +10718,50 @@ window.adminSetSub = async function(uid, status){
     if(typeof showProjToast==='function') showProjToast('Subscription set to '+status);
     adminRender(true);
   } catch(e){ alert('Update failed: '+(e.message||e)); }
+};
+
+// Hard-delete a user via the admin-delete-user Edge Function. Two-step confirm
+// because the action is irreversible: deletes auth.users (cascades to profile,
+// projects, role grants), optionally cancels Stripe subscription.
+window.adminDeleteUser = async function(uid, email){
+  var label = email || uid;
+  // Step 1 — coarse confirm
+  if(!confirm('PERMANENTLY DELETE user "'+label+'"?\n\n• All saved deals → gone\n• Auth account → gone\n• Role grants → gone\n• Stripe subscription → CANCELED\n\nThis cannot be undone. Continue?')) return;
+  // Step 2 — type-to-confirm
+  var typed = prompt('To confirm, type the email of the user you want to delete:\n\n'+label);
+  if(!typed || typed.trim().toLowerCase() !== String(label).trim().toLowerCase()){
+    alert('Email did not match — aborted. Nothing was deleted.');
+    return;
+  }
+  try {
+    var sb = _sbClient();
+    var sess = await sb.auth.getSession();
+    var token = sess && sess.data && sess.data.session && sess.data.session.access_token;
+    if(!token){ alert('Sign in again — your session expired.'); return; }
+    var resp = await fetch(SUPABASE_URL + '/functions/v1/admin-delete-user', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'apikey': SUPABASE_ANON,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: uid,
+        cancel_subscription: true,
+        reason: 'admin_panel',
+      }),
+    });
+    var body = await resp.json();
+    if(!resp.ok){
+      alert('Delete failed: ' + (body.detail || body.error || resp.statusText));
+      return;
+    }
+    if(typeof showProjToast==='function') showProjToast('🗑 Deleted ' + (body.deleted && body.deleted.email || uid));
+    adminCloseUserDetail();
+    adminRender(true);
+  } catch(e){
+    alert('Network error: ' + (e.message || e));
+  }
 };
 
 async function authLogout() {
