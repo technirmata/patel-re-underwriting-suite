@@ -1090,6 +1090,19 @@ strong { color: #e2e8f0; }
   .mx-kpi-val{font-size:21px}
 }
 
+/* ── Voice input — pulsing mic button when listening ─────────────────── */
+.ai-chat-mic.listening{background:rgba(239,68,68,.22)!important;border-color:#ef4444!important;color:#fca5a5!important;animation:micpulse 1.2s infinite ease-in-out}
+@keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.55)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+
+/* ── Deal Context Brief saved-state pill ──────────────────────────────── */
+#briefSavedLbl.is-dirty{color:#fbbf24}
+#briefSavedLbl.is-saved{color:#86efac}
+
+/* ── Autosave + unsaved-changes banner ────────────────────────────────── */
+.unsaved-restore-banner{position:fixed;left:50%;top:64px;transform:translateX(-50%);background:rgba(245,158,11,.96);color:#1a1107;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;display:flex;gap:12px;align-items:center;z-index:9998;box-shadow:0 12px 32px rgba(0,0,0,.35);max-width:min(640px,calc(100vw - 32px))}
+.unsaved-restore-banner button{background:#1a1107;color:#fbbf24;border:none;padding:6px 12px;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer}
+.unsaved-restore-banner button.ghost{background:transparent;color:#1a1107;border:1px solid rgba(0,0,0,.4)}
+
 /* ── Strategy Agents — multi-agent simulator cards (panel14) ───────────── */
 .agents-empty{padding:24px 16px;text-align:center;border:1px dashed rgba(99,102,241,.3);border-radius:10px;background:rgba(99,102,241,.04)}
 .agents-loading{padding:18px;text-align:center;color:var(--muted);font-size:12.5px}
@@ -4075,14 +4088,23 @@ strong { color: #e2e8f0; }
     </div>
   </div>
 
-  <!-- Quick Score (deterministic; merged from former Recommendation tab) -->
-  <div class="card" id="qsCard" style="margin-bottom:14px">
+  <!-- Deal Context Brief — give the AI seller-side context the form fields can't hold -->
+  <div class="card" id="briefCard" style="margin-bottom:14px;border:1px solid rgba(99,102,241,.30);background:linear-gradient(180deg,rgba(99,102,241,.04),transparent)">
     <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
-      <span>⚡ Quick Score — Deterministic Baseline</span>
-      <button class="btn btn-outline btn-sm" onclick="runRecommendation()" style="font-size:11px">🔄 Refresh</button>
+      <span>📝 Deal Context Brief</span>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <span id="briefSavedLbl" style="font-size:11px;color:var(--muted);font-weight:500"></span>
+        <button class="btn btn-outline btn-sm" onclick="briefAskAI()" style="font-size:11px">💬 Discuss with AI</button>
+      </div>
     </div>
-    <p style="color:var(--text2);font-size:12px;margin:6px 0 12px">Local instant scoring of every financing structure against your intake data. The Strategy Agents below extend this with AI reasoning + deal-specific verdicts.</p>
-    <div id="recCardsAi" class="rec-cards"></div>
+    <p style="color:var(--text2);font-size:12.5px;margin:6px 0 10px;line-height:1.55">Form fields capture <em>numbers</em>. The AI needs <em>context</em> to find creative structures: what the seller wants, exit timeline, willingness to carry, motivations, deal-killers you've already heard about. Type freely — every Strategy Agent reads this brief.</p>
+    <textarea id="dealBrief" rows="6" placeholder="Examples:&#10; • Seller is 78yo, motivated, wants tax-deferred income for retirement (wraps + sub-to look promising).&#10; • Listed 87 days, just dropped $50k. Likely will entertain seller carry on 50%.&#10; • Existing loan is assumable VA at 3.875% — $312k balance, 18 yrs left.&#10; • Owner managed it himself; T-12 mixes economic and gross occupancy. Real NOI is probably 12-15% lower.&#10; • LP partner Ana wants in for $250k if DSCR &gt;= 1.30 stress." style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:12px 14px;font-family:Inter,system-ui,sans-serif;font-size:13.5px;line-height:1.55;resize:vertical;min-height:120px"></textarea>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px;flex-wrap:wrap">
+      <div style="font-size:11px;color:var(--muted)">Saved per project. Auto-included in every AI run on this deal.</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="briefClear()" style="font-size:11px">Clear</button>
+      </div>
+    </div>
   </div>
 
   <!-- Strategy Agents — multi-agent AI simulator -->
@@ -4094,7 +4116,7 @@ strong { color: #e2e8f0; }
         <button class="btn btn-outline btn-sm" id="agentsClearBtn" onclick="clearStrategyAgents()" style="font-size:11px;display:none">✕ Clear</button>
       </div>
     </div>
-    <p style="color:var(--text2);font-size:12px;margin:6px 0 12px">Spawns one specialized agent per financing strategy. Each agent simulates whether THIS specific deal works under THAT strategy, identifies deal-killers, and rates confidence. Powered by the AI provider configured in ⚙️ Settings.</p>
+    <p style="color:var(--text2);font-size:12px;margin:6px 0 12px">Spawns one specialized agent per financing strategy. Each agent reads your <strong>Deal Context Brief</strong> above + the intake numbers, then verdicts whether THIS deal works under THAT strategy, identifies deal-killers, and rates confidence.</p>
     <div id="agentsCards"><div class="agents-empty"><div style="font-size:32px;opacity:.3">🤖</div><div style="font-weight:600;margin-top:8px;color:var(--text)">No simulation yet</div><div style="font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.6">Click <strong>⚡ Run Simulation</strong> to spawn ~10-13 strategy agents. Each one analyzes whether this deal works under its strategy, the deal-killers, and what to do next.</div></div></div>
     <div id="agentsWarn" class="vb-warn" style="display:none"></div>
   </div>
@@ -4827,7 +4849,7 @@ function R() {
 
   // ── Live-refresh whichever panel/calculator is currently visible ──────────────
   // Recommendations panel
-  if(document.querySelector('#panel1.active') || document.querySelector('#panel14.active')) runRecommendation();
+  // Quick-score auto-render removed — Deal Context Brief + Strategy Agents replace it.
   // Traditional calculators
   if(document.querySelector('#trad-conv.active'))  calcConv();
   if(document.querySelector('#trad-fha.active'))   calcFHA();
@@ -15735,8 +15757,9 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
     </div>
   </div>
   <div class="ai-chat-msgs" id="aiChatMsgs"></div>
-  <div class="ai-chat-input">
-    <textarea id="aiChatInput" placeholder="Ask anything about this deal…" rows="1" onkeydown="aiChatKeydown(event)"></textarea>
+  <div class="ai-chat-input" style="display:flex;gap:6px;align-items:flex-end">
+    <textarea id="aiChatInput" placeholder="Ask anything about this deal…" rows="1" onkeydown="aiChatKeydown(event)" style="flex:1"></textarea>
+    <button class="ai-chat-mic" id="aiChatMicBtn" onclick="aiChatToggleMic()" title="Voice → text" aria-label="Voice input" style="background:var(--surface3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;height:36px;width:36px">🎤</button>
     <button class="ai-chat-send" id="aiChatSendBtn" onclick="aiChatSend()" title="Send (Enter)">↑</button>
   </div>
   <div class="ai-chat-footer" id="aiChatFooter">Loading provider…</div>
@@ -17287,7 +17310,7 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
   window.riAutoOpen = function(){
     _renderMemoryBank();
     _updateSubLine();
-    try { if(typeof runRecommendation === 'function') runRecommendation(); } catch(_){ }
+    try { if(typeof briefRestore === 'function') briefRestore(); } catch(_){}
   };
   window.riOnAssetClassChange = function(){
     _updateSubLine();
@@ -17344,6 +17367,12 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     var redFlags = ['rf_foundation','rf_roof','rf_mold','rf_electrical','rf_liens','rf_environmental','rf_vacancy'];
     ctx.redFlags = redFlags.filter(function(f){ var e=document.getElementById(f); return e&&e.checked; });
     ctx.sellerMotivated = !!(document.getElementById('rf_seller_motivated')&&document.getElementById('rf_seller_motivated').checked);
+    // ── Deal Context Brief (free-text seller motivation, urgency, creative signals) ──
+    try {
+      var briefEl = document.getElementById('dealBrief');
+      var briefTxt = briefEl ? (briefEl.value || '').trim() : '';
+      if (briefTxt) ctx.dealBrief = briefTxt.slice(0, 2400);
+    } catch(_){}
     return ctx;
   }
 
@@ -19050,6 +19079,330 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     <div id="refBody"><div style="text-align:center;padding:30px;color:var(--muted)">Loading&hellip;</div></div>
   </div>
 </div>
+
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   v7 patches — Deal Context Brief + Voice-to-text + Live autosave +
+   beforeunload + Save As + per-deal chat reload.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+  function _id(x){return document.getElementById(x);}
+  function _getCurrentProjName(){
+    var n = _id('projNameInput'); return n ? (n.value||'').trim() : '';
+  }
+  function _getCurrentUid(){
+    try { var s = (typeof _getSession==='function')?_getSession():null; return (s&&s.userId)?s.userId:'guest'; } catch(e){ return 'guest'; }
+  }
+
+  // ─── 1. Deal Context Brief — saved per project ───────────────────────────
+  var BRIEF_KEY_BASE = 'jp_deal_brief';
+  function _briefKey(projName){
+    var p = projName || _getCurrentProjName() || '__unsaved__';
+    return BRIEF_KEY_BASE+'_u_'+_getCurrentUid()+'_p_'+p;
+  }
+  function _briefSaveCurrent(){
+    var ta = _id('dealBrief'); if(!ta) return;
+    try { localStorage.setItem(_briefKey(), ta.value||''); } catch(e){}
+    var lbl = _id('briefSavedLbl');
+    if(lbl){ lbl.textContent='✓ Saved · '+(ta.value.length||0)+' chars'; lbl.className='is-saved'; }
+  }
+  window.briefRestore = function(projName){
+    var ta = _id('dealBrief'); if(!ta) return;
+    try { ta.value = localStorage.getItem(_briefKey(projName)) || ''; } catch(e){}
+    var lbl = _id('briefSavedLbl');
+    if(lbl){ lbl.textContent = ta.value ? ('✓ Saved · '+ta.value.length+' chars') : ''; lbl.className = ta.value ? 'is-saved' : ''; }
+  };
+  window.briefClear = function(){
+    var ta = _id('dealBrief'); if(!ta) return;
+    if(!confirm('Clear the Deal Context Brief for this project?')) return;
+    ta.value = ''; _briefSaveCurrent();
+  };
+  window.briefAskAI = function(){
+    var ta = _id('dealBrief'); if(!ta) return;
+    var brief = (ta.value||'').trim();
+    if(!brief){
+      alert('Type some context first (seller motivation, exit timeline, urgency, creative signals…) then click again.');
+      ta.focus();
+      return;
+    }
+    // Open chat sidebar, pre-fill input with a discussion-starter prompt
+    if (typeof aiChatToggle === 'function'){
+      var c = _id('aiChat'); if(c && !c.classList.contains('open')) aiChatToggle();
+    }
+    setTimeout(function(){
+      var inp = _id('aiChatInput'); if(!inp) return;
+      var preface = 'Walk me through every creative-finance angle for this deal given the seller-side context below. For each angle: how it works, who it works for, what to ask the seller, the deal-killers, and the upside. Be candid if it doesn\'t fit.\n\n--- Deal Context Brief ---\n' + brief;
+      inp.value = preface;
+      inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 240) + 'px';
+      inp.focus();
+    }, 220);
+  };
+  // Wire input event for autosave + dirty marker
+  document.addEventListener('DOMContentLoaded', function(){
+    var ta = _id('dealBrief');
+    if(ta){
+      ta.addEventListener('input', function(){
+        var lbl = _id('briefSavedLbl');
+        if(lbl){ lbl.textContent='Editing…'; lbl.className='is-dirty'; }
+        clearTimeout(ta._briefT);
+        ta._briefT = setTimeout(_briefSaveCurrent, 600);
+      });
+      // Restore on first load if a project is already named
+      try { if(_getCurrentProjName()) window.briefRestore(); } catch(e){}
+    }
+  });
+
+  // ─── 2. Voice-to-text on chat input ──────────────────────────────────────
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var _sr = null, _srBuffer = '';
+  window.aiChatToggleMic = function(){
+    var btn = _id('aiChatMicBtn'); var inp = _id('aiChatInput');
+    if(!SR){
+      alert('Voice input not supported in this browser.\nUse Chrome / Edge / Safari for speech-to-text.');
+      return;
+    }
+    if(_sr){
+      try { _sr.stop(); } catch(e){}
+      _sr = null;
+      if(btn) btn.classList.remove('listening');
+      return;
+    }
+    _sr = new SR();
+    _sr.lang = 'en-US';
+    _sr.interimResults = true;
+    _sr.continuous = true;
+    _srBuffer = inp ? (inp.value || '') : '';
+    if(btn) btn.classList.add('listening');
+    _sr.onresult = function(ev){
+      var finalT = '', interimT = '';
+      for(var i=ev.resultIndex; i<ev.results.length; i++){
+        var t = ev.results[i][0].transcript;
+        if(ev.results[i].isFinal) finalT += t;
+        else interimT += t;
+      }
+      if(inp){
+        if(finalT){ _srBuffer = (_srBuffer ? _srBuffer + ' ' : '') + finalT.trim(); }
+        inp.value = _srBuffer + (interimT ? (_srBuffer ? ' ' : '') + interimT : '');
+        inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 240) + 'px';
+      }
+    };
+    _sr.onerror = function(ev){
+      console.warn('SpeechRecognition error:', ev.error);
+      if(btn) btn.classList.remove('listening');
+      _sr = null;
+      if(ev.error === 'not-allowed' || ev.error === 'service-not-allowed'){
+        alert('Microphone permission denied. Allow microphone access in your browser settings.');
+      }
+    };
+    _sr.onend = function(){
+      if(btn) btn.classList.remove('listening');
+      _sr = null;
+    };
+    try { _sr.start(); } catch(e){
+      if(btn) btn.classList.remove('listening');
+      _sr = null;
+      alert('Could not start microphone: '+(e.message||'unknown'));
+    }
+  };
+
+  // ─── 3. Per-deal chat reload on project switch ──────────────────────────
+  // The chat IIFE already keys storage by projName but doesn't reload when
+  // projName changes (e.g. on loadProject). Wrap loadProject to refresh chat.
+  function _refreshChatForProject(){
+    try {
+      // The chat IIFE exposes a few helpers but not _load directly. We can
+      // force a clean reload by closing+opening the chat OR by reading the
+      // storage key ourselves and dispatching a custom event the IIFE listens
+      // for. Simplest: if the chat is open, close and reopen to trigger _load.
+      var c = _id('aiChat');
+      if(c && c.classList.contains('open') && typeof aiChatToggle==='function'){
+        aiChatToggle();
+        setTimeout(function(){ aiChatToggle(); }, 60);
+      }
+    } catch(e){}
+    // Also restore the brief for the new project
+    try { window.briefRestore && window.briefRestore(); } catch(e){}
+  }
+  if(typeof window.loadProject === 'function'){
+    var _origLoadProject = window.loadProject;
+    window.loadProject = function(name){
+      var r = _origLoadProject.apply(this, arguments);
+      setTimeout(_refreshChatForProject, 120);
+      // Also clear unsaved-changes dirty flag (we just loaded a clean state)
+      window._dirtySinceLastSave = false;
+      _autosaveSnapshot();
+      return r;
+    };
+  }
+
+  // ─── 4. Live autosave on every keystroke ────────────────────────────────
+  var AUTOSAVE_KEY_BASE = 'jp_autosave';
+  function _autosaveKey(){ return AUTOSAVE_KEY_BASE+'_u_'+_getCurrentUid(); }
+  var _autosaveTimer = null;
+  function _autosaveSnapshot(){
+    try {
+      var data = {};
+      document.querySelectorAll('input[id],select[id],textarea[id]').forEach(function(inp){
+        if(!inp.id) return;
+        if(inp.type==='file') return;
+        if(inp.id==='aiChatInput') return;
+        if(inp.id==='projNameInput') return;
+        if(inp.type==='checkbox'||inp.type==='radio') data[inp.id]=inp.checked;
+        else data[inp.id]=inp.value;
+      });
+      var payload = { savedAt: Date.now(), data: data, projName: _getCurrentProjName() };
+      localStorage.setItem(_autosaveKey(), JSON.stringify(payload));
+      // Update the snapshot hash for dirty-detection
+      window._lastAutosaveAt = payload.savedAt;
+    } catch(e){}
+  }
+  function _scheduleAutosave(){
+    window._dirtySinceLastSave = true;
+    clearTimeout(_autosaveTimer);
+    _autosaveTimer = setTimeout(_autosaveSnapshot, 500);
+  }
+  // Global input listener
+  document.addEventListener('input', function(ev){
+    var t = ev.target;
+    if(!t || !t.id) return;
+    if(t.id==='aiChatInput') return;
+    if(t.id==='projNameInput') return;
+    if(t.type==='file') return;
+    _scheduleAutosave();
+  }, true);
+  document.addEventListener('change', function(ev){
+    var t = ev.target;
+    if(!t || !t.id) return;
+    if(t.type==='checkbox' || t.type==='radio' || t.tagName==='SELECT') _scheduleAutosave();
+  }, true);
+
+  // Restore on page load (only if the user isn't already loading a project)
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){
+      try {
+        var raw = localStorage.getItem(_autosaveKey());
+        if(!raw) return;
+        var snap = JSON.parse(raw);
+        if(!snap || !snap.data) return;
+        // Was anything actually filled in beyond defaults?
+        var meaningful = Object.keys(snap.data).some(function(k){
+          var v = snap.data[k];
+          if(v === '' || v === false || v == null) return false;
+          // Filter out fields whose value matches the field's current default
+          var el = document.getElementById(k); if(!el) return true;
+          if(el.type==='checkbox'||el.type==='radio') return v !== false;
+          if(el.tagName==='SELECT') return v !== el.value && v !== '' && v !== el.options[0].value;
+          // Skip when the saved value equals the default-value attr (preset placeholders)
+          if(el.defaultValue !== undefined && String(v) === String(el.defaultValue)) return false;
+          return String(v).length > 0;
+        });
+        if(!meaningful) return;
+        // Show banner offering to restore
+        _showRestoreBanner(snap);
+      } catch(e){}
+    }, 300);
+  });
+
+  function _showRestoreBanner(snap){
+    if(_id('unsavedRestoreBanner')) return;
+    var b = document.createElement('div');
+    b.id = 'unsavedRestoreBanner';
+    b.className = 'unsaved-restore-banner';
+    var when = '';
+    try { var d = new Date(snap.savedAt); when = ' (last edit '+d.toLocaleTimeString()+')'; } catch(e){}
+    b.innerHTML = '⚠ <span style="flex:1">In-progress deal found'+when+'. Restore where you left off?</span>'+
+      '<button onclick="window._restoreAutosave()">Restore</button>'+
+      '<button class="ghost" onclick="window._discardAutosave()">Discard</button>';
+    document.body.appendChild(b);
+  }
+  window._restoreAutosave = function(){
+    try {
+      var raw = localStorage.getItem(_autosaveKey());
+      if(!raw) return;
+      var snap = JSON.parse(raw);
+      Object.keys(snap.data||{}).forEach(function(k){
+        var el = document.getElementById(k); if(!el) return;
+        if(el.type==='file') return;
+        if(el.id==='projNameInput') return;
+        if(el.type==='checkbox'||el.type==='radio') el.checked = !!snap.data[k];
+        else el.value = snap.data[k];
+      });
+      // Trigger recompute via base inputs
+      ['pur_price','pur_arv','fin_gross'].forEach(function(id){
+        var e = document.getElementById(id);
+        if(e && e.value) e.dispatchEvent(new Event('input',{bubbles:true}));
+      });
+      if(typeof updatePropertyType==='function') try{updatePropertyType();}catch(_){}
+      var b = _id('unsavedRestoreBanner'); if(b) b.remove();
+      window._dirtySinceLastSave = true;
+    } catch(e){ alert('Restore failed: '+e.message); }
+  };
+  window._discardAutosave = function(){
+    if(!confirm('Throw away the in-progress deal? This cannot be undone.')) return;
+    try { localStorage.removeItem(_autosaveKey()); } catch(e){}
+    var b = _id('unsavedRestoreBanner'); if(b) b.remove();
+  };
+
+  // ─── 5. beforeunload guard ──────────────────────────────────────────────
+  window.addEventListener('beforeunload', function(ev){
+    if(window._dirtySinceLastSave){
+      // Modern browsers ignore custom messages but DO show a generic prompt
+      ev.preventDefault();
+      ev.returnValue = 'Your project is not saved. Are you sure you want to reload or close this tab?';
+      return ev.returnValue;
+    }
+  });
+  // Mark NOT dirty after explicit save
+  if(typeof window.saveProject === 'function'){
+    var _origSave = window.saveProject;
+    window.saveProject = function(){
+      var r = _origSave.apply(this, arguments);
+      window._dirtySinceLastSave = false;
+      // Also: clear the unsaved-snapshot since the project is now saved
+      try { localStorage.removeItem(_autosaveKey()); } catch(e){}
+      return r;
+    };
+  }
+
+  // ─── 6. Save As ─────────────────────────────────────────────────────────
+  window.saveProjectAs = function(){
+    var current = _getCurrentProjName();
+    var defaultName = current ? (current+' (copy)') : '';
+    var newName = prompt('Save current deal as a new project. Enter a name:', defaultName);
+    if(newName === null) return;
+    newName = (newName||'').trim();
+    if(!newName){ alert('Name cannot be empty.'); return; }
+    var nameEl = _id('projNameInput'); if(!nameEl) return;
+    var prev = nameEl.value;
+    nameEl.value = newName;
+    try {
+      if(typeof saveProject === 'function') saveProject();
+    } finally {
+      // saveProject empties the input on success — restore the new name as the current project ref
+      if(!nameEl.value) nameEl.value = newName;
+    }
+  };
+  // Inject Save As button next to the existing Save button (one time)
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){
+      try {
+        var saveBtn = document.querySelector('.proj-save-row .btn-primary');
+        if(!saveBtn || saveBtn._saveAsAdded) return;
+        saveBtn._saveAsAdded = true;
+        var sa = document.createElement('button');
+        sa.className = 'btn btn-outline btn-sm';
+        sa.style.cssText = 'white-space:nowrap;font-size:12px;margin-left:6px';
+        sa.textContent = '💾 Save As…';
+        sa.title = 'Save the current deal under a new name';
+        sa.onclick = function(ev){ ev.preventDefault(); window.saveProjectAs(); };
+        saveBtn.parentNode.insertBefore(sa, saveBtn.nextSibling);
+      } catch(e){}
+    }, 800);
+  });
+})();
+</script>
 
 <script>
 (function(){
