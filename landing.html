@@ -14,6 +14,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
+/* ===== referral-system v1 ===== */
+.refBadge{display:none;background:linear-gradient(135deg,rgba(99,102,241,.18),rgba(139,92,246,.10));
+  border:1px solid rgba(139,92,246,.35);border-radius:99px;padding:6px 14px;font-size:12.5px;
+  font-weight:600;color:var(--text);margin:8px 0 14px;align-items:center;gap:8px}
+.refBadge.open{display:inline-flex}
+.refBadge .dot{width:6px;height:6px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399}
+
+
 :root {
   --bg: #070a12;
   --bg2: #0b0e16;
@@ -941,5 +949,93 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 });
 </script>
+<!-- referral-system v1 capture -->
+<script>
+(function(){
+  var SUPABASE_URL  = 'https://ykcvmlhpfnruucsgcxhd.supabase.co';
+  var SUPABASE_ANON = 'sb_publishable_SgpxMN1uNPrunOvI2YspEQ_uyZJ1yK0';
+  var KEY = 'jp_ref_code';
+
+  function param(name){
+    try { return new URL(window.location.href).searchParams.get(name); }
+    catch(_e){ return null; }
+  }
+  function storeCode(c){ try { localStorage.setItem(KEY, c); } catch(_e){} }
+  function clearCode(){ try { localStorage.removeItem(KEY); } catch(_e){} }
+  function readCode(){ try { return localStorage.getItem(KEY); } catch(_e){ return null; } }
+
+  function appendRefToCtas(code){
+    var enc = encodeURIComponent(code);
+    document.querySelectorAll('a[href^="index.html"]').forEach(function(a){
+      var href = a.getAttribute('href') || '';
+      if(href.indexOf('ref=') !== -1) return;
+      var join = href.indexOf('?') === -1 ? '?' : '&';
+      var hashIdx = href.indexOf('#');
+      if(hashIdx === -1){
+        a.setAttribute('href', href + join + 'ref=' + enc);
+      } else {
+        a.setAttribute('href', href.slice(0, hashIdx) + join + 'ref=' + enc + href.slice(hashIdx));
+      }
+    });
+  }
+
+  async function validateAndShow(code){
+    try {
+      var resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/lookup_referral_code', {
+        method:'POST',
+        headers:{
+          'apikey': SUPABASE_ANON,
+          'Authorization': 'Bearer ' + SUPABASE_ANON,
+          'Content-Type':'application/json'
+        },
+        body: JSON.stringify({ code: code })
+      });
+      if(!resp.ok) return false;
+      var ok = await resp.json();
+      return ok === true;
+    } catch(_e){ return false; }
+  }
+
+  function ensureBadge(code){
+    if(document.getElementById('refBadge')) return;
+    var hero = document.querySelector('.hero .eyebrow');
+    if(!hero) return;
+    var b = document.createElement('div');
+    b.id = 'refBadge';
+    b.className = 'refBadge open';
+    var dot = document.createElement('span'); dot.className = 'dot'; b.appendChild(dot);
+    b.appendChild(document.createTextNode(' Referred by partner '));
+    var strong = document.createElement('strong');
+    strong.style.margin = '0 4px';
+    strong.style.letterSpacing = '1px';
+    strong.textContent = code;
+    b.appendChild(strong);
+    b.appendChild(document.createTextNode(' — trial credit applied at signup'));
+    hero.parentNode.insertBefore(b, hero.nextSibling);
+  }
+
+  function init(){
+    var raw = param('ref');
+    var code = raw ? raw.toUpperCase().trim() : null;
+    if(code){
+      storeCode(code);
+      ensureBadge(code);
+      appendRefToCtas(code);
+      validateAndShow(code).then(function(ok){
+        if(!ok){ clearCode(); var b=document.getElementById('refBadge'); if(b) b.remove(); }
+      });
+      return;
+    }
+    var stored = readCode();
+    if(stored){
+      ensureBadge(stored);
+      appendRefToCtas(stored);
+    }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
 </body>
 </html>
