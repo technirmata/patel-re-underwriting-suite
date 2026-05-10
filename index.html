@@ -1042,6 +1042,54 @@ strong { color: #e2e8f0; }
   .mx-kpi-val{font-size:21px}
 }
 
+/* ── Strategy Agents — multi-agent simulator cards (panel14) ───────────── */
+.agents-empty{padding:24px 16px;text-align:center;border:1px dashed rgba(99,102,241,.3);border-radius:10px;background:rgba(99,102,241,.04)}
+.agents-loading{padding:18px;text-align:center;color:var(--muted);font-size:12.5px}
+.agents-loading .pulse{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin:0 3px;animation:agpulse 1.2s infinite ease-in-out}
+.agents-loading .pulse:nth-child(2){animation-delay:.2s}
+.agents-loading .pulse:nth-child(3){animation-delay:.4s}
+@keyframes agpulse{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px;margin-top:4px}
+.agent-card{position:relative;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 14px 12px;cursor:pointer;transition:.18s;overflow:hidden}
+.agent-card:hover{border-color:rgba(99,102,241,.55);transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.agent-card.expanded{cursor:default}
+.agent-card.v-works{border-left:4px solid #22c55e}
+.agent-card.v-conditional{border-left:4px solid #f59e0b}
+.agent-card.v-blocked{border-left:4px solid #ef4444;opacity:.85}
+.agent-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.agent-emoji{font-size:18px;flex-shrink:0}
+.agent-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.2;flex:1;min-width:0}
+.agent-verdict{font-size:9.5px;font-weight:800;letter-spacing:.5px;padding:3px 8px;border-radius:5px;text-transform:uppercase;flex-shrink:0;white-space:nowrap}
+.agent-verdict.works{background:rgba(34,197,94,.18);color:#86efac;border:1px solid rgba(34,197,94,.4)}
+.agent-verdict.conditional{background:rgba(245,158,11,.18);color:#fbbf24;border:1px solid rgba(245,158,11,.4)}
+.agent-verdict.blocked{background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
+.agent-conf-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:10.5px;color:var(--muted)}
+.agent-conf-bar{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.agent-conf-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.agent-conf-fill.works{background:linear-gradient(90deg,#22c55e,#16a34a)}
+.agent-conf-fill.conditional{background:linear-gradient(90deg,#f59e0b,#d97706)}
+.agent-conf-fill.blocked{background:linear-gradient(90deg,#ef4444,#dc2626)}
+.agent-conf-pct{font-weight:700;color:var(--text);min-width:34px;text-align:right}
+.agent-headline{font-size:12px;color:var(--text2);line-height:1.45;margin-bottom:6px}
+.agent-detail{display:none;border-top:1px dashed rgba(255,255,255,.08);margin-top:8px;padding-top:10px;font-size:11.5px;color:var(--text2);line-height:1.55}
+.agent-card.expanded .agent-detail{display:block}
+.agent-detail-section{margin-bottom:10px}
+.agent-detail-label{font-size:9.5px;font-weight:800;letter-spacing:.5px;color:var(--accent);text-transform:uppercase;margin-bottom:4px}
+.agent-detail ul{margin:0;padding-left:16px}
+.agent-detail li{margin:2px 0}
+.agent-detail .killer{color:#fca5a5}
+.agent-metrics{display:flex;gap:10px;font-size:10.5px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+.agent-metrics span{background:rgba(255,255,255,.04);padding:2px 7px;border-radius:5px;border:1px solid rgba(255,255,255,.05)}
+.agent-metrics b{color:var(--text);font-weight:700}
+.agent-toggle{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;opacity:0;transition:.15s}
+.agent-card:hover .agent-toggle{opacity:.8}
+.agents-summary{display:flex;gap:10px;margin-bottom:12px;font-size:11px;color:var(--muted);flex-wrap:wrap;align-items:center}
+.agents-summary span{padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025)}
+.agents-summary b{font-weight:800}
+.agents-summary .ok b{color:#86efac}
+.agents-summary .cond b{color:#fbbf24}
+.agents-summary .bad b{color:#fca5a5}
+
 /* ── AI Research checklist (panel14) ───────────────────────────────────── */
 .ri-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px;flex-wrap:wrap}
 .ri-empty{text-align:center;padding:32px 16px;color:var(--muted)}
@@ -1560,10 +1608,9 @@ strong { color: #e2e8f0; }
   <div class="tab active" data-tab="0" onclick="ST(0)">📋 Deal Intake</div>
   <!-- Phase: AI Research (deal-specific checklist + web-grounded due diligence) -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Research</div><div class="tab-phase-line"></div></div>
-  <div class="tab" data-tab="14" onclick="ST(14);riAutoOpen()">🔍 AI Research</div>
-  <!-- Phase: Analyze (compare structures + KPIs) -->
+  <!-- Phase: Analyze (AI Research + Strategy Agents — the merged hub) -->
   <div class="tab-phase"><div class="tab-phase-line"></div><div class="tab-phase-label">Analyze</div><div class="tab-phase-line"></div></div>
-  <div class="tab" data-tab="1" onclick="ST(1)">✅ Recommendation</div>
+  <div class="tab" data-tab="14" onclick="ST(14);riAutoOpen()">🔍 AI Research &amp; Strategy</div>
     <!-- Phase: Finance Calculators — single hub with sub-nav inside (Conv / Creative / Morby / Velocity) -->
   
   <div class="tab" data-tab="13" onclick="ST(13)">💰 Finance Calculators</div>
@@ -2223,18 +2270,16 @@ strong { color: #e2e8f0; }
 </div><!-- end intake-grid -->
 </div><!-- end panel0 -->
 
-<!-- ══════════════════════════════════════════════ PANEL 1: AI RECOMMENDATION -->
+<!-- PANEL 1: legacy (merged into panel14). Kept in DOM for back-compat; nav entry removed. -->
 <div class="panel" id="panel1">
-<div class="card">
-  <div class="card-title">🤖 AI Financing Recommendation</div>
-  <p style="color:var(--text2);font-size:13px;margin-bottom:14px">Based on your intake data, all financing structures are scored and ranked. Click any card to jump to that calculator.</p>
-  <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <button class="btn btn-primary" onclick="runRecommendation()">🔄 Refresh Scores</button>
-    <button class="btn btn-primary" id="aiCreativeBtn" onclick="generateCreativeFinancing()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">✨ AI: Propose Creative Financing</button>
-  </div>
+<div class="card" style="text-align:center;padding:32px">
+  <div style="font-size:32px;margin-bottom:8px">🔄</div>
+  <div class="card-title" style="margin-bottom:8px">Recommendation has moved</div>
+  <p style="color:var(--text2);font-size:13px;margin:0 0 14px">The financing recommendations are now part of <strong>🔍 AI Research &amp; Strategy</strong> — alongside multi-agent simulation that tests each strategy against this specific deal.</p>
+  <button class="btn btn-primary" onclick="ST(14);riAutoOpen()">Open AI Research &amp; Strategy →</button>
 </div>
-<div id="recCards" class="rec-cards"></div>
-<div id="aiCreativePanel" style="margin-top:16px"></div>
+<div id="recCards" class="rec-cards" style="display:none"></div>
+<div id="aiCreativePanel" style="margin-top:16px;display:none"></div>
 </div>
 
 <!-- ══════════════════════════════════════════════ PANEL 2: TRADITIONAL -->
@@ -3979,6 +4024,30 @@ strong { color: #e2e8f0; }
     </div>
   </div>
 
+  <!-- Quick Score (deterministic; merged from former Recommendation tab) -->
+  <div class="card" id="qsCard" style="margin-bottom:14px">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <span>⚡ Quick Score — Deterministic Baseline</span>
+      <button class="btn btn-outline btn-sm" onclick="runRecommendation()" style="font-size:11px">🔄 Refresh</button>
+    </div>
+    <p style="color:var(--text2);font-size:12px;margin:6px 0 12px">Local instant scoring of every financing structure against your intake data. The Strategy Agents below extend this with AI reasoning + deal-specific verdicts.</p>
+    <div id="recCardsAi" class="rec-cards"></div>
+  </div>
+
+  <!-- Strategy Agents — multi-agent AI simulator -->
+  <div class="card" id="agentsCard" style="margin-bottom:14px;border:1px solid rgba(99,102,241,.35);background:linear-gradient(180deg,rgba(99,102,241,.06),transparent)">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <span>🤖 Strategy Agents — Simulation</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" id="agentsRunBtn" onclick="runStrategyAgentsSimulation()" style="font-size:11px;background:linear-gradient(135deg,#6366f1,#8b5cf6)">⚡ Run Simulation</button>
+        <button class="btn btn-outline btn-sm" id="agentsClearBtn" onclick="clearStrategyAgents()" style="font-size:11px;display:none">✕ Clear</button>
+      </div>
+    </div>
+    <p style="color:var(--text2);font-size:12px;margin:6px 0 12px">Spawns one specialized agent per financing strategy. Each agent simulates whether THIS specific deal works under THAT strategy, identifies deal-killers, and rates confidence. Powered by the AI provider configured in ⚙️ Settings.</p>
+    <div id="agentsCards"><div class="agents-empty"><div style="font-size:32px;opacity:.3">🤖</div><div style="font-weight:600;margin-top:8px;color:var(--text)">No simulation yet</div><div style="font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.6">Click <strong>⚡ Run Simulation</strong> to spawn ~10-13 strategy agents. Each one analyzes whether this deal works under its strategy, the deal-killers, and what to do next.</div></div></div>
+    <div id="agentsWarn" class="vb-warn" style="display:none"></div>
+  </div>
+
   <!-- Memory Bank -->
   <div class="card" id="riMemoryCard" style="margin-bottom:14px">
     <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
@@ -4707,7 +4776,7 @@ function R() {
 
   // ── Live-refresh whichever panel/calculator is currently visible ──────────────
   // Recommendations panel
-  if(document.querySelector('#panel1.active')) runRecommendation();
+  if(document.querySelector('#panel1.active') || document.querySelector('#panel14.active')) runRecommendation();
   // Traditional calculators
   if(document.querySelector('#trad-conv.active'))  calcConv();
   if(document.querySelector('#trad-fha.active'))   calcFHA();
@@ -5958,7 +6027,12 @@ function calcMorby() {
 // ── AI Recommendation Engine ──────────────────────────────────────────────────
 function runRecommendation() {
   const s = S;
-  if(!s.price){ si('recCards','<p style="color:var(--muted);padding:2rem;text-align:center">👆 Enter a Purchase Price in the Intake tab to generate recommendations.</p>'); return; }
+  if(!s.price){
+    var _msg = '<p style="color:var(--muted);padding:1.2rem;text-align:center;font-size:12px">👆 Enter a Purchase Price in the Intake tab to generate scores.</p>';
+    si('recCards', _msg);
+    if(el('recCardsAi')) si('recCardsAi', _msg);
+    return;
+  }
 
   const price  = s.price;
   const noi    = s.noi;
@@ -6068,6 +6142,7 @@ function runRecommendation() {
     </div>`).join('');
 
   si('recCards', html);
+  if(el('recCardsAi')) si('recCardsAi', html);
 }
 
 // ── AI Creative Financing Proposals ───────────────────────────────────────────
@@ -16245,8 +16320,158 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
   window.riAutoOpen = function(){
     _renderMemoryBank();
     _updateSubLine();
+    try { if(typeof runRecommendation === 'function') runRecommendation(); } catch(_){ }
   };
   window.riOnAssetClassChange = function(){ _updateSubLine(); };
+
+  /* ── Strategy Agents — multi-agent simulator ───────────────────────── */
+  var _agentsState = { running:false, agents:[] };
+  function _agentsWarn(msg){ var w=_id('agentsWarn'); if(w){ w.style.display='block'; w.className='vb-warn bad'; w.innerHTML=msg; } }
+  function _agentsClearWarn(){ var w=_id('agentsWarn'); if(w){ w.style.display='none'; w.innerHTML=''; } }
+  function _agentsLoading(){
+    var box=_id('agentsCards'); if(!box) return;
+    box.innerHTML = '<div class="agents-loading">⚡ Spawning strategy agents <span class="pulse"></span><span class="pulse"></span><span class="pulse"></span><div style="font-size:11px;margin-top:8px;color:var(--muted)">Each agent is independently analyzing this deal. 15-45 seconds depending on provider.</div></div>';
+  }
+  function _agentsCtx(){
+    var S = window.S || {}; var ctx = _dealCtx();
+    ctx.arv = (typeof gv==='function') ? (gv('pur_arv')||S.price||null) : (S.price||null);
+    ctx.rehab = S.rehab||0;
+    ctx.downPaymentDefault = S.down || (S.price ? S.price*0.20 : null);
+    ctx.closingCosts = S.close||0;
+    ctx.dscr = S.dscr || null;
+    ctx.coc = S.coc || null;
+    ctx.irr = S.irr || null;
+    ctx.capRate = S.capRate || null;
+    ctx.cashFlowMonthly = (S.cf!=null) ? Math.round(S.cf/12) : null;
+    ctx.totalCashIn = S.totalCashIn||null;
+    ctx.activeFinancing = S.activeLabel||null;
+    ctx.activeRate = S.activeRate||null;
+    try {
+      ctx.existingLoan = {
+        balance: (typeof gv==='function') ? (gv('exist_bal')||null) : null,
+        rate:    (typeof gv==='function') ? (gv('exist_rate')||null) : null,
+        payment: (typeof gv==='function') ? (gv('exist_pmt')||null) : null,
+      };
+    } catch(_){}
+    var redFlags = ['rf_foundation','rf_roof','rf_mold','rf_electrical','rf_liens','rf_environmental','rf_vacancy'];
+    ctx.redFlags = redFlags.filter(function(f){ var e=document.getElementById(f); return e&&e.checked; });
+    ctx.sellerMotivated = !!(document.getElementById('rf_seller_motivated')&&document.getElementById('rf_seller_motivated').checked);
+    return ctx;
+  }
+
+  window.runStrategyAgentsSimulation = async function(){
+    if(_agentsState.running) return;
+    _agentsClearWarn();
+    var S = window.S || {};
+    if(!S.price){ _agentsWarn('⚠ Enter a Purchase Price in the Intake tab first — agents need deal data to simulate.'); return; }
+    var btn = _id('agentsRunBtn'); if(btn){ btn.disabled=true; btn.textContent='⏳ Simulating…'; }
+    _agentsState.running = true;
+    _agentsLoading();
+
+    var ctx = _agentsCtx();
+    var prompt = 'You are a panel of specialized real estate financing agents. Each agent represents ONE specific financing strategy and must independently evaluate THIS specific deal under their strategy. Be candid: if a strategy cannot work for this deal, say so plainly.\n\n'
+      + 'DEAL CONTEXT (JSON):\n' + JSON.stringify(ctx, null, 2) + '\n\n'
+      + 'STRATEGIES TO SIMULATE (one agent per strategy):\n'
+      + '1. Conventional 30yr (bank loan, 20-25% down, full doc)\n'
+      + '2. FHA 3.5% (owner-occupied 1-4 unit only)\n'
+      + '3. DSCR Loan (no personal income doc, LLC OK, requires DSCR >= 1.20-1.25)\n'
+      + '4. Hard Money / BRRRR (short-term high-rate; refi at ARV; needs ARV >= ~1.30x all-in)\n'
+      + '5. Subject-To (take over seller existing loan; needs motivated seller + low existing rate; due-on-sale risk)\n'
+      + '6. Morby Method (seller carry + ARV-based bank loan; often $0 down + cash back at close)\n'
+      + '7. Seller Finance — straight (seller owns free-and-clear or tolerant lender)\n'
+      + '8. Lease Option (rent + option to buy; for slow markets or buyers needing time)\n'
+      + '9. Wrap Mortgage (seller carries new note that wraps existing loan)\n'
+      + '10. Syndication / Equity Raise (50+ units, sponsor team, agency debt + LP capital)\n'
+      + '11. JV / Equity Partner (you find deal, partner brings cash, share equity)\n'
+      + '12. Velocity Banking / HELOC-leverage (use HELOC to accelerate principal; needs disciplined operator + high-equity primary)\n'
+      + '13. All-Cash Purchase (no debt; works when cap rate >= market alt + opportunistic)\n\n'
+      + 'For EACH strategy, return verdict + confidence + concrete reasoning. "works" = this deal CAN be financed this way and produce a reasonable return. "conditional" = could work IF certain things become true (list them). "blocked" = the deal fundamentals make this strategy a non-starter.\n\n'
+      + 'Return STRICT JSON of this exact shape (no markdown fences, no commentary outside the JSON):\n'
+      + '{"agents":[{"strategy":"Conventional 30yr","emoji":"🏦","verdict":"works|conditional|blocked","confidence":0-100,"headline":"one-sentence verdict why this works/fails for THIS deal","why_works":["specific reason 1","reason 2"],"why_blocked":["specific reason 1","reason 2"],"deal_killers":["specific killer 1"],"next_steps":["specific actionable next step 1","step 2"],"expected_returns":{"cf_per_mo":number_or_null,"coc_pct":number_or_null,"dscr":number_or_null}}]}\n'
+      + 'Rules: (1) ground EVERY claim in the actual deal numbers above — no generic boilerplate. (2) when verdict=blocked, why_works should be empty []. when verdict=works, deal_killers should be empty []. (3) if the deal lacks data needed for a strategy, say so in headline and rate confidence accordingly — never invent numbers.';
+
+    try {
+      var raw = await _aiSynthesis(prompt);
+      var parsed = _extractJson(raw);
+      if(!parsed || !parsed.agents || !Array.isArray(parsed.agents) || !parsed.agents.length){
+        throw new Error('AI returned no parseable agents. Raw: ' + (raw||'').slice(0,250));
+      }
+      _agentsState.agents = parsed.agents;
+      _renderStrategyAgents(parsed.agents);
+      var clr = _id('agentsClearBtn'); if(clr) clr.style.display='inline-flex';
+    } catch(e){
+      _agentsWarn('⚠ Simulation failed: ' + _e(e.message||'unknown error') + ' &nbsp; <a onclick="openSettings()" style="color:var(--accent);cursor:pointer;text-decoration:underline">Open Settings</a> if no AI key is configured.');
+      var box=_id('agentsCards'); if(box) box.innerHTML = '<div class="agents-empty"><div style="font-size:32px;opacity:.3">⚠</div><div style="font-weight:600;margin-top:8px;color:var(--text)">Simulation failed</div><div style="font-size:11.5px;color:var(--muted);margin-top:6px">See warning above. Try again or switch AI providers in Settings.</div></div>';
+    } finally {
+      _agentsState.running = false;
+      if(btn){ btn.disabled=false; btn.textContent='⚡ Re-Run Simulation'; }
+    }
+  };
+
+  window.clearStrategyAgents = function(){
+    _agentsState.agents = [];
+    _agentsClearWarn();
+    var box=_id('agentsCards'); if(box) box.innerHTML = '<div class="agents-empty"><div style="font-size:32px;opacity:.3">🤖</div><div style="font-weight:600;margin-top:8px;color:var(--text)">No simulation yet</div><div style="font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.6">Click <strong>⚡ Run Simulation</strong> to spawn strategy agents.</div></div>';
+    var clr=_id('agentsClearBtn'); if(clr) clr.style.display='none';
+    var btn=_id('agentsRunBtn'); if(btn) btn.textContent='⚡ Run Simulation';
+  };
+
+  window.toggleAgentCard = function(idx){
+    var card = document.getElementById('agent_card_'+idx); if(card) card.classList.toggle('expanded');
+  };
+
+  function _renderStrategyAgents(agents){
+    var box = _id('agentsCards'); if(!box) return;
+    var ord = { 'works':0, 'conditional':1, 'blocked':2 };
+    agents.sort(function(a,b){
+      var oa = ord[(a.verdict||'').toLowerCase()]; if(oa==null) oa=3;
+      var ob = ord[(b.verdict||'').toLowerCase()]; if(ob==null) ob=3;
+      if(oa !== ob) return oa - ob;
+      return (b.confidence||0) - (a.confidence||0);
+    });
+    var counts = {works:0, conditional:0, blocked:0};
+    agents.forEach(function(a){ var v=(a.verdict||'').toLowerCase(); if(counts[v]!=null) counts[v]++; });
+    var summary = '<div class="agents-summary">'
+      + '<span class="ok">✅ Works: <b>'+counts.works+'</b></span>'
+      + '<span class="cond">⚠ Conditional: <b>'+counts.conditional+'</b></span>'
+      + '<span class="bad">❌ Blocked: <b>'+counts.blocked+'</b></span>'
+      + '<span style="flex:1"></span>'
+      + '<span style="font-size:10.5px">Click any card to expand</span>'
+      + '</div>';
+    var grid = '<div class="agents-grid">';
+    agents.forEach(function(a, idx){
+      var v = (a.verdict||'conditional').toLowerCase();
+      if(['works','conditional','blocked'].indexOf(v) === -1) v='conditional';
+      var conf = Math.max(0, Math.min(100, a.confidence||0));
+      var em = _e(a.emoji||'•');
+      var nm = _e(a.strategy||'Strategy');
+      var hd = _e(a.headline||'(no headline)');
+      var why = (a.why_works||[]).map(function(x){return '<li>'+_e(x)+'</li>';}).join('');
+      var blk = (a.why_blocked||[]).map(function(x){return '<li>'+_e(x)+'</li>';}).join('');
+      var kil = (a.deal_killers||[]).map(function(x){return '<li class="killer">'+_e(x)+'</li>';}).join('');
+      var nxt = (a.next_steps||[]).map(function(x){return '<li>'+_e(x)+'</li>';}).join('');
+      var er = a.expected_returns||{};
+      var metrics = '';
+      if(er.cf_per_mo!=null) metrics += '<span>CF: <b>$'+Math.round(er.cf_per_mo).toLocaleString()+'/mo</b></span>';
+      if(er.coc_pct!=null) metrics += '<span>CoC: <b>'+(Number(er.coc_pct)).toFixed(1)+'%</b></span>';
+      if(er.dscr!=null) metrics += '<span>DSCR: <b>'+(Number(er.dscr)).toFixed(2)+'x</b></span>';
+      grid += '<div class="agent-card v-'+v+'" id="agent_card_'+idx+'" onclick="toggleAgentCard('+idx+')">'
+        + '<button class="agent-toggle" onclick="event.stopPropagation();toggleAgentCard('+idx+')">▼</button>'
+        + '<div class="agent-head"><div class="agent-emoji">'+em+'</div><div class="agent-name">'+nm+'</div><div class="agent-verdict '+v+'">'+v+'</div></div>'
+        + '<div class="agent-conf-row"><span style="font-size:10px">Confidence</span><div class="agent-conf-bar"><div class="agent-conf-fill '+v+'" style="width:'+conf+'%"></div></div><div class="agent-conf-pct">'+conf+'%</div></div>'
+        + '<div class="agent-headline">'+hd+'</div>'
+        + (metrics ? '<div class="agent-metrics">'+metrics+'</div>' : '')
+        + '<div class="agent-detail">'
+          + (why ? '<div class="agent-detail-section"><div class="agent-detail-label">Why it works</div><ul>'+why+'</ul></div>' : '')
+          + (blk ? '<div class="agent-detail-section"><div class="agent-detail-label">Why it&#39;s blocked</div><ul>'+blk+'</ul></div>' : '')
+          + (kil ? '<div class="agent-detail-section"><div class="agent-detail-label">Deal killers</div><ul>'+kil+'</ul></div>' : '')
+          + (nxt ? '<div class="agent-detail-section"><div class="agent-detail-label">Next steps</div><ul>'+nxt+'</ul></div>' : '')
+        + '</div>'
+        + '</div>';
+    });
+    grid += '</div>';
+    box.innerHTML = summary + grid;
+  }
 
   function _updateSubLine(){
     var sub = _id('riSub');
