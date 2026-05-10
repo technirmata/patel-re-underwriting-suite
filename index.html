@@ -19367,22 +19367,112 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
   }
 
   // ─── 6. Save As ─────────────────────────────────────────────────────────
-  window.saveProjectAs = function(){
-    var current = _getCurrentProjName();
-    var defaultName = current ? (current+' (copy)') : '';
-    var newName = prompt('Save current deal as a new project. Enter a name:', defaultName);
-    if(newName === null) return;
-    newName = (newName||'').trim();
-    if(!newName){ alert('Name cannot be empty.'); return; }
-    var nameEl = _id('projNameInput'); if(!nameEl) return;
-    var prev = nameEl.value;
-    nameEl.value = newName;
-    try {
-      if(typeof saveProject === 'function') saveProject();
-    } finally {
-      // saveProject empties the input on success — restore the new name as the current project ref
-      if(!nameEl.value) nameEl.value = newName;
+  // ── Save As (modal file-picker) ────────────────────────────────────────
+  // Replaces the prompt() implementation. User can either:
+  //   a) Type a new name and click 'Save as NEW file', or
+  //   b) Click 'Overwrite' on any existing project row.
+  function _saveAsBuildList(){
+    var box = _id('saBody'); if(!box) return;
+    var projects = (typeof _getAllProjects==='function') ? _getAllProjects() : {};
+    var rows = Object.entries(projects)
+      .filter(function(kv){ return !kv[0].startsWith('__'); })
+      .map(function(kv){ return { name: kv[0], savedAt: kv[1].savedAt || '' }; })
+      .sort(function(a,b){ return (b.savedAt||'').localeCompare(a.savedAt||''); });
+    var html = '';
+    if(!rows.length){
+      html = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12.5px">No saved projects yet. Use the &quot;Save as new file&quot; field above.</div>';
+    } else {
+      html = '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin:14px 0 8px">Existing projects &mdash; click Overwrite to replace</div>';
+      rows.forEach(function(r, i){
+        var dt = '';
+        try { dt = new Date(r.savedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch(e){}
+        var safeName = String(r.name).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--surface)">'
+          + '<div style="flex:1;min-width:0;overflow:hidden">'
+            + '<div style="font-weight:600;color:var(--text);font-size:13px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">📄 ' + _saEscape(r.name) + '</div>'
+            + (dt ? '<div style="font-size:11px;color:var(--muted);margin-top:2px">Last saved ' + dt + '</div>' : '')
+          + '</div>'
+          + '<button class="btn btn-outline btn-sm" style="font-size:11.5px;padding:6px 12px;background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.5);color:#fbbf24;font-weight:600" onclick="window.saveProjectAsOverwrite(\'' + safeName + '\')">Overwrite</button>'
+          + '</div>';
+      });
     }
+    box.innerHTML = html;
+  }
+  function _saEscape(t){ var d=document.createElement('div'); d.textContent=String(t); return d.innerHTML; }
+
+  function _saveAsClose(){
+    var ov = _id('saveAsOverlay'); if(ov) ov.style.display='none';
+    document.removeEventListener('keydown', _saveAsEsc);
+  }
+  function _saveAsEsc(e){ if(e.key==='Escape') _saveAsClose(); }
+
+  window.saveProjectAs = function(){
+    var ov = _id('saveAsOverlay');
+    if(!ov){
+      // Lazy-build the modal once
+      ov = document.createElement('div');
+      ov.id = 'saveAsOverlay';
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:99997;display:none;align-items:center;justify-content:center;padding:20px';
+      ov.onclick = function(e){ if(e.target===ov) _saveAsClose(); };
+      ov.innerHTML = ''
+        + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0;width:min(560px,100%);max-height:min(80vh,720px);box-shadow:0 24px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden">'
+        + '  <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px">'
+        + '    <div>'
+        + '      <div style="font-size:14.5px;font-weight:700;color:var(--text)">💾 Save As</div>'
+        + '      <div style="font-size:11.5px;color:var(--muted);margin-top:3px">Save current deal to a new file or overwrite an existing one</div>'
+        + '    </div>'
+        + '    <button onclick="window._saveAsClose && window._saveAsClose()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px">✕</button>'
+        + '  </div>'
+        + '  <div style="padding:16px 20px;border-bottom:1px solid var(--border);background:var(--surface2)">'
+        + '    <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:8px">Save as a NEW file</div>'
+        + '    <div style="display:flex;gap:8px">'
+        + '      <input id="saNewName" type="text" placeholder="e.g. 123 Main St — Duplex Offer" style="flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;font-family:Inter,system-ui,sans-serif">'
+        + '      <button class="btn btn-primary" style="font-size:12.5px;padding:9px 16px;font-weight:700;white-space:nowrap" onclick="window.saveProjectAsNew()">💾 Save new</button>'
+        + '    </div>'
+        + '  </div>'
+        + '  <div id="saBody" style="flex:1;overflow-y:auto;padding:8px 20px 20px"></div>'
+        + '</div>';
+      document.body.appendChild(ov);
+    }
+    // Pre-fill the new-name field with a sane default
+    var current = _getCurrentProjName();
+    var input = _id('saNewName');
+    if(input){ input.value = current ? (current+' (copy)') : ''; }
+    _saveAsBuildList();
+    ov.style.display = 'flex';
+    document.addEventListener('keydown', _saveAsEsc);
+    setTimeout(function(){ var i=_id('saNewName'); if(i){ i.focus(); i.select(); } }, 80);
+  };
+  window._saveAsClose = _saveAsClose;
+
+  window.saveProjectAsNew = function(){
+    var input = _id('saNewName'); if(!input) return;
+    var name = (input.value||'').trim();
+    if(!name){
+      input.focus();
+      input.style.borderColor = '#ef4444';
+      setTimeout(function(){ input.style.borderColor=''; }, 1400);
+      return;
+    }
+    var projects = (typeof _getAllProjects==='function') ? _getAllProjects() : {};
+    if(projects[name]){
+      if(!confirm('A project named "' + name + '" already exists. Overwrite?')) return;
+    }
+    var nameEl = _id('projNameInput'); if(!nameEl) return;
+    nameEl.value = name;
+    if(typeof saveProject === 'function') saveProject();
+    if(!nameEl.value) nameEl.value = name;  // saveProject clears on success — restore
+    _saveAsClose();
+  };
+
+  window.saveProjectAsOverwrite = function(name){
+    if(!name) return;
+    if(!confirm('Overwrite "' + name + '" with the current deal? The previous content will be replaced.')) return;
+    var nameEl = _id('projNameInput'); if(!nameEl) return;
+    nameEl.value = name;
+    if(typeof saveProject === 'function') saveProject();
+    if(!nameEl.value) nameEl.value = name;
+    _saveAsClose();
   };
   // Inject Save As button next to the existing Save button (one time)
   document.addEventListener('DOMContentLoaded', function(){
