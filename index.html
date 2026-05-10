@@ -9510,30 +9510,33 @@ function _sbClient() {
     _sb.auth.onAuthStateChange((event, session) => {
       if(event === 'SIGNED_IN' && session?.user) {
         const u = session.user;
-        const cached = _getSession();
-        const isNewUser = !cached || cached.userId !== u.id;
-        if(isNewUser) {
-          _setSession({ userId: u.id, username: u.user_metadata?.username || u.email.split('@')[0], email: u.email, loginTime: new Date().toISOString() });
-          _authUpdateTopbar();
-        }
-        // CARD AT SIGNUP — when an OAuth user (Google) lands here for the first
-        // time AND has no Stripe subscription yet, push them to Checkout. This
-        // covers Google sign-up which never hits authRegister().
-        (async function autoCheckoutNewUser(){
-          if(!isNewUser) return;
+        _setSession({ userId: u.id, username: u.user_metadata?.username || u.email.split('@')[0], email: u.email, loginTime: new Date().toISOString() });
+        _authUpdateTopbar();
+        // CARD AT SIGNUP — on EVERY login (Google OAuth, email signup,
+        // returning users), check if a payment method is on file. If not,
+        // surface the paywall overlay with an unmissable "Add card" CTA.
+        // This covers all sign-up + sign-in paths and survives Supabase
+        // trigger lag (profile row may not exist yet for fresh OAuth users).
+        (async function ensurePaymentMethod(){
           try {
-            const { data: profile } = await _sbClient().from('profiles')
-              .select('subscription_status, stripe_customer_id')
-              .eq('user_id', u.id).maybeSingle();
-            if(!profile) return;
-            // Already paid / comp / trialing with card — leave them be
-            if(['active','comp','trialing','past_due'].includes(profile.subscription_status)) return;
-            if(profile.stripe_customer_id) return;  // Stripe customer already exists
-            // No card on file yet — redirect to Stripe Checkout
-            setTimeout(function(){
-              if(typeof window.trialOpenCheckout === 'function') window.trialOpenCheckout();
-            }, 800);
-          } catch(_){}
+            // Wait briefly for any DB triggers to materialise the profile row
+            await new Promise(r => setTimeout(r, 1500));
+            let profile = null;
+            try {
+              const r = await _sbClient().from('profiles')
+                .select('subscription_status, stripe_customer_id, trial_ends_at')
+                .eq('user_id', u.id).maybeSingle();
+              profile = r.data;
+            } catch(_){}
+            // Active/comp/trialing/past_due users already have a card — done
+            const status = profile?.subscription_status || 'free';
+            if(['active','comp'].includes(status)) return;
+            // For all other states (free / trialing-without-card / canceled /
+            // missing-profile) → force the paywall + auto-open checkout
+            if(typeof window._forcePaywallNoCard === 'function'){
+              window._forcePaywallNoCard(profile);
+            }
+          } catch(e){ console.warn('ensurePaymentMethod error:', e); }
         })();
       } else if(event === 'SIGNED_OUT') {
         _clearSession();
@@ -10001,7 +10004,15 @@ async function trialUpdateBanner(){
 
   // Trial state — compute days from trial_ends_at
   const endMs = new Date(profile.trial_ends_at).getTime();
-  if(!isFinite(endMs)){ bar.style.display='none'; return; }
+  if(!isFinite(endMs)){
+    // No trial timer set yet — likely a brand-new OAuth user whose profile
+    // row was just created. Show an unmissable "Add card" prompt.
+    bar.className = 'trial-banner trial-warn';
+    bar.style.display='flex';
+    bar.innerHTML = '⚠ <strong>Add a card to start your 7-day free trial.</strong> &nbsp;<a class="trial-cta" onclick="trialOpenCheckout()">Add card →</a>';
+    setTimeout(trialOpenPaywall, 600);
+    return;
+  }
   const daysLeft = Math.max(0, Math.ceil((endMs - Date.now()) / 86400000));
   // 'trialing' = card on file via Stripe; 'free' = no card yet
   const cardOnFile = (profile.subscription_status === 'trialing');
@@ -10048,6 +10059,35 @@ function trialClosePaywall(){
   const ov = document.getElementById('paywallOverlay');
   if(ov) ov.classList.remove('open');
 }
+
+// Unmissable paywall for users without a payment method on file. Called from
+// onAuthStateChange after Google OAuth or email signup. Updates the paywall
+// copy to make the action obvious and (after a tiny delay) auto-fires the
+// Stripe Checkout. If popup-blocked, the on-screen "Subscribe" button stays.
+window._forcePaywallNoCard = function(profile){
+  try {
+    var ov = document.getElementById('paywallOverlay');
+    var title = document.getElementById('paywallTitle');
+    var sub = document.getElementById('paywallSub');
+    var status = profile && profile.subscription_status || 'free';
+    if(title){
+      title.textContent = (status === 'canceled' || status === 'past_due')
+        ? 'Restart your subscription'
+        : 'Add a card to start your 7-day free trial';
+    }
+    if(sub){
+      sub.textContent = (status === 'canceled' || status === 'past_due')
+        ? 'Update payment to keep access. Card on file required — cancel anytime.'
+        : 'Card required to start the trial. We email you 2 days before charge. Cancel anytime in 1 click — never charged if you cancel before day 8.';
+    }
+    if(ov){ ov.classList.add('open'); ov.style.display = 'flex'; }
+    // Auto-fire Stripe Checkout. If user dismisses or popup-blocked, paywall
+    // overlay's "Subscribe" button still goes to the same place.
+    setTimeout(function(){
+      if(typeof trialOpenCheckout === 'function') trialOpenCheckout();
+    }, 400);
+  } catch(e){ console.warn('_forcePaywallNoCard error:', e); }
+};
 // Stripe Checkout via Supabase Edge Function — server creates the session
 // with trial_period_days:7 and payment_method_collection:'always' so the
 // customer must enter a card upfront. Card isn't charged until day 8 unless
