@@ -1715,7 +1715,7 @@ strong { color: #e2e8f0; }
         <option value="mixed">🔀 Mixed Use</option>
         <option value="land">🌿 Land / Development</option>
       </select></div>
-    <div class="field"><label id="units_label">Units / Count</label><input type="number" id="prop_units" value="1" min="1" oninput="syncUnitsToSpec();if(typeof broadcastAssetClassChange==='function')broadcastAssetClassChange('unit count');"></div>
+    <div class="field"><label id="units_label">Units / Count <span style="font-size:10px;color:var(--muted);font-weight:400">(no cap — scale to any size)</span></label><input type="number" id="prop_units" value="1" min="1" placeholder="any size — 4-plex to 1000+ unit syndication" oninput="syncUnitsToSpec();if(typeof broadcastAssetClassChange==='function')broadcastAssetClassChange('unit count');"></div>
     <div class="field"><label>Sqft</label><input type="number" id="prop_sqft" placeholder="1800"></div>
   </div>
   <div class="g2">
@@ -1823,7 +1823,7 @@ strong { color: #e2e8f0; }
     </div>
   </div>
   <div class="g3">
-    <div class="field"><label>Hold Period (yrs)</label><input type="number" id="pur_hold" value="5" min="1" max="30"></div>
+    <div class="field"><label>Hold Period (yrs)</label><input type="number" id="pur_hold" value="5" min="1" max="50"></div>
     <div class="field">
       <label>Interest Rate (%) <span style="font-size:10px;color:var(--accent);font-weight:600;background:rgba(99,102,241,.12);padding:1px 6px;border-radius:4px;margin-left:4px">Financing Baseline</span></label>
       <input type="number" id="pur_rate" placeholder="7.000" value="7.000" step="0.125" min="0" max="30">
@@ -3129,7 +3129,7 @@ strong { color: #e2e8f0; }
     </div>
     <div class="field" style="margin:0">
       <label>Hold Years</label>
-      <input type="number" id="proj_years" value="5" min="1" max="30" oninput="buildProjection()">
+      <input type="number" id="proj_years" value="5" min="1" max="50" oninput="buildProjection()">
       <div style="font-size:10px;color:var(--muted);margin-top:3px" id="va_hold_hint"></div>
     </div>
   </div>
@@ -3370,7 +3370,7 @@ strong { color: #e2e8f0; }
           <div class="field"><label>Investor Equity %</label><input type="number" id="pd_inv_equity" value="30" min="0" max="100" oninput="refreshPitchDeckPreview()"></div>
         </div>
         <div class="g2">
-          <div class="field"><label>Preferred Return %</label><input type="number" id="pd_pref_ret" value="8" min="0" max="30"></div>
+          <div class="field"><label>Preferred Return %</label><input type="number" id="pd_pref_ret" value="8" min="0" max="50"></div>
           <div class="field"><label>GP Promote % (above pref)</label><input type="number" id="pd_promote" value="20" min="0" max="100"></div>
         </div>
       </div>
