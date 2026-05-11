@@ -1,0 +1,42 @@
+# Patel RE Underwriting Suite — robots policy
+# Polite crawlers: please stay out. This is proprietary software.
+
+User-agent: *
+Disallow: /
+
+# Allow the landing page only (it's marketing copy, indexable is OK)
+User-agent: *
+Allow: /landing.html
+
+# Specific bots that respect this
+User-agent: Googlebot
+Disallow: /
+Allow: /landing.html
+
+User-agent: Bingbot
+Disallow: /
+Allow: /landing.html
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+# Crawl delay for the rest (in case anyone still hits us)
+Crawl-delay: 86400
