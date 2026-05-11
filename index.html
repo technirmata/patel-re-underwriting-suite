@@ -20496,8 +20496,11 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 #pwaInstallBanner .pib-yes:hover{filter:brightness(.95)}
 #pwaInstallBanner .pib-no{background:rgba(255,255,255,.16);color:#fff;font-weight:600}
 #pwaInstallBanner .pib-no:hover{background:rgba(255,255,255,.26)}
-@media(max-width:520px){#pwaInstallBanner{left:8px;right:8px;transform:none;bottom:12px}}
+@media(max-width:520px){#pwaInstallBanner{left:8px;right:8px;transform:none;bottom:calc(76px + env(safe-area-inset-bottom, 0px))}}
+@media(max-width:768px) and (min-width:521px){#pwaInstallBanner{bottom:calc(76px + env(safe-area-inset-bottom, 0px))}}
 @media print{#pwaInstallBanner{display:none !important}}
+/* Desktop users have Chrome's built-in install icon in the URL bar — banner only on mobile */
+@media(min-width:769px){#pwaInstallBanner{display:none !important}}
 </style>
 <div id="pwaInstallBanner" role="dialog" aria-label="Install Patel RE Suite">
   <span class="pib-icon" aria-hidden="true">📱</span>
