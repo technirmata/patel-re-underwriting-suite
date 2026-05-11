@@ -12,6 +12,19 @@
 -->
 
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- pwa-head-v1 -->
+<link rel="manifest" href="/patel-re-underwriting-suite/manifest.json">
+<meta name="theme-color" content="#0f1117">
+<link rel="apple-touch-icon" href="/patel-re-underwriting-suite/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/patel-re-underwriting-suite/icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/patel-re-underwriting-suite/icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="/patel-re-underwriting-suite/icon-512.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Patel RE Suite">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Patel RE Underwriting Suite">
+
 <title>Patel RE Underwriting Suite v4</title>
 <script>
 (function(){
@@ -104,9 +117,9 @@ html.booting body > *:not(#bootSplash){visibility:hidden!important}
 @keyframes bsspin{to{transform:rotate(360deg)}}
 
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.55;min-height:100vh}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.55;min-height:100vh;padding-bottom:env(safe-area-inset-bottom)}
 /* ── topbar ── */
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 calc(20px + env(safe-area-inset-right)) 0 calc(20px + env(safe-area-inset-left));display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;padding-top:env(safe-area-inset-top)}
 .logo{font-size:16px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .topbar-actions{display:flex;gap:8px}
 /* ── live bar ── */
@@ -605,7 +618,7 @@ strong { color: #e2e8f0; }
 .auth-oauth svg{flex-shrink:0}
 
 /* Trial banner */
-.trial-banner{position:sticky;top:0;width:100%;padding:8px 16px;font-size:12.5px;font-weight:600;text-align:center;display:none;align-items:center;justify-content:center;gap:8px;z-index:101;border-bottom:1px solid var(--border)}
+.trial-banner{position:sticky;top:0;width:100%;padding:calc(8px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 8px calc(16px + env(safe-area-inset-left));font-size:12.5px;font-weight:600;text-align:center;display:none;align-items:center;justify-content:center;gap:8px;z-index:101;border-bottom:1px solid var(--border)}
 .trial-banner.trial-active{background:linear-gradient(90deg,rgba(99,102,241,.18),rgba(139,92,246,.18));color:#a5b4fc}
 .trial-banner.trial-warn{background:linear-gradient(90deg,rgba(245,158,11,.20),rgba(245,158,11,.10));color:#fbbf24}
 .trial-banner.trial-expired{background:linear-gradient(90deg,rgba(239,68,68,.22),rgba(239,68,68,.12));color:#fca5a5}
@@ -1031,7 +1044,7 @@ strong { color: #e2e8f0; }
 /* END AI CSS */
 
 /* ── AI Deal Chat sidebar (FAB + slide-out) ────────────────────────────── */
-.ai-fab{position:fixed;bottom:20px;right:20px;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 8px 24px rgba(99,102,241,.45);z-index:9990;display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s,opacity .2s}
+.ai-fab{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));right:calc(20px + env(safe-area-inset-right));width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 8px 24px rgba(99,102,241,.45);z-index:9990;display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s,opacity .2s}
 .ai-fab:hover{transform:scale(1.06);box-shadow:0 12px 32px rgba(99,102,241,.6)}
 .ai-fab.open{transform:scale(.85);opacity:0;pointer-events:none}
 .ai-chat-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9988;display:none;backdrop-filter:blur(2px)}
@@ -1057,7 +1070,7 @@ strong { color: #e2e8f0; }
 .ai-chat-msg-bubble.error{background:rgba(239,68,68,.08)!important;border:1px solid rgba(239,68,68,.3)!important;color:#f87171!important}
 .ai-chat-empty{text-align:center;color:var(--muted);padding:30px 14px;font-size:13px;line-height:1.7}
 .ai-chat-empty-icon{font-size:34px;margin-bottom:10px;opacity:.4}
-.ai-chat-input{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;background:var(--surface2);flex-shrink:0}
+.ai-chat-input{padding:10px 12px calc(10px + env(safe-area-inset-bottom)) 12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;background:var(--surface2);flex-shrink:0}
 .ai-chat-input textarea{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:none;line-height:1.45;max-height:120px;min-height:38px;transition:border-color .15s}
 .ai-chat-input textarea:focus{border-color:var(--accent)}
 .ai-chat-send{width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:16px;font-weight:700;flex-shrink:0;transition:.15s;display:flex;align-items:center;justify-content:center}
@@ -1363,11 +1376,695 @@ strong { color: #e2e8f0; }
   /* Charts (canvas) — keep but constrain */
   canvas { max-width:100% !important; height:auto !important; }
 }
+
+/* ╔═══════════════════════════════════════════════════════════════════════╗
+   ║ MOBILE RESPONSIVE LAYER v1                                            ║
+   ║ Breakpoints: 768px (tablet+phone), 520px (phone-specific).            ║
+   ║ All overrides scoped behind @media. Desktop unaffected.               ║
+   ║ Companion JS adds body.is-mobile + bottom tab sheet + chat fullscreen.║
+   ╚═══════════════════════════════════════════════════════════════════════╝ */
+
+@media (max-width: 768px) {
+
+  /* ── HTML / body safe-area + smooth scroll ─────────────────────────── */
+  html, body { -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+  body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+
+  /* ── Topbar: compress to 56px ──────────────────────────────────────── */
+  :root { --topbar-h: 56px; }
+  .topbar {
+    height: 56px; padding: 0 12px;
+    position: sticky; top: 0;
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(56px + env(safe-area-inset-top, 0px));
+  }
+  .logo { font-size: 13.5px; max-width: 50vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topbar-actions { gap: 6px; }
+  .tb-primary { padding: 0 10px; min-width: 38px; height: 36px; }
+  .tb-primary .tb-lbl { display: none; }
+  .tb-burger { display: inline-flex !important; width: 36px; height: 36px; }
+  .tb-files { width: 36px; height: 36px; }
+  .user-chip { padding: 3px 8px 3px 4px; height: 36px; }
+  .user-chip-lbl { display: none; }
+  .user-chip.guest .user-chip-lbl { display: inline; font-size: 11.5px; }
+
+  /* ── Livebar: shrink, force horizontal scroll ──────────────────────── */
+  .livebar-wrap { z-index: 99; }
+  .livebar.livebar-compact {
+    min-height: 44px;
+    padding: 5px 12px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .livebar.livebar-compact::-webkit-scrollbar { display: none; }
+  .lm-chip { padding: 3px 10px 3px 8px; }
+  .lm-chip-icon { font-size: 12px; }
+  .lm-chip-stats { gap: 8px; }
+  .lm-chip-stats .lm-label { font-size: 9.5px; letter-spacing: .2px; }
+  .lm-chip-stats .lm-val { font-size: 12.5px; font-weight: 700; }
+  .verdict-badge { font-size: 11px; padding: 3px 8px; flex-shrink: 0; }
+  .lm-grade { min-width: 50px; padding: 3px 8px; flex-shrink: 0; }
+  .grade-val { font-size: 14px; }
+  .livebar-toggle { width: 28px; height: 28px; font-size: 12px; margin-left: 4px; }
+  .livebar-expanded { padding: 8px 12px; gap: 8px; }
+
+  /* ── Desktop tabs: keep horizontally scrollable, larger taps ───────── */
+  .tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 0 4px;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 11px 11px;
+    font-size: 12.5px;
+    min-height: 44px;
+    align-items: center;
+  }
+  .tab-phase { display: none; }
+
+  /* ── Panels: tighten padding + collapse all multi-col grids to 1 col ─ */
+  .panel { padding: 14px 12px; }
+  .g2, .g3, .g4, .g12, .g21, .chart-grid,
+  .intake-grid,
+  .pn-grid-top,
+  .vb-grid,
+  .mx-exit-grid,
+  .rec-cards,
+  .agents-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+  #panel9 div[style*="grid-template-columns:380px"],
+  #panel9 div[style*="grid-template-columns: 380px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Cards: smaller padding ────────────────────────────────────────── */
+  .card { padding: 14px; margin-bottom: 12px; }
+  .card2 { padding: 11px; }
+  .card-title { font-size: 12.5px; }
+
+  /* ── Form fields: 16px font (prevents iOS zoom), larger touch ──────── */
+  .field { margin-bottom: 12px; }
+  .field input, .field select, .field textarea {
+    font-size: 16px !important;
+    padding: 10px 12px;
+    border-radius: 8px;
+  }
+  .field label { font-size: 12px; margin-bottom: 5px; }
+  .dual-wrap { gap: 6px; }
+  .dual-pct { max-width: 70px !important; flex: 0 0 70px !important; }
+  .ymo-pair-wrap input.ymo-yr,
+  .ymo-pair-wrap input.ymo-mo {
+    font-size: 14px;
+    padding: 8px 4px 8px 10px !important;
+  }
+  .mc-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .mc { padding: 10px 8px; }
+  .mc-val { font-size: 19px; }
+
+  /* ── Buttons: bigger tap area ──────────────────────────────────────── */
+  .btn { padding: 10px 16px; font-size: 13.5px; min-height: 40px; }
+  .btn-sm { padding: 7px 14px; font-size: 12.5px; min-height: 36px; }
+
+  /* ── Calc sub-tabs (.ctabs / .ctab) ────────────────────────────────── */
+  .ctabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .ctabs::-webkit-scrollbar { display: none; }
+  .ctab { padding: 9px 14px; font-size: 12.5px; min-height: 38px; display: inline-flex; align-items: center; flex-shrink: 0; }
+  .fc-hub-nav { padding: 6px; gap: 4px; }
+  .fc-hub-tab { padding: 10px 12px; font-size: 12.5px; min-height: 40px; }
+
+  /* ── Tables: smaller font, horizontal scroll preserved ─────────────── */
+  .amort-wrap table { font-size: 11px; }
+  .amort-wrap th, .amort-wrap td { padding: 5px 6px; }
+  .proj-table { font-size: 11px; }
+  .proj-table th, .proj-table td { padding: 5px 7px; }
+  .pn-table { font-size: 11.5px; }
+  .pn-table th, .pn-table td { padding: 5px 7px; }
+  .sens-table { font-size: 11.5px; }
+  .amort-wrap, .sens-wrap { -webkit-overflow-scrolling: touch; }
+
+  /* Partners row tap targets */
+  .pn-row { padding: 8px; min-height: 44px; }
+  .pn-row input, .pn-row select, .pn-pct-input { font-size: 13px; padding: 7px 8px; min-height: 32px; }
+  .pn-row-rm { font-size: 18px; padding: 6px; min-width: 30px; min-height: 30px; }
+  .pn-card-grid { grid-template-columns: 1fr; gap: 10px; }
+
+  /* Strategy Agents single column */
+  .agents-grid { grid-template-columns: 1fr !important; }
+  .agent-card { padding: 14px; }
+
+  /* ── AI Chat: fullscreen takeover on mobile ────────────────────────── */
+  .ai-chat {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh;
+    height: 100dvh;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-left: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .ai-chat-hdr {
+    padding: 12px 14px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+  .ai-chat-msgs { padding: 14px 14px 18px; }
+  .ai-chat-input {
+    padding: 10px 12px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+  .ai-chat-input textarea { font-size: 16px !important; min-height: 40px; }
+  .ai-chat-mic {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 18px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+  }
+  .ai-chat-send { width: 48px; height: 48px; font-size: 18px; }
+  .ai-chat-actions button { font-size: 16px; padding: 8px 12px; min-width: 40px; min-height: 40px; }
+  body.is-mobile .ai-chat-back-mobile { display: inline-flex; }
+  .ai-chat-back-mobile {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px 10px;
+    margin-right: 4px;
+    border-radius: 8px;
+    min-width: 40px;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+  }
+  .ai-chat-back-mobile:hover { background: var(--surface3); }
+  .ai-fab {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    right: 14px;
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+  }
+  .ai-fab.open { opacity: 0; pointer-events: none; transform: scale(.6); }
+
+  /* ── Modals: bottom-sheet style on mobile ──────────────────────────── */
+  .proj-overlay {
+    align-items: flex-end;
+    padding: 0;
+    background: rgba(0,0,0,.55);
+    backdrop-filter: blur(4px);
+  }
+  .proj-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: 90vh;
+    border-radius: 18px 18px 0 0;
+    animation: mobSheetUp .25s ease;
+  }
+  .proj-modal-header { padding: 14px 16px 10px; }
+  .proj-modal-body { padding: 12px 16px 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+  .proj-modal::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 8px auto 0;
+    flex-shrink: 0;
+  }
+
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal-overlay .modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 18px 18px 0 0;
+    padding: 20px 18px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    animation: mobSheetUp .25s ease;
+  }
+  .modal-overlay .modal::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: -6px auto 12px;
+  }
+
+  .paywall-overlay { padding: 0; align-items: flex-end; }
+  .paywall-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 18px 18px 0 0;
+    padding: 24px 22px;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    max-height: 92vh;
+    animation: mobSheetUp .25s ease;
+  }
+
+  .refOv { padding: 0; align-items: flex-end; }
+  .refMod {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: 90vh;
+    border-radius: 18px 18px 0 0;
+    padding: 18px 18px 22px;
+    padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+    animation: mobSheetUp .25s ease;
+  }
+  .refStats { grid-template-columns: repeat(2, 1fr); }
+
+  .auth-overlay { padding: 0; align-items: stretch; }
+  .auth-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    border-radius: 0;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    display: flex;
+    flex-direction: column;
+  }
+  .auth-modal-top { padding: 28px 24px 0; }
+  .auth-tabs { margin: 0 24px; }
+  .auth-body { padding: 20px 24px 24px; }
+  .auth-field input { font-size: 16px !important; padding: 12px 14px; }
+  .auth-btn { padding: 14px; font-size: 15px; min-height: 48px; }
+  .auth-oauth { padding: 14px; min-height: 48px; }
+
+  #adminUserOverlay { padding: 0; }
+  #adminUserOverlay > * {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  /* ── Drop-zones: "Tap to upload" cue on touch devices ──────────────── */
+  .drop-zone-text::after {
+    content: ' (Tap to upload)';
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 12px;
+    display: inline-block;
+    margin-left: 4px;
+  }
+
+  /* ── Bottom mobile tab bar (built by JS) ───────────────────────────── */
+  .mtabbar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 64px;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 98;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    box-shadow: 0 -4px 16px rgba(0,0,0,.35);
+  }
+  .mtabbar-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 6px 4px;
+    font-size: 10px;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    height: 100%;
+    transition: color .15s;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .mtabbar-btn:hover { color: var(--text); }
+  .mtabbar-btn .mtb-icon { font-size: 19px; line-height: 1; }
+  .mtabbar-btn.active { color: var(--accent); }
+  .mtabbar-btn[data-mtb="menu"] { color: var(--text); }
+
+  /* All-tabs slide-up sheet */
+  .msheet-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.55);
+    z-index: 9985;
+    display: none;
+    backdrop-filter: blur(2px);
+  }
+  .msheet-backdrop.open { display: block; animation: mobBackdropFade .2s ease; }
+  .msheet {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    z-index: 9986;
+    transform: translateY(100%);
+    transition: transform .25s ease;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -12px 40px rgba(0,0,0,.5);
+  }
+  .msheet.open { transform: translateY(0); }
+  .msheet::before {
+    content: '';
+    display: block;
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 10px auto 4px;
+  }
+  .msheet-title {
+    padding: 8px 18px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+  }
+  .msheet-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0 14px 14px;
+  }
+  .msheet-tile {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 12px;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: .15s;
+    min-height: 64px;
+  }
+  .msheet-tile:hover, .msheet-tile.active {
+    border-color: var(--accent);
+    background: var(--surface3);
+  }
+  .msheet-tile.active { color: var(--accent); }
+  .msheet-tile .mst-emoji { font-size: 20px; line-height: 1; }
+  .msheet-tile .mst-name { font-size: 13px; font-weight: 600; }
+  .msheet-tile .mst-phase {
+    font-size: 9.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    font-weight: 700;
+  }
+
+  @keyframes mobSheetUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes mobBackdropFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+/* Phone-specific tightening below 520px */
+@media (max-width: 520px) {
+  .auth-modal-top { padding: 24px 18px 0; }
+  .auth-tabs { margin: 0 18px; }
+  .auth-body { padding: 18px 18px 22px; }
+  .auth-modal-top .auth-logo { font-size: 18px; }
+
+  .logo { font-size: 12.5px; max-width: 40vw; }
+
+  .lm-chip { padding: 3px 8px 3px 6px; }
+  .lm-chip-stats { gap: 6px; }
+  .lm-chip-stats .lm-val { font-size: 12px; }
+  .lm-chip-stats .lm-label { font-size: 9px; }
+
+  .panel { padding: 12px 10px; }
+
+  .amort-wrap table { font-size: 10.5px; }
+  .pn-table { font-size: 11px; }
+  .proj-table { font-size: 10.5px; }
+
+  .mtabbar-btn { font-size: 0; }
+  .mtabbar-btn .mtb-icon { font-size: 22px; }
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .mtabbar { height: 52px; height: calc(52px + env(safe-area-inset-bottom, 0px)); }
+  .mtabbar-btn .mtb-icon { font-size: 16px; }
+  .mtabbar-btn { font-size: 9px; padding: 4px 2px; }
+  .ai-fab { bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (max-width: 768px) {
+  .mtabbar-btn:focus-visible,
+  .msheet-tile:focus-visible,
+  .ai-chat-back-mobile:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+/* ╚═══════════════════════════════════════════════════════════════════════╝ */
+
+/* ════════════════════════════════════════════════════════════════════════
+   TABLET + LANDSCAPE + EDGE-CASE VIEWPORTS (added by tablet-landscape agent)
+   Layered ONLY at min-width:769px or via combined queries so it never
+   conflicts with the phone agent's @media (max-width:768px) ownership.
+   ──────────────────────────────────────────────────────────────────────── */
+
+/* ── Tablet PORTRAIT (769–1024px) — iPad portrait, unfolded foldables ─── */
+@media (min-width:769px) and (max-width:1024px){
+  .panel{padding:16px 18px}
+  /* g3 drops to 2-col (3rd item wraps to row 2) */
+  .g3{grid-template-columns:1fr 1fr}
+  /* g4 drops to 2-col (rows of 2) */
+  .g4{grid-template-columns:1fr 1fr}
+  /* g12 + g21 stay 2-col but tighter */
+  .g12,.g21{gap:14px}
+  /* chart grid tighter, still 2-col */
+  .chart-grid{gap:12px}
+  /* tabs same horizontal bar — already wraps; just tighter spacing */
+  .tab{padding:10px 10px;font-size:12.5px}
+  .tab-phase{padding:0 4px}
+  /* topbar full button row visible */
+  .topbar{padding-left:calc(16px + env(safe-area-inset-left));padding-right:calc(16px + env(safe-area-inset-right))}
+  /* AI chat sidebar stays as side-panel, slightly narrower */
+  .ai-chat{width:360px}
+  /* Strategy Agents → explicit 2-col so it doesn't go 3-col on iPad portrait */
+  .agents-grid{grid-template-columns:1fr 1fr}
+  /* Rec / partner card grids → 2-col */
+  .rec-cards,.pn-card-grid{grid-template-columns:1fr 1fr}
+  /* Partners panel keeps side-by-side header */
+  .pn-grid-top{grid-template-columns:1fr 1fr}
+  /* Modals: centered, slightly wider than mobile bottom-sheet */
+  .modal{width:min(560px,92vw);max-height:88vh;overflow-y:auto}
+  .refMod{width:min(640px,94vw)}
+  /* Metrics exit grid stays 2-col */
+  .mx-exit-grid{grid-template-columns:1fr 1fr}
+  /* Velocity banking grid → keep 2-col */
+  .vb-grid{grid-template-columns:1fr 1fr}
+  .vb-stat-grid{grid-template-columns:1fr 1fr}
+  /* Intake stays 3fr/2fr */
+  .intake-grid{grid-template-columns:3fr 2fr}
+}
+
+/* ── Tablet LANDSCAPE (1025–1280px) — iPad landscape ─────────────────── */
+@media (min-width:1025px) and (max-width:1280px){
+  .panel{padding:18px 22px}
+  /* Tab padding scheme already tightened at 1380px / 1100px breakpoints;
+     just nudge livebar a bit */
+  .livebar.livebar-compact{padding:6px 12px}
+  /* AI chat sidebar — desktop width */
+  .ai-chat{width:380px}
+  /* Strategy Agents — let auto-fit decide (typically 2-3 cols here) */
+  /* Modals: classic desktop centered */
+  .modal{width:min(640px,92vw)}
+}
+
+/* ── Phone LANDSCAPE (≤768px AND landscape AND short height) ─────────── */
+@media (max-width:768px) and (orientation:landscape) and (max-height:500px){
+  /* Boot splash: hide the spinner so the short screen isn't dominated by it */
+  #bootSplash .bs-spinner{display:none}
+  /* Livebar: compact chips smaller */
+  .livebar.livebar-compact{padding:4px 10px;min-height:40px;gap:6px}
+  .lm-chip{padding:3px 8px 3px 6px}
+  .lm-chip-stats{gap:6px}
+  .lm-chip-stats .lm-label{font-size:10.5px}
+  .lm-chip-stats .lm-val{font-size:11.5px}
+  /* AI chat fullscreen, but the input row sticks to safe-area bottom.
+     Phone agent already makes .ai-chat width:100vw at ≤640px; this
+     just pins the input row precisely. */
+  .ai-chat{height:100vh;height:100dvh}
+  .ai-chat-msgs{padding-bottom:8px}
+  .ai-chat-input{position:sticky;bottom:0;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+  /* Modals: bottom-sheet at 95vh since screen is short.
+     If the phone agent has already converted .modal to bottom-sheet,
+     this just makes it taller; otherwise it caps height. */
+  .modal{max-height:95vh;width:96vw}
+  .auth-modal{max-height:calc(100vh - 16px);max-height:calc(100dvh - 16px)}
+  /* The phone agent's bottom-fixed hamburger menu (slide-up sheet) is
+     hard to use in landscape — convert the tb-more popover to a slide-IN
+     panel from the right edge so vertical space stays for content. */
+  .tb-more.open{
+    position:fixed;
+    top:0;
+    right:0;
+    bottom:0;
+    width:min(260px,70vw);
+    max-width:70vw;
+    height:100vh;
+    height:100dvh;
+    border-radius:0;
+    flex-direction:column;
+    padding:calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) 12px;
+    box-shadow:-12px 0 30px rgba(0,0,0,.55);
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    animation:tbMoreSlideIn .22s ease;
+  }
+  @keyframes tbMoreSlideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+  /* Compact tabs — fewer pixels per row */
+  .tab{padding:6px 8px;font-size:12px}
+  .tab-phase-label{display:none}
+  /* Topbar shorter */
+  .topbar{height:44px}
+  :root{--topbar-h:44px}
+}
+
+/* ── Foldable INNER display (Samsung Z Fold front-cover-ish, very narrow) ─
+   Treat as ultra-narrow phone. Tighten everything by ~8px.
+   Matches a 280px-wide tall viewport (front cover when folded).        */
+@media (min-width:240px) and (max-width:300px){
+  .panel{padding:10px 8px}
+  .topbar{padding:0 8px;height:46px}
+  .logo{font-size:11.5px}
+  .livebar.livebar-compact{padding:4px 6px;gap:5px}
+  .lm-chip{padding:2px 6px 2px 4px}
+  .lm-chip-stats{gap:5px}
+  .lm-chip-stats .lm-label{font-size:9.5px;letter-spacing:.2px}
+  .lm-chip-stats .lm-val{font-size:11px}
+  .lm{min-width:56px;padding:3px 6px}
+  .tab{padding:6px 5px;font-size:11.5px}
+  .tab-phase{padding:0 2px}
+  .tab-phase-label{display:none}
+  .card{padding:12px 10px;margin-bottom:10px}
+  .card2{padding:10px 9px;margin-bottom:9px}
+  .field input,.field select,.field textarea{padding:7px 8px;font-size:12.5px}
+  .btn{padding:7px 12px;font-size:12.5px}
+  .modal,.refMod{padding:16px 14px}
+  .mc-grid{grid-template-columns:1fr 1fr;gap:6px}
+  .mc{padding:8px}
+  .mc-val{font-size:17px}
+  .ai-chat-input textarea{font-size:12.5px;min-height:34px}
+  .ai-fab{width:46px;height:46px;font-size:18px;bottom:calc(12px + env(safe-area-inset-bottom));right:calc(12px + env(safe-area-inset-right))}
+  /* All grids collapse to single column at this width */
+  .g2,.g3,.g4,.g12,.g21,.chart-grid,.intake-grid,
+  .agents-grid,.rec-cards,.pn-card-grid,
+  .pn-grid-top,.vb-grid,.vb-stat-grid,.mx-exit-grid{grid-template-columns:1fr !important}
+}
+
+/* ── ULTRA-WIDE (≥1800px) — 4K monitors, ultrawides ──────────────────────
+   Keep content centered, don't stretch across the screen. The livebar +
+   topbar (top-of-page chrome) stay full width because they're tied to
+   the sticky topbar context. */
+@media (min-width:1800px){
+  .panel{max-width:1600px;margin:0 auto}
+  /* livebar stays full width but center its inner content via flex */
+  .livebar-wrap{align-items:center}
+  .livebar.livebar-compact{max-width:1600px;margin:0 auto;width:100%}
+  .livebar-expanded{max-width:1600px;margin:0 auto;width:100%}
+  /* tabs centered too */
+  .tabs{max-width:1600px;margin:0 auto;width:100%}
+  /* topbar centered content (background still full-width for sticky shadow) */
+  .topbar{max-width:1600px;margin:0 auto;width:100%}
+  /* Big screens — give modals a little more breathing room */
+  .modal{width:min(720px,90vw)}
+  .refMod{width:min(820px,90vw)}
+  /* AI chat sidebar — slightly wider on a 4K monitor so it doesn't feel skinny */
+  .ai-chat{width:420px}
+}
+
+/* ── iOS SAFE-AREA + LANDSCAPE notch padding for sticky chrome ────────── */
+@supports(padding:max(0px)){
+  .topbar{padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
+  .livebar-wrap{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+  .tabs{padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
+}
+
+/* ── Reduced motion: respect user pref globally ───────────────────────── */
+@media (prefers-reduced-motion:reduce){
+  .ai-chat,.tb-more.open,.ai-fab,.modal-overlay,.refOv,.auth-overlay{
+    transition:none !important;animation:none !important;
+  }
+  .bs-spinner{animation:none !important}
+}
+/* ──────────────────────────────────────────────────────────────────────
+   END tablet-landscape patch
+   ────────────────────────────────────────────────────────────────────── */
 </style>
 </head>
 <body>
 <!-- Boot splash — blocks paint until auth resolves to prevent flash of unauth content -->
 <script>document.documentElement.classList.add('booting');</script>
+<script>
+/* ─── Mobile detection (synchronous, runs before paint) ───────────────────
+   Adds body.is-mobile + html.is-mobile when viewport <= 768px so CSS and JS
+   can branch on touch/phone state. Re-evaluates on resize. */
+(function(){
+  function _apply(){
+    try {
+      var m = window.matchMedia('(max-width:768px)').matches;
+      var p = window.matchMedia('(max-width:520px)').matches;
+      var cls = document.documentElement.classList;
+      cls.toggle('is-mobile', m);
+      cls.toggle('is-phone', p);
+      if (document.body) {
+        document.body.classList.toggle('is-mobile', m);
+        document.body.classList.toggle('is-phone', p);
+      }
+    } catch(_){}
+  }
+  _apply();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _apply, {once:true});
+  }
+  window.addEventListener('resize', _apply, {passive:true});
+  window.addEventListener('orientationchange', _apply, {passive:true});
+})();
+</script>
 <div id="bootSplash" aria-hidden="true">
   <div class="bs-logo">⚡ Patel RE Underwriting Suite</div>
   <div class="bs-spinner"></div>
@@ -11839,6 +12536,18 @@ function _userChipRender(){
   html += '<div class="um-action" onclick="_userChipClose();(typeof openTeams===\'function\')&&openTeams()">'
     + '<span class="um-item-icon">⚙</span>'
     + '<span class="um-item-text">Manage workspace</span></div>';
+  /* pwa-userchip-install-v1 */
+  // Install app — only show if not already standalone
+  html += '<div class="um-item" id="umInstallItem" style="display:none" onclick="_userChipClose();(typeof pwaShowInstall===\'function\')&&pwaShowInstall()">'
+    + '<span class="um-item-icon">📲</span>'
+    + '<span class="um-item-text">Install app</span></div>';
+  setTimeout(function(){
+    try {
+      var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+      var n = document.getElementById('umInstallItem');
+      if (n && !standalone) n.style.display = 'flex';
+    } catch(_){}
+  }, 30);
   // Manage Billing — Stripe Customer Portal (update card / cancel / invoices)
   if(s){
     html += '<div class="um-item" onclick="_userChipClose();(typeof trialOpenBillingPortal===\'function\')&&trialOpenBillingPortal()">'
@@ -11949,6 +12658,20 @@ async function authInit() {
   setTimeout(_hideBootSplash, 6000);
   // Attach to the global tail so any explicit caller can also remove early.
   window._hideBootSplash = _hideBootSplash;
+
+  // ── DEV SESSION HYGIENE ────────────────────────────────────────────────────
+  // If the URL has no ?dev=1 but a stale dev-session is in localStorage,
+  // clear it. A stale dev session causes the suite to issue Supabase queries
+  // with no valid JWT → noisy 400 errors in the console.
+  try {
+    var _urlParams = new URLSearchParams(window.location.search);
+    var _isDevUrl = _urlParams.get('dev') === '1';
+    var _cachedSess = (typeof _getSession === 'function') ? _getSession() : null;
+    if(!_isDevUrl && _cachedSess && _cachedSess._dev){
+      try { _clearSession(); } catch(_){}
+      console.log('[auth] cleared stale dev preview session');
+    }
+  } catch(_){}
 
   // ── DEV PREVIEW BYPASS ─────────────────────────────────────────────────────
   // ?dev=1 in URL → inject a fake comp-status session and skip auth.
@@ -19740,6 +20463,360 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
         saveBtn.parentNode.insertBefore(sa, saveBtn.nextSibling);
       } catch(e){}
     }, 800);
+  });
+})();
+</script>
+
+
+<!-- pwa-sw-register-v1 -->
+<script>
+(function(){
+  if (!('serviceWorker' in navigator)) return;
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('/patel-re-underwriting-suite/sw.js')
+      .then(function(reg){ try{ console.log('[PWA] SW registered, scope:', reg.scope); }catch(_){} })
+      .catch(function(err){ try{ console.warn('[PWA] SW registration failed:', err); }catch(_){} });
+  });
+})();
+</script>
+
+<!-- pwa-install-prompt-v1 -->
+<style>
+#pwaInstallBanner{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99996;
+  display:none;align-items:center;gap:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;padding:10px 14px 10px 16px;border-radius:14px;box-shadow:0 12px 32px rgba(99,102,241,.4);
+  font:600 13px/1.3 Inter,system-ui,sans-serif;max-width:calc(100vw - 24px)}
+#pwaInstallBanner.open{display:flex}
+#pwaInstallBanner .pib-icon{font-size:18px;line-height:1}
+#pwaInstallBanner .pib-text{flex:1;min-width:0}
+#pwaInstallBanner .pib-title{font-weight:700;font-size:13.5px}
+#pwaInstallBanner .pib-sub{font-weight:500;font-size:11.5px;opacity:.88;margin-top:1px}
+#pwaInstallBanner button{border:0;cursor:pointer;font:inherit;border-radius:8px;padding:6px 12px}
+#pwaInstallBanner .pib-yes{background:#fff;color:#4c1d95;font-weight:700}
+#pwaInstallBanner .pib-yes:hover{filter:brightness(.95)}
+#pwaInstallBanner .pib-no{background:rgba(255,255,255,.16);color:#fff;font-weight:600}
+#pwaInstallBanner .pib-no:hover{background:rgba(255,255,255,.26)}
+@media(max-width:520px){#pwaInstallBanner{left:8px;right:8px;transform:none;bottom:12px}}
+@media print{#pwaInstallBanner{display:none !important}}
+</style>
+<div id="pwaInstallBanner" role="dialog" aria-label="Install Patel RE Suite">
+  <span class="pib-icon" aria-hidden="true">📱</span>
+  <div class="pib-text">
+    <div class="pib-title">Install Patel RE Suite</div>
+    <div class="pib-sub">Add to home screen — opens fullscreen, works offline.</div>
+  </div>
+  <button class="pib-yes" type="button" id="pwaInstallYes">Install</button>
+  <button class="pib-no"  type="button" id="pwaInstallNo" aria-label="Dismiss">Not now</button>
+</div>
+<script>
+(function(){
+  var KEY_DISMISSED = 'pwa_install_dismissed_v1';
+  var KEY_INSTALLED = 'pwa_install_completed_v1';
+  var KEY_LAST_SEEN = 'pwa_install_last_seen_v1';
+  var deferredPrompt = null;
+
+  function isStandalone(){
+    try {
+      if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+      // iOS Safari
+      if (navigator.standalone === true) return true;
+    } catch(_){}
+    return false;
+  }
+
+  function show(){
+    if (isStandalone()) return;
+    try {
+      if (localStorage.getItem(KEY_INSTALLED) === '1') return;
+      if (localStorage.getItem(KEY_DISMISSED) === '1') return;
+    } catch(_){}
+    var el = document.getElementById('pwaInstallBanner');
+    if (!el) return;
+    el.classList.add('open');
+    try { localStorage.setItem(KEY_LAST_SEEN, String(Date.now())); } catch(_){}
+  }
+
+  function hide(){
+    var el = document.getElementById('pwaInstallBanner');
+    if (el) el.classList.remove('open');
+  }
+
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredPrompt = e;
+    // Surface the banner after the app has had a moment to render so we don't
+    // collide with the auth overlay / boot splash.
+    setTimeout(show, 1200);
+  });
+
+  window.addEventListener('appinstalled', function(){
+    try { localStorage.setItem(KEY_INSTALLED, '1'); } catch(_){}
+    hide();
+  });
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var yes = document.getElementById('pwaInstallYes');
+    var no  = document.getElementById('pwaInstallNo');
+    if (yes) yes.addEventListener('click', async function(){
+      if (!deferredPrompt) { hide(); return; }
+      try {
+        deferredPrompt.prompt();
+        var choice = await deferredPrompt.userChoice;
+        if (choice && choice.outcome === 'accepted') {
+          try { localStorage.setItem(KEY_INSTALLED, '1'); } catch(_){}
+        } else {
+          try { localStorage.setItem(KEY_DISMISSED, '1'); } catch(_){}
+        }
+      } catch(_){}
+      deferredPrompt = null;
+      hide();
+    });
+    if (no) no.addEventListener('click', function(){
+      try { localStorage.setItem(KEY_DISMISSED, '1'); } catch(_){}
+      hide();
+    });
+  });
+
+  // Manual trigger callable from the user-chip menu: window.pwaShowInstall()
+  window.pwaShowInstall = function(){
+    try { localStorage.removeItem('pwa_install_dismissed_v1'); } catch(_){}
+    if (deferredPrompt) {
+      show();
+    } else if (isStandalone()) {
+      // Already installed — nothing to do
+    } else {
+      // No prompt available — give the user iOS instructions
+      try {
+        var ua = navigator.userAgent || '';
+        var isIOS = /iPhone|iPad|iPod/i.test(ua);
+        if (isIOS) {
+          alert('To install: tap the Share button in Safari, then "Add to Home Screen".');
+        } else {
+          alert('Your browser does not support PWA installation, or the app is already installed.');
+        }
+      } catch(_){}
+    }
+  };
+})();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   MOBILE BOTTOM TAB BAR + ALL-TABS SHEET + CHAT BACK ARROW + INPUT MODES
+   Only renders when body.is-mobile is true. Re-evaluates on resize.
+   ═══════════════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+  if (typeof window === 'undefined') return;
+
+  var TABS = [
+    { id:0,  emoji:'📋', label:'Intake',     phase:'Intake',   fn:function(){ window.ST&&window.ST(0); } },
+    { id:14, emoji:'🔍', label:'AI Research',phase:'Analyze',  fn:function(){ window.ST&&window.ST(14); window.riAutoOpen&&window.riAutoOpen(); } },
+    { id:13, emoji:'💰', label:'Finance',    phase:'Analyze',  fn:function(){ window.ST&&window.ST(13); } },
+    { id:11, emoji:'👥', label:'Partners',   phase:'Capital',  fn:function(){ window.ST&&window.ST(11); window.partnerInit&&window.partnerInit(); window.partnerCompute&&window.partnerCompute(); } },
+    { id:15, emoji:'📊', label:'Metrics',    phase:'Capital',  fn:function(){ window.ST&&window.ST(15); window.mxRender&&window.mxRender(); } },
+    { id:16, emoji:'🛡', label:'Discipline', phase:'Capital',  fn:function(){ window.ST&&window.ST(16); window.dscInit&&window.dscInit(); } },
+    { id:8,  emoji:'📈', label:'Projections',phase:'Deal',     fn:function(){ window.ST&&window.ST(8); window.seedFA&&window.seedFA(); window.buildProjection&&window.buildProjection(); } },
+    { id:6,  emoji:'📝', label:'LOI',        phase:'Deal',     fn:function(){ window.ST&&window.ST(6); window.syncIntakeToLOI&&window.syncIntakeToLOI(); } },
+    { id:9,  emoji:'🎯', label:'Pitch Deck', phase:'Pitch',    fn:function(){ window.ST&&window.ST(9); window.refreshPitchDeckPreview&&window.refreshPitchDeckPreview(); } },
+    { id:7,  emoji:'📄', label:'Exec',phase:'Pitch',  fn:function(){ window.ST&&window.ST(7); window.updateExec&&window.updateExec(); } }
+  ];
+
+  function currentPanelId(){
+    var p = document.querySelector('.panel.active');
+    if (!p || !p.id) return 0;
+    var m = /^panel(\d+)$/.exec(p.id);
+    return m ? Number(m[1]) : 0;
+  }
+
+  function buildBottomBar(){
+    if (document.getElementById('mTabBar')) return;
+    var bar = document.createElement('div');
+    bar.id = 'mTabBar';
+    bar.className = 'mtabbar';
+    bar.setAttribute('role','tablist');
+    bar.setAttribute('aria-label','Mobile navigation');
+    var quick = [TABS[0], TABS[2], TABS[1], TABS[3]];
+    quick.forEach(function(t){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mtabbar-btn';
+      b.setAttribute('data-mtb', String(t.id));
+      b.setAttribute('aria-label', t.label);
+      b.innerHTML = '<span class="mtb-icon" aria-hidden="true">'+t.emoji+'</span><span>'+t.label+'</span>';
+      b.addEventListener('click', function(ev){
+        ev.preventDefault();
+        try { t.fn(); } catch(e){}
+        syncActiveStates();
+      });
+      bar.appendChild(b);
+    });
+    var menuBtn = document.createElement('button');
+    menuBtn.type = 'button';
+    menuBtn.className = 'mtabbar-btn';
+    menuBtn.setAttribute('data-mtb','menu');
+    menuBtn.setAttribute('aria-label','All sections');
+    menuBtn.innerHTML = '<span class="mtb-icon" aria-hidden="true">≡</span><span>More</span>';
+    menuBtn.addEventListener('click', function(ev){
+      ev.preventDefault();
+      openSheet();
+    });
+    bar.appendChild(menuBtn);
+    document.body.appendChild(bar);
+  }
+
+  function buildSheet(){
+    if (document.getElementById('mSheet')) return;
+    var backdrop = document.createElement('div');
+    backdrop.id = 'mSheetBackdrop';
+    backdrop.className = 'msheet-backdrop';
+    backdrop.addEventListener('click', closeSheet);
+    document.body.appendChild(backdrop);
+
+    var sheet = document.createElement('div');
+    sheet.id = 'mSheet';
+    sheet.className = 'msheet';
+    sheet.setAttribute('role','dialog');
+    sheet.setAttribute('aria-label','All sections');
+    var title = document.createElement('div');
+    title.className = 'msheet-title';
+    title.textContent = 'Jump to section';
+    sheet.appendChild(title);
+    var grid = document.createElement('div');
+    grid.className = 'msheet-grid';
+    TABS.forEach(function(t){
+      var tile = document.createElement('button');
+      tile.type = 'button';
+      tile.className = 'msheet-tile';
+      tile.setAttribute('data-mtbtile', String(t.id));
+      tile.innerHTML = '<span class="mst-phase">'+t.phase+'</span>'+
+                       '<span style="display:flex;align-items:center;gap:8px">'+
+                         '<span class="mst-emoji" aria-hidden="true">'+t.emoji+'</span>'+
+                         '<span class="mst-name">'+t.label+'</span>'+
+                       '</span>';
+      tile.addEventListener('click', function(ev){
+        ev.preventDefault();
+        try { t.fn(); } catch(e){}
+        closeSheet();
+        syncActiveStates();
+      });
+      grid.appendChild(tile);
+    });
+    sheet.appendChild(grid);
+    document.body.appendChild(sheet);
+  }
+
+  function openSheet(){
+    var b = document.getElementById('mSheetBackdrop');
+    var s = document.getElementById('mSheet');
+    if (!b || !s) return;
+    syncActiveStates();
+    b.classList.add('open');
+    s.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSheet(){
+    var b = document.getElementById('mSheetBackdrop');
+    var s = document.getElementById('mSheet');
+    if (b) b.classList.remove('open');
+    if (s) s.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  window.mTabbarOpen = openSheet;
+  window.mTabbarClose = closeSheet;
+
+  function syncActiveStates(){
+    var active = currentPanelId();
+    document.querySelectorAll('.mtabbar-btn[data-mtb]').forEach(function(b){
+      var id = b.getAttribute('data-mtb');
+      if (id === 'menu') return;
+      b.classList.toggle('active', String(active) === id);
+    });
+    document.querySelectorAll('.msheet-tile[data-mtbtile]').forEach(function(t){
+      t.classList.toggle('active', String(active) === t.getAttribute('data-mtbtile'));
+    });
+  }
+
+  function wrapST(){
+    if (typeof window.ST !== 'function' || window.ST.__mobileWrapped) return;
+    var orig = window.ST;
+    window.ST = function(){
+      var r = orig.apply(this, arguments);
+      try { syncActiveStates(); } catch(_){}
+      return r;
+    };
+    window.ST.__mobileWrapped = true;
+  }
+
+  function injectChatBackArrow(){
+    var hdr = document.querySelector('#aiChat .ai-chat-hdr');
+    if (!hdr || hdr.querySelector('.ai-chat-back-mobile')) return;
+    var back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'ai-chat-back-mobile';
+    back.setAttribute('aria-label','Close chat');
+    back.innerHTML = '←';
+    back.addEventListener('click', function(ev){
+      ev.preventDefault();
+      try { window.aiChatToggle && window.aiChatToggle(); } catch(_){}
+    });
+    hdr.insertBefore(back, hdr.firstChild);
+  }
+
+  function applyInputmodes(){
+    var pairs = [
+      ['auth_login_user',  'email',     'email'],
+      ['auth_reg_email',   'email',     'email'],
+      ['auth_forgot_email','email',     'email'],
+      ['auth_login_pass',  null,        'current-password'],
+      ['auth_reg_pass',    null,        'new-password'],
+      ['auth_reg_pass2',   null,        'new-password'],
+      ['auth_reset_pass',  null,        'new-password'],
+      ['auth_reset_pass2', null,        'new-password'],
+      ['pd_contact_phone', 'tel',       'tel']
+    ];
+    pairs.forEach(function(p){
+      var e = document.getElementById(p[0]);
+      if (!e) return;
+      if (p[1] && !e.getAttribute('inputmode')) e.setAttribute('inputmode', p[1]);
+      if (p[2] && !e.getAttribute('autocomplete')) e.setAttribute('autocomplete', p[2]);
+    });
+    document.querySelectorAll('input[type="number"]').forEach(function(e){
+      if (!e.getAttribute('inputmode')) e.setAttribute('inputmode', 'decimal');
+    });
+  }
+
+  function init(){
+    var isMobile = window.matchMedia('(max-width:768px)').matches;
+    var bar = document.getElementById('mTabBar');
+    if (isMobile) {
+      buildBottomBar();
+      buildSheet();
+      injectChatBackArrow();
+      applyInputmodes();
+      wrapST();
+      syncActiveStates();
+    } else {
+      if (bar) bar.remove();
+      var sh = document.getElementById('mSheet'); if (sh) sh.remove();
+      var bd = document.getElementById('mSheetBackdrop'); if (bd) bd.remove();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt);
+    rt = setTimeout(init, 200);
+  }, { passive: true });
+
+  document.addEventListener('keydown', function(ev){
+    if (ev.key === 'Escape') closeSheet();
   });
 })();
 </script>
