@@ -1,0 +1,36 @@
+{
+  "name": "Patel RE Underwriting Suite",
+  "short_name": "Patel RE Suite",
+  "description": "Underwrite any real estate deal in under 2 minutes. 13 financing strategies. One verdict per deal.",
+  "start_url": "/patel-re-underwriting-suite/",
+  "scope": "/patel-re-underwriting-suite/",
+  "id": "/patel-re-underwriting-suite/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0f1117",
+  "theme_color": "#0f1117",
+  "lang": "en-US",
+  "dir": "ltr",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Deal Intake",
+      "short_name": "Intake",
+      "url": "/patel-re-underwriting-suite/?tab=0",
+      "description": "Start a new deal"
+    },
+    {
+      "name": "AI Strategy Agents",
+      "short_name": "Agents",
+      "url": "/patel-re-underwriting-suite/?tab=14",
+      "description": "Run strategy agents on a deal"
+    }
+  ],
+  "categories": ["business", "finance", "productivity"]
+}
