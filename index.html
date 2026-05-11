@@ -91,6 +91,18 @@
   --card-r:12px;--trans:.18s ease;
   --topbar-h:56px;
 }
+/* ── Boot splash: blocks the suite until authInit resolves ────────────────
+   Prevents flash of unauthenticated content during the async getSession()
+   network call. The splash is opaque and z-index above everything. authInit
+   removes the .booting class once it has decided (overlay shown OR app ready).
+*/
+html.booting body > *:not(#bootSplash){visibility:hidden!important}
+#bootSplash{position:fixed;inset:0;background:#0f1117;z-index:9999999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;transition:opacity .25s ease;opacity:1}
+#bootSplash.hide{opacity:0;pointer-events:none}
+#bootSplash .bs-logo{font-size:18px;font-weight:800;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.3px}
+#bootSplash .bs-spinner{width:24px;height:24px;border:2px solid rgba(255,255,255,.12);border-top-color:#8b5cf6;border-radius:50%;animation:bsspin .9s linear infinite}
+@keyframes bsspin{to{transform:rotate(360deg)}}
+
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.55;min-height:100vh}
 /* ── topbar ── */
@@ -1354,6 +1366,12 @@ strong { color: #e2e8f0; }
 </style>
 </head>
 <body>
+<!-- Boot splash — blocks paint until auth resolves to prevent flash of unauth content -->
+<script>document.documentElement.classList.add('booting');</script>
+<div id="bootSplash" aria-hidden="true">
+  <div class="bs-logo">⚡ Patel RE Underwriting Suite</div>
+  <div class="bs-spinner"></div>
+</div>
 <!-- AUTH MODAL -->
 <div class="auth-overlay" id="authOverlay" style="display:none">
   <div class="auth-modal">
@@ -11912,6 +11930,26 @@ window._tbBurgerToggle=_tbBurgerToggle;
 window._tbBurgerClose=_tbBurgerClose;
 
 async function authInit() {
+  // Splash auto-hides on every return path of this function (success or error).
+  // We attach the cleanup to the next-frame so the user sees the final decided
+  // state (overlay visible / app revealed) without an intermediate paint.
+  function _hideBootSplash(){
+    try {
+      var s = document.getElementById('bootSplash');
+      if(s){
+        s.classList.add('hide');
+        document.documentElement.classList.remove('booting');
+        // remove from DOM after the fade-out so it can't trap clicks
+        setTimeout(function(){ try { s.remove(); } catch(_){} }, 350);
+      }
+    } catch(_){}
+  }
+  // Safety net: ensure splash never persists more than 6 seconds even on
+  // unexpected error paths.
+  setTimeout(_hideBootSplash, 6000);
+  // Attach to the global tail so any explicit caller can also remove early.
+  window._hideBootSplash = _hideBootSplash;
+
   // ── DEV PREVIEW BYPASS ─────────────────────────────────────────────────────
   // ?dev=1 in URL → inject a fake comp-status session and skip auth.
   // Lets headless QA (and demos) render the full app without real sign-in.
@@ -11937,6 +11975,7 @@ async function authInit() {
       try { document.getElementById('authOverlay').style.display = 'none'; } catch(_){}
       try { _authUpdateTopbar(); } catch(_){}
       console.log('[dev] auth bypass active — fake comp session injected. URL: ?dev=1');
+      _hideBootSplash();
       return;
     }
   } catch(_){}
@@ -11996,6 +12035,9 @@ async function authInit() {
     }
   } catch(_){}
   setTimeout(()=>{ document.getElementById('auth_login_user')?.focus(); }, 200);
+  // Hide the boot splash now that auth state has been resolved (overlay
+  // shown if needed, app revealed if signed in).
+  _hideBootSplash();
 }
 
 // ── Projects key is now per-user ──────────────────────────────────────────────
