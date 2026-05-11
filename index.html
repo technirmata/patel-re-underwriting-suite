@@ -110,6 +110,16 @@
    removes the .booting class once it has decided (overlay shown OR app ready).
 */
 html.booting body > *:not(#bootSplash){visibility:hidden!important}
+/* ── Auth lock: while #authOverlay is open, body cannot scroll AND every
+   sibling of #authOverlay/#bootSplash is fully hidden so the suite never
+   peeks through. Solid #0f1117 base under the brand gradient overlay. */
+body.auth-locked{overflow:hidden!important;height:100vh;height:100dvh;position:fixed;width:100%;top:0;left:0}
+body.auth-locked > *:not(#authOverlay):not(#bootSplash):not(script):not(style):not(noscript){visibility:hidden!important}
+body.auth-locked #authOverlay{background:#0f1117 radial-gradient(ellipse at top left,rgba(99,102,241,.16) 0%,rgba(0,0,0,0) 55%) no-repeat,#0f1117 radial-gradient(ellipse at bottom right,rgba(139,92,246,.14) 0%,rgba(0,0,0,0) 55%) no-repeat,#0f1117!important;backdrop-filter:none!important}
+/* ── AI chat fullscreen lock: hide PWA install banner + mobile tab bar so
+   the chat input row sits at the actual viewport bottom (only safe-area
+   home-indicator below it). */
+body.ai-chat-open #pwaInstallBanner,body.ai-chat-open #mTabBar{display:none!important}
 #bootSplash{position:fixed;inset:0;background:#0f1117;z-index:9999999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;transition:opacity .25s ease;opacity:1}
 #bootSplash.hide{opacity:0;pointer-events:none}
 #bootSplash .bs-logo{font-size:18px;font-weight:800;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.3px}
@@ -20890,17 +20900,71 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     var open = (w > DEVTOOLS_THRESHOLD || ht > DEVTOOLS_THRESHOLD);
     if (open && !devtoolsOpen) {
       devtoolsOpen = true;
-      try { document.title = '⚠ ' + document.title.replace(/^⚠ /, ''); } catch(_){}
+      // Title prefix intentionally omitted here: build.py's anti-tamper IIFE
+      // owns the document.title ⚠ prefix. Console warnings below are this
+      // layer's only visible signal.
       console.warn('%c⚠ DEVELOPER TOOLS DETECTED', 'color:#f87171;font-size:16px;font-weight:bold');
       console.warn('%c© Patel RE Underwriting Suite. Code is proprietary and watermarked.', 'color:#94a3b8;font-size:12px');
       console.warn('%cUnauthorized copying, reverse engineering, or redistribution is prohibited.', 'color:#94a3b8;font-size:12px');
       console.warn('%cAll runtime activity is logged with a session fingerprint.', 'color:#fbbf24;font-size:12px');
     } else if (!open && devtoolsOpen) {
       devtoolsOpen = false;
-      try { document.title = document.title.replace(/^⚠ /, ''); } catch(_){}
     }
   }
   setInterval(_checkDevtools, 800);
+
+  // ── BODY CLASS SYNC: auth-locked + ai-chat-open ───────────────────────────
+  // Centralised body-class toggles so mobile CSS rules can react to overlay
+  // state without every caller manually adding/removing classes.
+  function _syncAuthLockedClass(){
+    try {
+      var ov = document.getElementById('authOverlay');
+      if (!ov) return;
+      var open = ov.style.display && ov.style.display !== 'none';
+      document.body.classList.toggle('auth-locked', !!open);
+    } catch(_){}
+  }
+  function _installAuthLockedObserver(){
+    var ov = document.getElementById('authOverlay');
+    if (!ov || ov.__authLockedObserved) { _syncAuthLockedClass(); return; }
+    ov.__authLockedObserved = true;
+    try {
+      var mo = new MutationObserver(_syncAuthLockedClass);
+      mo.observe(ov, { attributes:true, attributeFilter:['style','class'] });
+    } catch(_){}
+    _syncAuthLockedClass();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _installAuthLockedObserver, {once:true});
+  } else {
+    _installAuthLockedObserver();
+  }
+
+  // Wrap aiChatToggle so opening/closing the chat flips body.ai-chat-open.
+  // Defer until aiChatToggle exists (defined in a script block below the FAB).
+  function _wrapAiChatToggle(){
+    if (typeof window.aiChatToggle !== 'function' || window.aiChatToggle.__bodyClassWrapped) return false;
+    var orig = window.aiChatToggle;
+    var wrapped = function(){
+      var r = orig.apply(this, arguments);
+      try {
+        var c = document.getElementById('aiChat');
+        var open = !!(c && c.classList.contains('open'));
+        document.body.classList.toggle('ai-chat-open', open);
+      } catch(_){}
+      return r;
+    };
+    wrapped.__bodyClassWrapped = true;
+    window.aiChatToggle = wrapped;
+    return true;
+  }
+  if (!_wrapAiChatToggle()) {
+    var _wrapTries = 0;
+    var _wrapTimer = setInterval(function(){
+      _wrapTries++;
+      if (_wrapAiChatToggle() || _wrapTries > 40) { clearInterval(_wrapTimer); }
+    }, 80);
+  }
 
   // ── 3. SOURCE ATTESTATION FINGERPRINT ──────────────────────────────────────
   // Generate a per-session id and embed it as an invisible HTML comment + DOM
