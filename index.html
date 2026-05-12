@@ -2205,7 +2205,7 @@ strong { color: #e2e8f0; }
       <div class="auth-err" id="auth_forgot_ok" style="margin-bottom:10px;font-size:13px;color:var(--green)"></div>
       <button class="auth-btn" onclick="authForgotPassword()">Send Reset Link</button>
       <div style="margin-top:14px;padding:10px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);border-radius:8px;font-size:11.5px;color:#fbbf24;line-height:1.5">
-        ⚠ <strong>If the email doesn't arrive in 1–2 minutes:</strong> check spam, then ask the project owner to set up custom SMTP in Supabase. The default email service is rate-limited.
+        ⚠ <strong>If the email doesn't arrive in 1–2 minutes:</strong> check your spam folder.
       </div>
       <div class="auth-divider"><span>or</span></div>
       <button class="auth-guest" onclick="authSwitchTab('login')">← Back to Sign In</button>
@@ -12631,11 +12631,17 @@ function _userChipRender(){
     }, 30);
   }
   if(s){
+    html += '<div class="um-item" onclick="_userChipClose();bugReportOpen()">'
+      + '<span class="um-item-icon">🐛</span>'
+      + '<span class="um-item-text">Report a bug</span></div>';
     html += '<div class="um-divider"></div>';
     html += '<div class="um-action danger" onclick="_userChipClose();(typeof authLogout===\'function\')&&authLogout()">'
       + '<span class="um-item-icon">⏻</span>'
       + '<span class="um-item-text">Sign out</span></div>';
   } else {
+    html += '<div class="um-item" onclick="_userChipClose();bugReportOpen()">'
+      + '<span class="um-item-icon">🐛</span>'
+      + '<span class="um-item-text">Report a bug</span></div>';
     html += '<div class="um-divider"></div>';
     html += '<div class="um-action" onclick="_userChipClose();(function(){var o=document.getElementById(\'authOverlay\');if(o)o.style.display=\'flex\';})()">'
       + '<span class="um-item-icon">→</span>'
@@ -21071,6 +21077,429 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
   .auth-modal-top .auth-sub { margin-bottom: 8px; }
 }
 </style>
+
+<style>
+/* ─── Bug Report Modal v1 (2026-05-12) ─────────────────────────────────────── */
+.bug-fab{
+  position:fixed;
+  bottom:calc(20px + env(safe-area-inset-bottom));
+  left:calc(20px + env(safe-area-inset-left));
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(239,68,68,.92);
+  border:1px solid rgba(239,68,68,.55);
+  color:#fff;font-size:20px;cursor:pointer;
+  box-shadow:0 8px 20px rgba(239,68,68,.35);
+  z-index:9988;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .15s, box-shadow .2s, opacity .2s;
+}
+.bug-fab:hover{transform:scale(1.07);box-shadow:0 12px 28px rgba(239,68,68,.55)}
+.bug-fab:active{transform:scale(.95)}
+@media(max-width:768px){
+  .bug-fab{width:40px;height:40px;font-size:18px;bottom:calc(72px + env(safe-area-inset-bottom));left:12px}
+}
+@media print{ .bug-fab{display:none !important} }
+body.auth-locked .bug-fab{display:none !important}
+body.ai-chat-open .bug-fab{display:none !important}
+body.bug-open{overflow:hidden}
+
+.bug-overlay{
+  position:fixed;inset:0;background:rgba(8,10,18,.72);backdrop-filter:blur(6px);
+  z-index:100002;display:none;align-items:flex-start;justify-content:center;
+  padding:48px 16px;overflow-y:auto;animation:bugFade .18s ease-out;
+}
+.bug-overlay.open{display:flex}
+@keyframes bugFade{from{opacity:0}to{opacity:1}}
+
+.bug-modal{
+  width:100%;max-width:560px;background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:22px 22px 18px;box-shadow:0 32px 80px rgba(0,0,0,.55);
+  color:var(--text);position:relative;animation:bugRise .22s ease-out;
+}
+@keyframes bugRise{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.bug-modal h2{margin:0 0 4px;font-size:18px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.bug-modal .bug-sub{font-size:12.5px;color:var(--text2);margin-bottom:14px;line-height:1.45}
+.bug-modal .bug-close{
+  position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:8px;
+  background:transparent;border:1px solid var(--border);color:var(--text2);
+  font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.bug-modal .bug-close:hover{background:var(--surface2);color:var(--text)}
+.bug-modal .bug-field{margin-bottom:12px}
+.bug-modal .bug-field label{display:block;font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.bug-modal .bug-field input,
+.bug-modal .bug-field textarea,
+.bug-modal .bug-field select{
+  width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box;
+}
+.bug-modal .bug-field input:focus,
+.bug-modal .bug-field textarea:focus,
+.bug-modal .bug-field select:focus{
+  outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.18);
+}
+.bug-modal .bug-field textarea{min-height:120px;resize:vertical;line-height:1.5}
+@media(max-width:480px){
+  .bug-modal .bug-field input,
+  .bug-modal .bug-field textarea,
+  .bug-modal .bug-field select{ font-size:16px }
+}
+
+.bug-textarea-wrap{position:relative}
+.bug-mic-btn{
+  position:absolute;bottom:8px;right:8px;width:34px;height:34px;border-radius:50%;
+  background:var(--surface3);border:1px solid var(--border);color:var(--text);
+  font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .15s, color .15s, border-color .15s;
+}
+.bug-mic-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.bug-mic-btn.listening{
+  background:#ef4444;border-color:#ef4444;color:#fff;
+  animation:bugMicPulse 1.1s ease-in-out infinite;
+}
+@keyframes bugMicPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}
+  50%{box-shadow:0 0 0 10px rgba(239,68,68,0)}
+}
+.bug-mic-hint{font-size:11px;color:var(--muted);margin-top:4px;min-height:14px}
+.bug-mic-hint.is-listening{color:#ef4444;font-weight:600}
+
+.bug-ctx{
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:8px 10px;font-size:11px;color:var(--muted);line-height:1.6;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  word-break:break-all;max-height:90px;overflow-y:auto;margin-bottom:12px;
+  white-space:pre-wrap;
+}
+.bug-ctx-toggle{
+  background:transparent;border:none;color:var(--accent);font-size:11.5px;
+  cursor:pointer;padding:0;margin-bottom:8px;text-decoration:underline;
+}
+.bug-actions{display:flex;gap:8px;margin-top:6px}
+.bug-actions .bug-submit{
+  flex:1;padding:11px 16px;border:none;border-radius:8px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  font-weight:700;font-size:14px;cursor:pointer;transition:filter .15s,transform .08s;
+}
+.bug-actions .bug-submit:hover{filter:brightness(1.08)}
+.bug-actions .bug-submit:active{transform:scale(.98)}
+.bug-actions .bug-submit:disabled{opacity:.55;cursor:not-allowed;filter:grayscale(.3)}
+.bug-actions .bug-cancel{
+  padding:11px 16px;border:1px solid var(--border);border-radius:8px;
+  background:var(--surface2);color:var(--text);font-weight:600;font-size:14px;cursor:pointer;
+}
+.bug-actions .bug-cancel:hover{background:var(--surface3)}
+.bug-status{margin-top:10px;font-size:12.5px;line-height:1.4;min-height:18px}
+.bug-status.is-ok{color:var(--green)}
+.bug-status.is-err{color:#ef4444}
+.bug-status.is-load{color:var(--text2)}
+</style>
+
+<!-- Bug Report v1 (2026-05-12) ─────────────────────────────────────────── -->
+<button class="bug-fab" id="bugFab" onclick="bugReportOpen()" title="Report a bug, error, or feedback (Cmd+Shift+B)" aria-label="Report a bug" data-print="hide">🐛</button>
+<div class="bug-overlay" id="bugOverlay" onclick="if(event.target===this)bugReportClose()" role="dialog" aria-modal="true" aria-labelledby="bugReportTitle">
+  <div class="bug-modal" role="document">
+    <button class="bug-close" onclick="bugReportClose()" aria-label="Close">×</button>
+    <h2 id="bugReportTitle">🐛 Report a bug or issue</h2>
+    <div class="bug-sub">Tell us what went wrong. The more detail, the faster we can fix it. Sent directly to the team.</div>
+    <div class="bug-field">
+      <label for="bugCategory">Type</label>
+      <select id="bugCategory">
+        <option value="bug">🐞 Bug or error</option>
+        <option value="ui">🎨 UI / display problem</option>
+        <option value="data">📊 Wrong number / calculation</option>
+        <option value="auth">🔐 Sign-in / account issue</option>
+        <option value="billing">💳 Billing / subscription</option>
+        <option value="feature">💡 Feature request / feedback</option>
+        <option value="other">📨 Something else</option>
+      </select>
+    </div>
+    <div class="bug-field">
+      <label for="bugSubject">Subject</label>
+      <input type="text" id="bugSubject" placeholder="One-line summary (e.g. 'Cap rate shows NaN on duplex panel')" maxlength="160">
+    </div>
+    <div class="bug-field">
+      <label for="bugDesc">What happened? <span style="color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400">(tap 🎤 to dictate)</span></label>
+      <div class="bug-textarea-wrap">
+        <textarea id="bugDesc" placeholder="Walk me through: what you were doing, what went wrong, what you expected. Steps to reproduce help most." rows="5"></textarea>
+        <button type="button" class="bug-mic-btn" id="bugMicBtn" onclick="bugReportToggleMic()" title="Voice → text" aria-label="Voice input">🎤</button>
+      </div>
+      <div class="bug-mic-hint" id="bugMicHint"></div>
+    </div>
+    <button class="bug-ctx-toggle" onclick="bugReportToggleCtx()" id="bugCtxToggle">▸ Diagnostic info attached (browser, panel, viewport)</button>
+    <div class="bug-ctx" id="bugCtx" style="display:none"></div>
+    <div class="bug-actions">
+      <button class="bug-cancel" onclick="bugReportClose()">Cancel</button>
+      <button class="bug-submit" id="bugSubmitBtn" onclick="bugReportSubmit()">Send report</button>
+    </div>
+    <div class="bug-status" id="bugStatus"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   Bug Report v1 (2026-05-12) — site-wide bug reporting w/ voice-to-text.
+   Posts to bug-report Edge Function which emails parthusarealestate@gmail.com.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+  function _id(x){return document.getElementById(x);}
+
+  function _activePanel(){
+    try {
+      var panels = document.querySelectorAll('.panel');
+      for (var i=0; i<panels.length; i++){
+        var p = panels[i];
+        if (p && p.classList.contains('active')) return p.id || ('panel'+i);
+      }
+    } catch(_){}
+    return 'unknown';
+  }
+
+  function _collectContext(){
+    var ctx = {};
+    try {
+      ctx.url = location.href;
+      ctx.path = location.pathname;
+      ctx.panel = _activePanel();
+      ctx.ua = (navigator.userAgent||'').slice(0, 320);
+      ctx.viewport = (window.innerWidth||0) + 'x' + (window.innerHeight||0);
+      ctx.dpr = window.devicePixelRatio || 1;
+      ctx.lang = navigator.language || '';
+      try { ctx.timezone = (Intl && Intl.DateTimeFormat) ? (Intl.DateTimeFormat().resolvedOptions().timeZone||'') : ''; } catch(_){ ctx.timezone=''; }
+      ctx.platform = navigator.platform || '';
+      ctx.online = (navigator.onLine === false) ? 'offline' : 'online';
+      try { ctx.build = document.documentElement.getAttribute('data-build') || ''; } catch(_){}
+      try { ctx.sid = document.documentElement.getAttribute('data-sid') || ''; } catch(_){}
+      try {
+        var s = (typeof _getSession==='function') ? _getSession() : null;
+        if (s) {
+          ctx.user_id = s.userId || s.id || '';
+          ctx.email = s.email || '';
+          ctx.username = s.username || '';
+        }
+      } catch(_){}
+      try {
+        if (Array.isArray(window.__bugRecentErrors)) {
+          ctx.recent_errors = window.__bugRecentErrors.slice(-3);
+        }
+      } catch(_){}
+    } catch(_){}
+    return ctx;
+  }
+
+  // ── Lightweight console.error capture ─────────────────────────────────────
+  try {
+    window.__bugRecentErrors = window.__bugRecentErrors || [];
+    var _origErr = console.error;
+    console.error = function(){
+      try {
+        var msg = Array.prototype.slice.call(arguments).map(function(a){
+          if (typeof a === 'string') return a;
+          try { return JSON.stringify(a); } catch(_){ return String(a); }
+        }).join(' ').slice(0, 300);
+        window.__bugRecentErrors.push({ t: new Date().toISOString(), msg: msg });
+        if (window.__bugRecentErrors.length > 20) window.__bugRecentErrors.shift();
+      } catch(_){}
+      return _origErr.apply(console, arguments);
+    };
+    window.addEventListener('error', function(ev){
+      try {
+        window.__bugRecentErrors.push({ t: new Date().toISOString(), msg: 'window.onerror: '+(ev.message||'')+' @ '+(ev.filename||'')+':'+(ev.lineno||0) });
+        if (window.__bugRecentErrors.length > 20) window.__bugRecentErrors.shift();
+      } catch(_){}
+    });
+  } catch(_){}
+
+  // ── Open / Close ──────────────────────────────────────────────────────────
+  window.bugReportOpen = function(prefillSubject){
+    var ov = _id('bugOverlay'); if(!ov) return;
+    var ctx = _collectContext();
+    var ctxBox = _id('bugCtx');
+    if (ctxBox) {
+      var lines = [];
+      Object.keys(ctx).forEach(function(k){
+        var v = ctx[k];
+        if (typeof v === 'object') { try { v = JSON.stringify(v); } catch(_){ v = String(v); } }
+        lines.push(k + ': ' + v);
+      });
+      ctxBox.textContent = lines.join('\n');
+    }
+    var subj = _id('bugSubject');
+    if (subj && prefillSubject && typeof prefillSubject === 'string') subj.value = prefillSubject;
+    var st = _id('bugStatus'); if (st) { st.textContent=''; st.className='bug-status'; }
+    document.body.classList.add('bug-open');
+    ov.classList.add('open');
+    setTimeout(function(){ var s2=_id('bugSubject'); if(s2) s2.focus(); }, 60);
+  };
+
+  window.bugReportClose = function(){
+    var ov = _id('bugOverlay'); if(!ov) return;
+    ov.classList.remove('open');
+    document.body.classList.remove('bug-open');
+    if (_bugSR) { try { _bugSR.stop(); } catch(_){} _bugSR = null; }
+    var btn = _id('bugMicBtn'); if (btn) btn.classList.remove('listening');
+    var hint = _id('bugMicHint'); if (hint) { hint.textContent=''; hint.classList.remove('is-listening'); }
+  };
+
+  window.bugReportToggleCtx = function(){
+    var box = _id('bugCtx'); var tog = _id('bugCtxToggle');
+    if (!box || !tog) return;
+    var open = box.style.display !== 'none';
+    box.style.display = open ? 'none' : 'block';
+    tog.textContent = (open ? '▸' : '▾') + ' Diagnostic info attached (browser, panel, viewport)';
+  };
+
+  // ── Voice-to-text (mirrors aiChatToggleMic) ───────────────────────────────
+  var _bugSR = null, _bugSRBuffer = '';
+  window.bugReportToggleMic = function(){
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var btn = _id('bugMicBtn'); var ta = _id('bugDesc'); var hint = _id('bugMicHint');
+    if (!SR) {
+      alert('Voice input not supported in this browser.\nUse Chrome / Edge / Safari for speech-to-text.');
+      return;
+    }
+    if (_bugSR) {
+      try { _bugSR.stop(); } catch(_){}
+      _bugSR = null;
+      if (btn) btn.classList.remove('listening');
+      if (hint) { hint.textContent=''; hint.classList.remove('is-listening'); }
+      return;
+    }
+    _bugSR = new SR();
+    _bugSR.lang = 'en-US';
+    _bugSR.interimResults = true;
+    _bugSR.continuous = true;
+    _bugSRBuffer = ta ? (ta.value || '') : '';
+    if (btn) btn.classList.add('listening');
+    if (hint) { hint.textContent='● Listening… tap 🎤 again to stop.'; hint.classList.add('is-listening'); }
+    _bugSR.onresult = function(ev){
+      var finalT = '', interimT = '';
+      for (var i=ev.resultIndex; i<ev.results.length; i++){
+        var t = ev.results[i][0].transcript;
+        if (ev.results[i].isFinal) finalT += t;
+        else interimT += t;
+      }
+      if (ta) {
+        if (finalT) _bugSRBuffer = (_bugSRBuffer ? _bugSRBuffer + ' ' : '') + finalT.trim();
+        ta.value = _bugSRBuffer + (interimT ? (_bugSRBuffer ? ' ' : '') + interimT : '');
+      }
+    };
+    _bugSR.onerror = function(ev){
+      console.warn('Bug-report SpeechRecognition error:', ev.error);
+      if (btn) btn.classList.remove('listening');
+      if (hint) { hint.textContent=''; hint.classList.remove('is-listening'); }
+      _bugSR = null;
+      if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
+        alert('Microphone permission denied. Allow microphone access in your browser settings.');
+      }
+    };
+    _bugSR.onend = function(){
+      if (btn) btn.classList.remove('listening');
+      if (hint) { hint.textContent=''; hint.classList.remove('is-listening'); }
+      _bugSR = null;
+    };
+    try { _bugSR.start(); } catch(e){
+      if (btn) btn.classList.remove('listening');
+      if (hint) { hint.textContent=''; hint.classList.remove('is-listening'); }
+      _bugSR = null;
+      alert('Could not start microphone: '+(e.message||'unknown'));
+    }
+  };
+
+  // ── Submit ────────────────────────────────────────────────────────────────
+  window.bugReportSubmit = async function(){
+    var st = _id('bugStatus');
+    var subjEl = _id('bugSubject'); var descEl = _id('bugDesc'); var catEl = _id('bugCategory');
+    var btn = _id('bugSubmitBtn');
+    var subject = (subjEl && subjEl.value || '').trim();
+    var description = (descEl && descEl.value || '').trim();
+    var category = catEl ? catEl.value : 'bug';
+
+    if (!subject && !description) {
+      st.textContent = 'Add a subject or description first.';
+      st.className = 'bug-status is-err';
+      return;
+    }
+    if (description.length > 6000) {
+      st.textContent = 'Description too long — keep it under 6000 characters.';
+      st.className = 'bug-status is-err';
+      return;
+    }
+
+    st.textContent = 'Sending…';
+    st.className = 'bug-status is-load';
+    if (btn) btn.disabled = true;
+
+    var ctx = _collectContext();
+    var payload = {
+      category: category,
+      subject: subject || ('Untitled — ' + category),
+      description: description || '(no description)',
+      context: ctx
+    };
+
+    try {
+      var sbUrl = (typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '');
+      var sbAnon = (typeof SUPABASE_ANON !== 'undefined' ? SUPABASE_ANON : '');
+      var url = sbUrl + '/functions/v1/bug-report';
+      var headers = { 'Content-Type': 'application/json' };
+      if (sbAnon) headers['apikey'] = sbAnon;
+      try {
+        var sb = window._supabase || (typeof _sbClient==='function' ? _sbClient() : null);
+        if (sb) {
+          var sess = await sb.auth.getSession();
+          var tok = sess && sess.data && sess.data.session && sess.data.session.access_token;
+          if (tok) headers['Authorization'] = 'Bearer ' + tok;
+          else if (sbAnon) headers['Authorization'] = 'Bearer ' + sbAnon;
+        } else if (sbAnon) {
+          headers['Authorization'] = 'Bearer ' + sbAnon;
+        }
+      } catch(_){
+        if (sbAnon) headers['Authorization'] = 'Bearer ' + sbAnon;
+      }
+
+      var resp = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(payload)
+      });
+      var body;
+      try { body = await resp.json(); } catch(_){ body = { ok: resp.ok }; }
+      if (!resp.ok) {
+        var msg = (body && (body.error || body.detail)) || ('HTTP '+resp.status);
+        st.textContent = 'Could not send: ' + msg;
+        st.className = 'bug-status is-err';
+        if (btn) btn.disabled = false;
+        return;
+      }
+      st.textContent = '✓ Report sent. Thank you — we read every one.';
+      st.className = 'bug-status is-ok';
+      if (subjEl) subjEl.value = '';
+      if (descEl) descEl.value = '';
+      _bugSRBuffer = '';
+      if (btn) btn.disabled = false;
+      setTimeout(function(){ bugReportClose(); }, 1400);
+    } catch (e) {
+      st.textContent = 'Network error: ' + (e && e.message || 'unknown');
+      st.className = 'bug-status is-err';
+      if (btn) btn.disabled = false;
+    }
+  };
+
+  // ── Keyboard shortcut: Ctrl/Cmd + Shift + B ──────────────────────────────
+  document.addEventListener('keydown', function(e){
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'B' || e.key === 'b')) {
+      e.preventDefault();
+      bugReportOpen();
+    }
+    if (e.key === 'Escape') {
+      var ov = _id('bugOverlay'); if (ov && ov.classList.contains('open')) bugReportClose();
+    }
+  });
+})();
+</script>
+
 <script>
 (function(){
   // ── Casual-copy deterrent. NOT a security boundary. ──────────────────────
