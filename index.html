@@ -21004,6 +21004,40 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
   // during the deploy pipeline.
 })();
 </script>
+<style>
+/* === Auth modal mobile polish — vertically center content === */
+@media (max-width: 768px) {
+  .auth-modal {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    padding: calc(env(safe-area-inset-top, 0px) + 24px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px) !important;
+    gap: 14px;
+  }
+  /* Push the brand block up + form down so they meet near center */
+  .auth-modal-top {
+    padding: 0 !important;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .auth-modal-top .auth-logo { font-size: 22px; margin-bottom: 6px; }
+  .auth-modal-top .auth-sub { font-size: 14.5px; margin-bottom: 12px; }
+  .auth-features { padding: 0 8px; max-width: 400px; margin: 0 auto 6px; }
+  .auth-tabs { margin: 0; }
+  .auth-body { padding: 18px 0 0 !important; }
+  /* Inputs at iOS-safe 16px to prevent zoom on focus */
+  .auth-field input { font-size: 16px !important; padding: 12px 14px !important; }
+  .auth-btn { font-size: 16px; padding: 14px; }
+  /* OAuth Google button — bigger tap target */
+  .auth-oauth { padding: 12px 14px !important; font-size: 14.5px !important; min-height: 48px; }
+}
+@media (max-width: 768px) and (max-height: 700px) {
+  /* Short landscape phones — tighten everything */
+  .auth-modal { padding-top: calc(env(safe-area-inset-top, 0px) + 12px) !important; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important; gap: 8px; }
+  .auth-features { display: none !important; }  /* hide bullets when short */
+  .auth-modal-top .auth-sub { margin-bottom: 8px; }
+}
+</style>
 <script>
 (function(){
   // ── Casual-copy deterrent. NOT a security boundary. ──────────────────────
