@@ -20186,21 +20186,24 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     _srBaseline = inp ? (inp.value || '') : '';
     if(btn) btn.classList.add('listening');
     _sr.onresult = function(ev){
-      // FIX (voice duplication): rebuild from scratch every event.
-      // Some browsers fire onresult with resultIndex=0 always, so iterating
-      // only from resultIndex AND accumulating produces N×duplicates of finals.
-      // Walk ALL results, concatenate clean each time. Idempotent.
-      var allFinal = '', interim = '';
+      // Rebuild from scratch every event (defeats duplicate-finals bug when
+      // browser fires onresult with resultIndex=0 repeatedly). Join utterance
+      // segments with explicit spaces — Chrome transcripts don't reliably
+      // include trailing whitespace.
+      var finalParts = [];
+      var interimParts = [];
       for (var i = 0; i < ev.results.length; i++) {
-        var t = ev.results[i][0].transcript;
-        if (ev.results[i].isFinal) allFinal += t;
-        else                       interim  += t;
+        var t = (ev.results[i][0].transcript || '').trim();
+        if (!t) continue;
+        if (ev.results[i].isFinal) finalParts.push(t);
+        else                       interimParts.push(t);
       }
       if (!inp) return;
-      var combined = _srBaseline;
-      if (allFinal) combined = (combined ? combined + ' ' : '') + allFinal.trim();
-      if (interim)  combined = (combined ? combined + ' ' : '') + interim;
-      inp.value = combined;
+      var parts = [];
+      if (_srBaseline) parts.push(_srBaseline.trim());
+      if (finalParts.length)   parts.push(finalParts.join(' '));
+      if (interimParts.length) parts.push(interimParts.join(' '));
+      inp.value = parts.join(' ');
       inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 240) + 'px';
     };
     _sr.onerror = function(ev){
@@ -21438,22 +21441,23 @@ body.bug-open{overflow:hidden}
     if (btn) btn.classList.add('listening');
     if (hint) { hint.textContent='● Listening… tap 🎤 again to stop.'; hint.classList.add('is-listening'); }
     _bugSR.onresult = function(ev){
-      // FIX (voice duplication): always rebuild from scratch by iterating ALL
-      // results, never just from ev.resultIndex. Some browsers reset
-      // resultIndex to 0 every event, causing N×duplicate finals when we
-      // accumulate. Use _bugSRBuffer as a fixed BASELINE only (set once when
-      // mic starts), and always recompute the full text.
-      var allFinal = '', interim = '';
+      // Idempotent rebuild — defeats duplicate-finals from browsers that fire
+      // onresult with resultIndex=0 every event. Join utterance segments with
+      // explicit spaces (Chrome transcripts don't reliably include trailing ws).
+      var finalParts = [];
+      var interimParts = [];
       for (var i = 0; i < ev.results.length; i++) {
-        var t = ev.results[i][0].transcript;
-        if (ev.results[i].isFinal) allFinal += t;
-        else                       interim  += t;
+        var t = (ev.results[i][0].transcript || '').trim();
+        if (!t) continue;
+        if (ev.results[i].isFinal) finalParts.push(t);
+        else                       interimParts.push(t);
       }
       if (!ta) return;
-      var combined = _bugSRBuffer;
-      if (allFinal) combined = (combined ? combined + ' ' : '') + allFinal.trim();
-      if (interim)  combined = (combined ? combined + ' ' : '') + interim;
-      ta.value = combined;
+      var parts = [];
+      if (_bugSRBuffer) parts.push(_bugSRBuffer.trim());
+      if (finalParts.length)   parts.push(finalParts.join(' '));
+      if (interimParts.length) parts.push(interimParts.join(' '));
+      ta.value = parts.join(' ');
     };
     _bugSR.onerror = function(ev){
       console.warn('Bug-report SpeechRecognition error:', ev.error);
