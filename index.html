@@ -20162,10 +20162,11 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 
   // ─── 2. Voice-to-text on chat input ──────────────────────────────────────
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  // _srBaseline = whatever was in the input BEFORE the user started speaking.
-  // We never mutate _srBaseline during a session — we always rebuild input value
-  // as: baseline + ALL finals + current interim. Idempotent re-runs = same output.
-  var _sr = null, _srBaseline = '';
+  // VOICE-TO-TEXT STATE
+  // _srBaseline       = input value snapshot when mic turned on (immutable per session)
+  // _srAbsorbed       = Set of "i:transcript" keys we've already committed
+  // _srCommittedFinals = ordered list of finals committed during this mic session
+  var _sr = null, _srBaseline = '', _srAbsorbed = null, _srCommittedFinals = null;
   window.aiChatToggleMic = function(){
     var btn = _id('aiChatMicBtn'); var inp = _id('aiChatInput');
     if(!SR){
@@ -20182,26 +20183,39 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     _sr.lang = 'en-US';
     _sr.interimResults = true;
     _sr.continuous = true;
-    // Snapshot whatever is already in the input — we'll prepend it to all results
     _srBaseline = inp ? (inp.value || '') : '';
+    _srAbsorbed = new Set();
+    _srCommittedFinals = [];
     if(btn) btn.classList.add('listening');
     _sr.onresult = function(ev){
-      // Rebuild from scratch every event (defeats duplicate-finals bug when
-      // browser fires onresult with resultIndex=0 repeatedly). Join utterance
-      // segments with explicit spaces — Chrome transcripts don't reliably
-      // include trailing whitespace.
-      var finalParts = [];
+      // v3 fix: real browsers (especially iOS Safari) emit DUPLICATE isFinal
+      // results for the same utterance after silence-detection restarts.
+      // v2 "rebuild from scratch" added all of them. v3 dedupes by:
+      //   (a) per-index absorption: each (i, transcript) committed once
+      //   (b) consecutive-finals dedup: skip if identical to the previous commit
       var interimParts = [];
       for (var i = 0; i < ev.results.length; i++) {
         var t = (ev.results[i][0].transcript || '').trim();
         if (!t) continue;
-        if (ev.results[i].isFinal) finalParts.push(t);
-        else                       interimParts.push(t);
+        if (ev.results[i].isFinal) {
+          var key = i + ':' + t;
+          if (_srAbsorbed.has(key)) continue;
+          var last = _srCommittedFinals[_srCommittedFinals.length - 1];
+          if (last && last === t) {
+            _srAbsorbed.add(key);  // mark seen so we don't re-evaluate
+            continue;
+          }
+          _srAbsorbed.add(key);
+          _srCommittedFinals.push(t);
+        } else {
+          interimParts.push(t);
+        }
       }
       if (!inp) return;
+      // Display = baseline + committed-finals + current interim
       var parts = [];
       if (_srBaseline) parts.push(_srBaseline.trim());
-      if (finalParts.length)   parts.push(finalParts.join(' '));
+      if (_srCommittedFinals.length) parts.push(_srCommittedFinals.join(' '));
       if (interimParts.length) parts.push(interimParts.join(' '));
       inp.value = parts.join(' ');
       inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 240) + 'px';
@@ -21417,8 +21431,8 @@ body.bug-open{overflow:hidden}
     tog.textContent = (open ? '▸' : '▾') + ' Diagnostic info attached (browser, panel, viewport)';
   };
 
-  // ── Voice-to-text (mirrors aiChatToggleMic) ───────────────────────────────
-  var _bugSR = null, _bugSRBuffer = '';
+  // ── Voice-to-text (v3: dedupe duplicate finals from silence-restart) ────
+  var _bugSR = null, _bugSRBuffer = '', _bugSRAbsorbed = null, _bugSRCommittedFinals = null;
   window.bugReportToggleMic = function(){
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     var btn = _id('bugMicBtn'); var ta = _id('bugDesc'); var hint = _id('bugMicHint');
@@ -21438,24 +21452,37 @@ body.bug-open{overflow:hidden}
     _bugSR.interimResults = true;
     _bugSR.continuous = true;
     _bugSRBuffer = ta ? (ta.value || '') : '';
+    _bugSRAbsorbed = new Set();
+    _bugSRCommittedFinals = [];
     if (btn) btn.classList.add('listening');
     if (hint) { hint.textContent='● Listening… tap 🎤 again to stop.'; hint.classList.add('is-listening'); }
     _bugSR.onresult = function(ev){
-      // Idempotent rebuild — defeats duplicate-finals from browsers that fire
-      // onresult with resultIndex=0 every event. Join utterance segments with
-      // explicit spaces (Chrome transcripts don't reliably include trailing ws).
-      var finalParts = [];
+      // v3 fix: iOS Safari + some Chromium builds emit duplicate isFinal
+      // results for the same utterance after silence-detection restarts.
+      // Dedupe via (a) per-(index,text) absorption set and (b) skip if a new
+      // final is identical to the immediately-previous committed one.
       var interimParts = [];
       for (var i = 0; i < ev.results.length; i++) {
         var t = (ev.results[i][0].transcript || '').trim();
         if (!t) continue;
-        if (ev.results[i].isFinal) finalParts.push(t);
-        else                       interimParts.push(t);
+        if (ev.results[i].isFinal) {
+          var key = i + ':' + t;
+          if (_bugSRAbsorbed.has(key)) continue;
+          var last = _bugSRCommittedFinals[_bugSRCommittedFinals.length - 1];
+          if (last && last === t) {
+            _bugSRAbsorbed.add(key);
+            continue;
+          }
+          _bugSRAbsorbed.add(key);
+          _bugSRCommittedFinals.push(t);
+        } else {
+          interimParts.push(t);
+        }
       }
       if (!ta) return;
       var parts = [];
       if (_bugSRBuffer) parts.push(_bugSRBuffer.trim());
-      if (finalParts.length)   parts.push(finalParts.join(' '));
+      if (_bugSRCommittedFinals.length) parts.push(_bugSRCommittedFinals.join(' '));
       if (interimParts.length) parts.push(interimParts.join(' '));
       ta.value = parts.join(' ');
     };
