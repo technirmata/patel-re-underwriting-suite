@@ -41,6 +41,13 @@
   try{localStorage.removeItem('__pageDiagErrs');}catch(_){}
 })();
 </script>
+<!-- Preconnect hints: open DNS+TLS to CDN + Supabase early so when defer scripts
+     and authInit's first XHR fire, the connection is already warm. Saves ~100-400ms
+     of round-trips on cold loads, especially on cellular. -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://ykcvmlhpfnruucsgcxhd.supabase.co" crossorigin>
+<link rel="dns-prefetch" href="https://api.resend.com">
 <!-- supabase-js: kept sync because authInit fires immediately and needs it -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- All other heavy libs: defer (download in parallel, execute before DCL, do not
