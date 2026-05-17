@@ -82,14 +82,14 @@ img { display:block; max-width:100% }
 .bg-glow-2 { position:absolute; right:-20%; top:25vh; width:60vw; height:60vh; background:radial-gradient(ellipse at center, rgba(139,92,246,.18), transparent 65%); filter:blur(80px); pointer-events:none; z-index:0 }
 
 /* ── nav ── */
-.nav { position:sticky; top:0; z-index:50; background:rgba(7,10,18,.7); backdrop-filter:saturate(150%) blur(14px); border-bottom:1px solid rgba(255,255,255,.05) }
-.nav-inner { display:flex; align-items:center; gap:16px; padding:14px 24px; max-width:var(--max); margin:0 auto }
+.nav { position:sticky; top:0; z-index:50; background:rgba(7,10,18,.7); backdrop-filter:saturate(150%) blur(14px); border-bottom:1px solid rgba(255,255,255,.05); padding-top:env(safe-area-inset-top,0px) }
+.nav-inner { display:flex; align-items:center; gap:16px; padding:14px 24px; max-width:var(--max); margin:0 auto; padding-left:max(24px, env(safe-area-inset-left)); padding-right:max(24px, env(safe-area-inset-right)) }
 .brand { display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:-.2px; font-size:15px; color:var(--text); flex:1 }
 .brand .bolt { width:28px; height:28px; border-radius:8px; background:var(--gradient); display:flex; align-items:center; justify-content:center; font-size:14px; box-shadow:0 6px 18px rgba(99,102,241,.45) }
 .nav-cta { display:flex; gap:8px; align-items:center }
 .nav-link { color:var(--text2); font-size:14.5px; font-weight:600; padding:9px 13px; border-radius:8px }
 .nav-link:hover { color:var(--text); background:rgba(255,255,255,.04) }
-.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:inherit; font-size:15px; font-weight:700; padding:12px 20px; border-radius:10px; border:1px solid transparent; cursor:pointer; transition:.15s; text-decoration:none; white-space:nowrap }
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:inherit; font-size:15px; font-weight:700; padding:12px 20px; border-radius:10px; border:1px solid transparent; cursor:pointer; transition:.15s; text-decoration:none; white-space:nowrap; min-height:44px }
 .btn-primary { background:var(--gradient); color:#fff; box-shadow:0 8px 24px rgba(99,102,241,.35) }
 .btn-primary:hover { filter:brightness(1.1); transform:translateY(-1px); color:#fff }
 .btn-ghost { background:transparent; color:var(--text); border-color:var(--border) }
@@ -523,6 +523,118 @@ img { display:block; max-width:100% }
   a:focus-visible, button:focus-visible, summary:focus-visible, .btn:focus-visible {
     outline:2px solid var(--accent); outline-offset:2px;
   }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   STRUCTURAL MOBILE PATCH v2 — Fixes layered ON TOP of all prior rules.
+   Targets: iPhone SE (375), iPhone 14 Pro (390), Pixel (412), iPad (768).
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Global: prevent any container from overflowing viewport */
+.container, .hero-grid, .bento, .steps, .problem-grid, .faq-list, .price-card,
+.mockup-body, .mock-grid { min-width:0 }
+.bento-card, .step, .problem-card, .faq-item, .price-card { min-width:0; overflow-wrap:break-word; word-wrap:break-word }
+.bento-card h3, .step h3, .problem-card h3, .faq-item summary,
+.price-list li, .price-trial { overflow-wrap:break-word; word-wrap:break-word; hyphens:auto }
+
+/* Hero text breaking on narrow viewports */
+.hero h1, .sec h2, .cta-band h2 { overflow-wrap:break-word; word-wrap:break-word; hyphens:auto }
+
+/* Ensure tap targets are 44px+ everywhere on mobile */
+@media (max-width:768px) {
+  .btn, .nav-link, .faq-item summary { min-height:44px }
+  .nav-link { display:flex !important; align-items:center }
+
+  /* HERO — visual order: heading → lede → CTA → microcopy → mockup AT BOTTOM */
+  .hero-grid { display:flex; flex-direction:column }
+  .hero-grid > div:first-child { order:1 }
+  .hero-grid > .hero-mockup { order:2 }
+
+  /* CTA stack at narrow viewports — full width prevents cramped 50/50 split */
+  .hero-cta { flex-direction:column; gap:10px; width:100% }
+  .hero-cta .btn, .hero-cta .btn-lg { width:100%; flex:0 0 auto; min-height:48px; font-size:16px }
+
+  /* All CTA buttons get min 16px font-size to prevent iOS zoom on tap (iOS rule) */
+  .btn-lg, .btn-primary, .btn-ghost, .price-card .btn, .cta-band .btn,
+  .mobile-cta .btn { font-size:16px; min-height:48px }
+
+  /* Pricing card full-width, safe padding */
+  .price-card { max-width:100%; margin:0; box-sizing:border-box }
+  .price-card .btn { width:100%; padding:16px; font-size:16px; min-height:48px }
+
+  /* Trust pills don't cause horizontal overflow */
+  .trust-row { padding:0 6px }
+  .trust-pill { max-width:100%; white-space:normal; text-align:center; line-height:1.35 }
+
+  /* Comparison table — clearer scroll affordance, prevent overflow horizontally on container */
+  .sec > .container > div[style*="overflow-x:auto"] { max-width:100%; box-sizing:border-box }
+
+  /* iMessage cards full-width single column on narrow */
+  .sec > .container > div[style*="auto-fit,minmax(310px"] {
+    grid-template-columns:1fr !important;
+  }
+
+  /* CTA band heading doesn't break with <br> awkwardly */
+  .cta-band h2 br { display:none }
+
+  /* Footer security row pills wrap cleanly */
+  .footer > .container > div[style*="border-bottom:1px solid var(--border)"]:first-child > span {
+    flex:1 1 100%; justify-content:flex-start
+  }
+}
+
+/* Phone (≤480) — single-column everywhere, max safety */
+@media (max-width:480px) {
+  /* Heading clamps prevent text from blowing layout */
+  .hero h1 { font-size:clamp(26px, 7.6vw, 34px); line-height:1.12 }
+  .sec h2 { font-size:clamp(22px, 6.2vw, 28px); line-height:1.18 }
+  .cta-band h2 { font-size:clamp(22px, 6.4vw, 28px); line-height:1.18 }
+
+  /* Hero microcopy stacks vertically on phone */
+  .hero-microcopy { flex-direction:column; align-items:flex-start; gap:6px }
+  .hero-microcopy .dot-sep { display:none }
+
+  /* Asset class chips clean spacing, full-width row of pills */
+  section > .container > div[style*="display:flex"][style*="flex-wrap:wrap"] {
+    gap:6px !important; padding:0 4px
+  }
+
+  /* SVG hex grid: prevent crushed labels by hiding text below visible threshold */
+  .sec svg[aria-label*="13 financing strategies"] { aspect-ratio:920/460; height:auto !important }
+
+  /* Pricing list left-aligned, no awkward indent */
+  .price-list li { padding-right:4px }
+
+  /* FAQ summary tap target — generous on phone */
+  .faq-item summary { padding:18px 14px; min-height:52px; line-height:1.35 }
+  .faq-item summary::after { font-size:24px; line-height:1; flex-shrink:0 }
+  .faq-item .answer { font-size:14.5px; line-height:1.6 }
+
+  /* Sticky mobile CTA — safer padding + clear separation from footer */
+  .mobile-cta { padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));
+    padding-left:max(14px, env(safe-area-inset-left));
+    padding-right:max(14px, env(safe-area-inset-right)) }
+  .mobile-cta .btn { padding:14px; font-size:16px; min-height:50px; font-weight:700 }
+}
+
+/* iPhone SE & smallest (≤360) — extra-tight, no overflow */
+@media (max-width:360px) {
+  .container { padding:0 12px }
+  .hero h1 { font-size:24px; line-height:1.12 }
+  .sec h2 { font-size:21px }
+  .price-amount .num { font-size:36px }
+  .hero-cta .btn, .hero-cta .btn-lg { font-size:15.5px; padding:12px 14px }
+  .mobile-cta .btn { font-size:15.5px }
+  /* Comparison table: smaller min-width so less horizontal scroll */
+  .sec > .container > div[style*="overflow-x:auto"] table { min-width:420px }
+}
+
+/* Tablet (481-768) — bento can be 2-col, no need for forced single */
+@media (min-width:481px) and (max-width:768px) {
+  .bento { grid-template-columns:repeat(2,1fr) }
+  .b-wide, .b-narrow, .b-half { grid-column:span 2 }
+  .hero-cta { flex-direction:row; gap:12px }
+  .hero-cta .btn { width:auto; flex:1 1 0 }
 }
 
 </style>
