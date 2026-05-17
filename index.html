@@ -23247,6 +23247,42 @@ body.modal-open .ai-fab {
 
 /* ─── /CHAT MOBILE v2 ─── */
 /* ╰── /chat.css ──╯ */
+
+/* ── PANELS v2.1 follow-up (post-QA) ── */
+/* Panel 11 (Markets/Comp) had select#pn_template overflowing at 517px.
+   Force any select inside the comp panel + workspace member panel to fit. */
+@media (max-width: 768px){
+  #panel11 select,
+  #panel11 .wm-role-select,
+  select.wm-role-select,
+  #pn_template{
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+  }
+  /* Any element that still tries to be wider than the panel — clip it. */
+  #panel11{
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+  #panel11 *{
+    max-width: 100% !important;
+  }
+  /* Workspace member admin grid: stack rows on phone */
+  #panel11 .wm-grid,
+  #panel11 .wm-row{
+    display: block !important;
+    width: 100% !important;
+  }
+  #panel11 .wm-grid > *,
+  #panel11 .wm-row > *{
+    width: 100% !important;
+    margin-bottom: 6px !important;
+  }
+}
+
 </style>
 <!-- ════════ MOBILE PATCHES BUNDLE v2 — end ════════ -->
 <script>
