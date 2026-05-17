@@ -23498,41 +23498,7 @@ body.modal-open .ai-fab {
 
 /* The existing rule `body.ai-chat-open #mTabBar { display:none }` (line 124) is
    now a no-op on phones because mTabBar itself is display:none. Harmless to keep. */
-
-
-/* ── v2.5.3 (2026-05-17): Hide AI FAB entirely on form-heavy panels ────────
-   User reported "deal assistant is there in different tabs like LOI / Exec".
-   These panels are 100% form inputs — the chat button hovering on them is
-   noise. Use :has() to detect when an .active panel is a form-heavy one
-   and remove BOTH FABs. Dashboard / Brain still have the FABs available. */
-@media (max-width: 768px){
-  /* Form-heavy panels: LOI Builder (panel6), Exec Report (panel7),
-     Strategy Agents (panel9), Admin (panel17), Sub2 (panel8), Brain (panel16) */
-  body:has(#panel6.active) .ai-fab,
-  body:has(#panel6.active) #aiFab,
-  body:has(#panel7.active) .ai-fab,
-  body:has(#panel7.active) #aiFab,
-  body:has(#panel9.active) .ai-fab,
-  body:has(#panel9.active) #aiFab,
-  body:has(#panel17.active) .ai-fab,
-  body:has(#panel17.active) #aiFab{
-    display: none !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-  }
-  /* Likewise hide the bug FAB on those form-heavy panels to reduce noise.
-     Bug reporting still accessible via Cmd+Shift+B or user-chip dropdown. */
-  body:has(#panel6.active) .bug-fab,
-  body:has(#panel6.active) #bugFab,
-  body:has(#panel7.active) .bug-fab,
-  body:has(#panel7.active) #bugFab,
-  body:has(#panel9.active) .bug-fab,
-  body:has(#panel9.active) #bugFab,
-  body:has(#panel17.active) .bug-fab,
-  body:has(#panel17.active) #bugFab{
-    display: none !important;
-  }
-}
+/* v2.5.3 reverted — FABs stay visible everywhere; opacity/size handle UX */
 
 
 /* ── v3 panel-overflow fixes (post-audit 2026-05-17) ─────────────────────── */
