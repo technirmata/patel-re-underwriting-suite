@@ -20208,6 +20208,12 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
           _srAbsorbed.add(key);
           _srCommittedFinals.push(t);
         } else {
+          // Also dedupe interim against the last committed final — prevents
+          // transient "hello world hello world" display during silence-restart
+          // recognition window before the duplicate gets dropped by the final
+          // dedup pass.
+          var lastFinalInterim = _srCommittedFinals[_srCommittedFinals.length - 1];
+          if (lastFinalInterim && lastFinalInterim === t) continue;
           interimParts.push(t);
         }
       }
@@ -21476,6 +21482,9 @@ body.bug-open{overflow:hidden}
           _bugSRAbsorbed.add(key);
           _bugSRCommittedFinals.push(t);
         } else {
+          // Dedupe interim against last committed final (silence-restart artifact)
+          var lastFinalInterim = _bugSRCommittedFinals[_bugSRCommittedFinals.length - 1];
+          if (lastFinalInterim && lastFinalInterim === t) continue;
           interimParts.push(t);
         }
       }
