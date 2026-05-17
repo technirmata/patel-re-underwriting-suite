@@ -5178,7 +5178,7 @@ function syncCalcFromIntake(sub) {
   const price    = Math.round(s.price);
   const arv      = Math.round(gv('pur_arv') || s.price);
   const downAmt  = s.down > 0 ? Math.round(s.down) : Math.round(s.price * 0.20);
-  const downPct  = Math.round(s.down > 0 ? (s.down / s.price * 100) : 20);
+  const downPct  = Math.round((s.down > 0 && s.price > 0) ? (s.down / s.price * 100) : 20);  // guard div-by-zero (audit-reliability #3)
   const rent     = s.grossRent > 0 ? Math.round(s.grossRent / 12) : 0;
   const exp      = s.totalExp  > 0 ? Math.round(s.totalExp  / 12) : 0;
   const close    = s.close > 0 ? Math.round(s.close) : 0;
@@ -7799,14 +7799,7 @@ function downloadLOI_doc() {
   URL.revokeObjectURL(url);
 }
 
-function buildLOI_old() { /* retired — kept as stub to avoid reference errors */
-  const buyer   = gvs('loi_buyer')||'[Buyer Name]';
-  const notes   = '';
-
-  /* stub body - functionality moved to buildLOI() */
-  void buyer; void notes;
-}
-
+// (removed dead: buildLOI_old — audit-deadcode #5, explicit stub w/ zero callers)
 // ── Executive Summary ─────────────────────────────────────────────────────────
 function updateExec() {
   const s = S;
@@ -11130,6 +11123,28 @@ function autoFillFromResearch(r) {
 // SUPABASE CONFIG — fill in your values after creating a Supabase project
 // ══════════════════════════════════════════════════════════════════════════════
 const SUPABASE_URL  = 'https://ykcvmlhpfnruucsgcxhd.supabase.co';
+
+// ── Fetch-with-timeout helper (audit-reliability #4) ───────────────────────
+// 20s default; aborts via AbortController. Used by Stripe + Edge Function calls
+// that previously hung indefinitely on network stalls.
+async function _fetchWithTimeout(url, opts, timeoutMs) {
+  const ms = typeof timeoutMs === 'number' ? timeoutMs : 20000;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const r = await fetch(url, Object.assign({}, opts || {}, { signal: ctrl.signal }));
+    return r;
+  } catch (e) {
+    if (e && e.name === 'AbortError') {
+      const err = new Error('Request timed out after ' + (ms/1000) + 's');
+      err.code = 'TIMEOUT';
+      throw err;
+    }
+    throw e;
+  } finally {
+    clearTimeout(t);
+  }
+}
 const SUPABASE_ANON = 'sb_publishable_SgpxMN1uNPrunOvI2YspEQ_uyZJ1yK0';
 // ── Default Groq key — works out of the box, users can override in ⚙️ Settings ─
 // Embedded default Groq key removed (was revoked, returning HTTP 401). Users now must add their own key.
@@ -11220,7 +11235,16 @@ async function _sbLoadProjects(userId) {
     const { data, error } = await _sbClient().from('user_projects')
       .select('projects_json').eq('user_id', userId).maybeSingle();
     if(error) { console.warn('Supabase load error:', error.message); return null; }
-    return data?.projects_json ? JSON.parse(data.projects_json) : {};
+    if (!data?.projects_json) return {};
+    try {
+      // Surface parse failures (audit-reliability #2) — return SENTINEL not {}
+      // so caller can distinguish "no data" from "corrupted data" and skip the
+      // dangerous "overwrite cache with empty object" path.
+      return JSON.parse(data.projects_json);
+    } catch (parseErr) {
+      console.error('Supabase projects parse error — refusing to overwrite local cache:', parseErr.message);
+      return null;  // sentinel: caller MUST treat this as "do not touch cache"
+    }
   } catch(e) { console.warn('Supabase load error:', e); return null; }
 }
 
@@ -11240,7 +11264,7 @@ function _getSession() {
 function _setSession(obj) { localStorage.setItem(JP_SESSION_KEY, JSON.stringify(obj)); }
 function _clearSession() { localStorage.removeItem(JP_SESSION_KEY); }
 
-function authGetCurrentUser() { return _getSession(); }
+// (removed dead: authGetCurrentUser — audit-deadcode #1, zero callers)
 
 // ── localStorage-only fallback (when Supabase not configured) ─────────────────
 const _JP_USERS_KEY = 'jp_auth_users';
@@ -11516,12 +11540,7 @@ async function authForgotPassword() {
   }
 }
 
-function authGuest() {
-  _clearSession();
-  if(_sbOk()) _sbClient().auth.signOut().catch(()=>{});
-  _authDismiss();
-  _authUpdateTopbar();
-}
+// (removed dead: authGuest — audit-deadcode #2, zero callers)
 
 // ── GitHub OAuth ─────────────────────────────────────────────────────────
 async function authOAuthGoogle(){ return _authOAuth('google', 'email profile'); }
@@ -11551,21 +11570,8 @@ window.authOAuthGoogle = authOAuthGoogle;
 // Banner shows the count + an "Upgrade" CTA. After day 7, paywall blocks.
 // Subscription state lives in localStorage `jp_subscription_<userId>` for now,
 // flipped to "active" by Stripe webhook (deferred; key not yet provided).
-const TRIAL_DAYS = 7;
-
-function _trialDaysLeft(userCreatedAt){
-  if(!userCreatedAt) return null;
-  const start = new Date(userCreatedAt).getTime();
-  if(isNaN(start)) return null;
-  const elapsed = (Date.now() - start) / 86400000;
-  return Math.max(0, Math.ceil(TRIAL_DAYS - elapsed));
-}
-
-function _subStatus(userId){
-  if(!userId) return 'guest';
-  try { return localStorage.getItem('jp_subscription_'+userId) || 'trialing'; }
-  catch(e){ return 'trialing'; }
-}
+// (removed dead: TRIAL_DAYS const, _trialDaysLeft, _subStatus — audit-deadcode #3-6,
+//  zero callers; superseded by _fetchProfile path)
 
 // Cache the user's profile (subscription_status, is_admin, trial_ends_at) so we don't
 // re-query Supabase on every banner refresh. Re-fetched on auth-state change.
@@ -11755,7 +11761,7 @@ async function trialOpenCheckout(){
   const { data:{ session } } = await sb.auth.getSession();
   if(!session){ alert('Sign in first to subscribe.'); return; }
   try {
-    const resp = await fetch(`${SUPABASE_URL}/functions/v1/create-checkout-session`, {
+    const resp = await _fetchWithTimeout(`${SUPABASE_URL}/functions/v1/create-checkout-session`, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + session.access_token,
@@ -11787,7 +11793,7 @@ async function trialOpenBillingPortal(){
   const { data:{ session } } = await sb.auth.getSession();
   if(!session){ alert('Sign in first.'); return; }
   try {
-    const resp = await fetch(`${SUPABASE_URL}/functions/v1/customer-portal`, {
+    const resp = await _fetchWithTimeout(`${SUPABASE_URL}/functions/v1/customer-portal`, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + session.access_token,
@@ -23452,10 +23458,12 @@ body.modal-open .ai-fab {
      Uses CSS :has() — widely supported (Safari 15.4+, Chrome 105+, FF 121+).
      A simple test of `body:has(:focus)` was too broad (any focused element
      including the FAB itself would trigger). Scoping to text-entry types only. */
-  body:has(input:focus, textarea:focus, select:focus, [contenteditable="true"]:focus) .ai-fab,
-  body:has(input:focus, textarea:focus, select:focus, [contenteditable="true"]:focus) .bug-fab,
-  body:has(input:focus, textarea:focus, select:focus, [contenteditable="true"]:focus) #aiFab,
-  body:has(input:focus, textarea:focus, select:focus, [contenteditable="true"]:focus) #bugFab{
+  /* SCOPED to panel inputs only — was matching chat textarea after close,
+     leaving FAB permanently hidden (audit-visual-qa bug #1). */
+  body:has(.panel.active input:focus, .panel.active textarea:focus, .panel.active select:focus, .panel.active [contenteditable="true"]:focus) .ai-fab,
+  body:has(.panel.active input:focus, .panel.active textarea:focus, .panel.active select:focus, .panel.active [contenteditable="true"]:focus) .bug-fab,
+  body:has(.panel.active input:focus, .panel.active textarea:focus, .panel.active select:focus, .panel.active [contenteditable="true"]:focus) #aiFab,
+  body:has(.panel.active input:focus, .panel.active textarea:focus, .panel.active select:focus, .panel.active [contenteditable="true"]:focus) #bugFab{
     opacity: 0 !important;
     pointer-events: none !important;
     transform: scale(.85) !important;
@@ -23497,6 +23505,60 @@ body.modal-open .ai-fab {
   body:has(#panel17.active) .bug-fab,
   body:has(#panel17.active) #bugFab{
     display: none !important;
+  }
+}
+
+
+/* ── v3 panel-overflow fixes (post-audit 2026-05-17) ─────────────────────── */
+@media (max-width: 768px){
+  /* LOI Builder (panel6): inputs were overflowing by 28-43px on phones.
+     Pin all form rows + inputs to 100% width, box-sizing border-box. */
+  #panel6,
+  #panel6 .card,
+  #panel6 .field,
+  #panel6 .row,
+  #panel6 [style*="display:flex"]{
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #panel6 .field input,
+  #panel6 .field select,
+  #panel6 .field textarea,
+  #panel6 input:not([type="checkbox"]):not([type="radio"]),
+  #panel6 textarea,
+  #panel6 select{
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #panel6 .btn,
+  #panel6 button{
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+  }
+  /* Exec Report (panel7): section-pill nav was overflowing 300px right.
+     Wrap pills onto multiple rows OR allow horizontal scroll. */
+  #panel7 .exec-sec-nav,
+  #panel7 [style*="display:flex"]:has(.exec-sec-pill){
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  #panel7 .exec-sec-pill{
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+  }
+  #panel7,
+  #panel7 .card,
+  #panel7 .card2{
+    max-width: 100% !important;
+    overflow-x: hidden !important;
   }
 }
 
