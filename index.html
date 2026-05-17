@@ -23835,6 +23835,51 @@ body.modal-open .ai-fab {
 })();
 </script>
 
+
+<script>
+/* ─── Chat auto-close on panel switch v1 (2026-05-17) ──────────────────────
+   On phones, the AI chat takes over the full screen when open. If the user
+   switches tabs via the top tab bar without closing the chat first, the chat
+   stays fullscreen — covering every panel and looking like "the deal assistant
+   is there on LOI/Exec". Fix: wrap window.ST so it auto-closes the chat when
+   a panel switch happens AND we're on a phone-sized viewport. */
+(function(){
+  'use strict';
+  function isPhone(){ return window.matchMedia('(max-width: 768px)').matches; }
+  function chatIsOpen(){
+    var c = document.getElementById('aiChat');
+    return c && c.classList.contains('open');
+  }
+  function closeChat(){
+    if (typeof window.aiChatToggle === 'function') {
+      try { window.aiChatToggle(); } catch(_){}
+    } else {
+      var c = document.getElementById('aiChat');
+      if (c) c.classList.remove('open');
+      document.body.classList.remove('ai-chat-open');
+    }
+  }
+  function wrap(){
+    if (typeof window.ST !== 'function' || window.__STWrappedForChat) return;
+    var _origST = window.ST;
+    window.ST = function(i){
+      if (isPhone() && chatIsOpen()) {
+        // Close chat BEFORE switching panels so the new panel paints clean.
+        closeChat();
+      }
+      return _origST.apply(this, arguments);
+    };
+    window.__STWrappedForChat = true;
+  }
+  // ST is defined in the big inline script that runs synchronously before us,
+  // so it should already exist. Belt-and-suspenders: also re-wrap on DCL.
+  wrap();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wrap);
+  }
+})();
+</script>
+
 <script>
 (function(){
   // ── Casual-copy deterrent. NOT a security boundary. ──────────────────────
