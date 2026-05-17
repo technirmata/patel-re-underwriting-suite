@@ -22937,9 +22937,13 @@ body.modal-open .ai-fab {
       Existing rules use a mix of 100vh / 100dvh / 100svh — collapse to a
       deterministic order so the input row never sits below the keyboard.
    ═══════════════════════════════════════════════════════════════════════ */
+/* CRITICAL: scope full-screen takeover to .ai-chat.open ONLY.
+   The base rule (line ~1060) keeps .ai-chat display:flex but pushes it
+   off-screen via transform:translateX(100%). .open flips transform to
+   translateX(0). If we override transform without .open scope, chat sits
+   fullscreen at left:0 PERMANENTLY — hiding every panel. Was the bug. */
 @media (max-width: 768px) {
-  .ai-chat {
-    /* Full-screen — no gaps */
+  .ai-chat.open {
     position: fixed !important;
     top: 0 !important;
     right: 0 !important;
@@ -22948,25 +22952,18 @@ body.modal-open .ai-fab {
     width: 100vw !important;
     width: 100dvw !important;
     max-width: 100vw !important;
-    /* Height fallback chain — last value wins on supporting browsers */
     height: 100vh !important;
     height: 100dvh !important;
-    /* Layout */
     display: flex !important;
     flex-direction: column !important;
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    /* CRITICAL: kill the double safe-area-inset-top that comes from the
-       base mobile rule painting padding-top on BOTH .ai-chat and
-       .ai-chat-hdr — pick the header, not the container. */
     padding-top: 0 !important;
     padding-bottom: 0 !important;
-    /* iOS Safari rendering hint — promote to its own layer so scroll
-       inside .ai-chat-msgs doesn't repaint the whole tree */
-    transform: translateZ(0);
+    /* Use translateX(0) NOT translateZ — preserves slide-in semantics. */
+    transform: translateX(0) !important;
     will-change: transform;
-    /* Keep above existing chrome but BELOW the auth overlay (z-index 99999) */
     z-index: 9989 !important;
   }
 }
@@ -23218,7 +23215,7 @@ body.modal-open .ai-fab {
        Trim header padding so the messages list isn't squeezed.
    ═══════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) and (orientation: landscape) and (max-height: 500px) {
-  .ai-chat {
+  .ai-chat.open {
     height: 100vh !important;
     height: 100dvh !important;
   }
