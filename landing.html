@@ -652,6 +652,7 @@ html, body{
    overflow inside that constrained container. */
 table{
   display: block !important;
+  min-width: 0 !important;                    /* override existing min-width:680px in landing CSS */
   max-width: calc(100vw - 32px) !important;  /* viewport minus standard side padding */
   width: 100% !important;
   overflow-x: auto !important;
