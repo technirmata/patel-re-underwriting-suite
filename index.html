@@ -23562,6 +23562,33 @@ body.modal-open .ai-fab {
   }
 }
 
+
+/* ── v3.1: actual LOI culprit fix (.loi-doc 44px×2 padding) ──────────────── */
+@media (max-width: 768px){
+  /* The LOI document preview uses 44px × 52px padding to simulate paper.
+     On mobile that consumes 88-104px alone, forcing card width ~408px.
+     Reduce padding + allow text reflow. */
+  #panel6 .loi-doc{
+    padding: 20px 18px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+  #loiPreview{
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  /* Force the wrapping card to clip any descendant that still escapes */
+  #panel6 > .card{
+    overflow: hidden !important;
+  }
+}
+
 </style>
 <!-- ════════ MOBILE PATCHES BUNDLE v2 — end ════════ -->
 
