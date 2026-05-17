@@ -21500,6 +21500,1755 @@ body.bug-open{overflow:hidden}
 })();
 </script>
 
+<!-- ════════ MOBILE PATCHES BUNDLE v2 — start ════════ -->
+<style id="mobilePatchesBundleV2">
+/* ╭── nav.css ──╮ */
+/* ─── NAV MOBILE v2 ───
+   Scope: navigation chrome only (tab bar, topbar/user-chip, banners, FABs, mTabBar).
+   Author: nav-zone agent. CSS-only, additive. Targets 320/375/390/412/480/768/landscape.
+   DOES NOT touch panel content, modals, dropdown menus, chat panel, landing.
+   ──────────────────────────────────────────────────────────────── */
+
+/* =========================================================
+   1. BANNER STACK + SAFE AREA — phones/tablets up to 768px
+   ========================================================= */
+@media (max-width: 768px) {
+
+  /* Trial banner: stops being a sticky competitor with topbar.
+     Topbar is sticky top:0 z:100. Trial banner was z:101 with sticky top:0
+     causing the two to pile and push content under each other. Keep it
+     above topbar in document order, but NOT sticky on mobile — it scrolls
+     away with content (frees vertical space; user can reopen via dropdown). */
+  .trial-banner {
+    position: relative !important;
+    top: auto !important;
+    z-index: 102 !important;
+    padding: calc(6px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right))
+             6px calc(12px + env(safe-area-inset-left)) !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+  }
+  .trial-banner .trial-cta { padding: 4px 10px !important; font-size: 12px !important; }
+
+  /* Topbar: respect notch (already had inset-top), enforce predictable height. */
+  .topbar {
+    height: 52px !important;
+    min-height: 52px !important;
+    padding-top: env(safe-area-inset-top) !important;
+    padding-left: max(10px, env(safe-area-inset-left)) !important;
+    padding-right: max(10px, env(safe-area-inset-right)) !important;
+    gap: 6px !important;
+  }
+  :root { --topbar-h: 52px; }
+
+  /* Livebar: lower z and clamp height so it doesn't dominate viewport. */
+  .livebar-wrap { top: var(--topbar-h) !important; z-index: 97 !important; }
+  .livebar.livebar-compact {
+    padding-left: max(10px, env(safe-area-inset-left)) !important;
+    padding-right: max(10px, env(safe-area-inset-right)) !important;
+    min-height: 42px !important;
+  }
+}
+
+/* =========================================================
+   2. TAB BAR — horizontal scroll, no wrap, ≥44px taps, snap
+   ========================================================= */
+@media (max-width: 768px) {
+  /* Kill flex-wrap on mobile — 18+ wrapped tabs create a 4-row mega-strip
+     that eats half the screen. Force single-row horizontal scroll. */
+  .tabs {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-x: contain !important;
+    scroll-snap-type: x proximity !important;
+    padding: 0 max(8px, env(safe-area-inset-left)) 0 max(8px, env(safe-area-inset-right)) !important;
+    /* Soft right-edge fade hint so user knows it scrolls */
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 24px), transparent 100%);
+            mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 24px), transparent 100%);
+    scrollbar-width: none !important;
+  }
+  .tabs::-webkit-scrollbar { display: none !important; }
+
+  .tab {
+    flex: 0 0 auto !important;
+    min-height: 44px !important;          /* WCAG/Apple 44px tap target */
+    padding: 11px 14px !important;
+    font-size: 13px !important;
+    scroll-snap-align: start !important;
+    white-space: nowrap !important;
+  }
+  /* Active tab is visually anchored — JS already handles content switch;
+     this just makes sure the active tab gets a clearer 2-px underline. */
+  .tab.active { border-bottom-width: 3px !important; }
+}
+
+/* =========================================================
+   3. TOPBAR ACTIONS — chip can't clip, burger/files don't shove out
+   ========================================================= */
+@media (max-width: 768px) {
+  .topbar-actions {
+    gap: 5px !important;
+    flex-shrink: 0 !important;
+    max-width: 70% !important;
+    justify-content: flex-end !important;
+  }
+  .logo {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .user-chip {
+    flex-shrink: 0 !important;
+    max-width: 44vw !important;
+    padding: 3px 8px 3px 3px !important;
+    height: 36px !important;
+  }
+  .user-chip-lbl { display: none !important; }
+  .user-chip.guest { padding: 3px 12px 3px 5px !important; }
+  .user-chip.guest .user-chip-lbl {
+    display: inline !important;
+    max-width: 24vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11.5px !important;
+  }
+
+  /* "More" popover from burger — position relative to topbar inset, not right:12.
+     Prevents clip on 320px and lets safe-area pad it on landscape phones. */
+  .tb-more.open,
+  .tb-more {
+    /* Keep desktop default unless burger is open */
+  }
+  .tb-burger { min-width: 38px !important; min-height: 38px !important; }
+  .tb-files  { min-width: 38px !important; min-height: 38px !important; }
+}
+
+/* Burger popover - reposition for narrow viewports (≤480) */
+@media (max-width: 480px) {
+  .tb-more {
+    right: max(8px, env(safe-area-inset-right)) !important;
+    left:  auto !important;
+    top: calc(var(--topbar-h, 52px) + 6px) !important;
+    min-width: 180px !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+}
+
+/* =========================================================
+   4. mTabBar (mobile bottom nav) — safe-area + content offset
+   ========================================================= */
+@media (max-width: 768px) {
+  .mtabbar {
+    z-index: 98 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    padding-left:  env(safe-area-inset-left, 0px) !important;
+    padding-right: env(safe-area-inset-right, 0px) !important;
+  }
+  .mtabbar-btn { min-height: 44px !important; }
+
+  /* Add scroll padding so the last bits of panel content aren't trapped
+     under the mTabBar.  This is on the document, not on panels. */
+  body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  body.ai-chat-open { padding-bottom: 0 !important; }
+}
+
+/* =========================================================
+   5. FAB STACKING — no collisions with mTabBar or banners
+   Order: mTabBar (z98) < bug-fab (z9988) < pwaBanner (z99996) < ai-fab (z9990)
+   Visual:  bottom→top:  mTabBar | bug-fab | ai-fab | pwaBanner above all
+   ========================================================= */
+@media (max-width: 768px) {
+  /* AI FAB sits ABOVE mTabBar (64px) and clear of bug-fab on the other side */
+  .ai-fab {
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+    right:  calc(14px + env(safe-area-inset-right, 0px)) !important;
+    width: 52px !important;
+    height: 52px !important;
+  }
+
+  /* Bug FAB on the LEFT — same shelf as AI FAB so neither overlaps mTabBar */
+  .bug-fab {
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+    left:   calc(14px + env(safe-area-inset-left, 0px)) !important;
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  /* When PWA install banner is visible, lift both FABs above it.
+     PWA banner is ~64px tall at bottom: 76 + safe-area. */
+  body:has(#pwaInstallBanner.open) .ai-fab {
+    bottom: calc(146px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  body:has(#pwaInstallBanner.open) .bug-fab {
+    bottom: calc(146px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* Tiny phones (320–360) — shrink FABs slightly so they don't dominate */
+@media (max-width: 360px) {
+  .ai-fab  { width: 46px !important; height: 46px !important; font-size: 19px !important; }
+  .bug-fab { width: 40px !important; height: 40px !important; font-size: 17px !important; }
+  .topbar-actions { gap: 4px !important; }
+  .user-chip { max-width: 38vw !important; }
+}
+
+/* =========================================================
+   6. LANDSCAPE PHONES — clawback vertical, respect L/R notches
+   ========================================================= */
+@media (max-width: 932px) and (orientation: landscape) and (max-height: 500px) {
+  .topbar    { height: 44px !important; min-height: 44px !important; }
+  :root      { --topbar-h: 44px; }
+  .tab       { min-height: 40px !important; padding: 8px 12px !important; }
+  .mtabbar   { height: calc(48px + env(safe-area-inset-bottom, 0px)) !important; }
+  body       { padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)); }
+  .ai-fab    { bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
+               width: 46px !important; height: 46px !important; }
+  .bug-fab   { bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
+               width: 40px !important; height: 40px !important; }
+
+  /* Respect left/right notches on landscape iPhones (Dynamic Island etc.) */
+  .topbar,
+  .livebar.livebar-compact,
+  .tabs,
+  .trial-banner {
+    padding-left:  max(12px, env(safe-area-inset-left)) !important;
+    padding-right: max(12px, env(safe-area-inset-right)) !important;
+  }
+}
+
+/* =========================================================
+   7. PWA INSTALL BANNER — dismissible, never under notch
+   ========================================================= */
+@media (max-width: 768px) {
+  #pwaInstallBanner {
+    left: max(8px, env(safe-area-inset-left)) !important;
+    right: max(8px, env(safe-area-inset-right)) !important;
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  #pwaInstallBanner .pib-no,
+  #pwaInstallBanner .pib-yes { min-height: 36px !important; min-width: 48px !important; }
+}
+
+/* =========================================================
+   8. PRINT — kill mobile chrome
+   ========================================================= */
+@media print {
+  .mtabbar, .ai-fab, .bug-fab, #pwaInstallBanner, .trial-banner,
+  .tb-more, .tb-burger { display: none !important; }
+}
+/* ╰── /nav.css ──╯ */
+
+/* ╭── panels.css ──╮ */
+/* ─── PANELS MOBILE v2 ─── */
+/* Zone: panel content only — .panel, .panel-content, .tab-content, .panel inputs,
+   tables, chart canvases, KPI cards, Finance Calc sub-tabs, form rows.
+   Out of scope: AI Chat, modals/overlays, top nav, mTabBar, livebar, landing.
+   Strategy: additive; uses !important only when winning over inline styles.
+   Target viewports: 320 / 375 / 390 / 412 / 480 / 768.                        */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. UNIVERSAL TABLE OVERFLOW GUARD (every viewport, not just mobile)
+   Many tables are emitted inside containers without overflow wrappers.
+   Hard-wraps any orphan table in its parent's horizontal-scroll container.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.panel table {
+  max-width: 100%;
+}
+/* Re-enable horizontal scroll for inline-style wide tables (sens, proj 900px) */
+.panel div[style*="overflow-x:auto"],
+.panel div[style*="overflow-x: auto"] {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+/* Force every direct table child of a .card to be inside an overflow scroller
+   by giving the card itself horizontal-scroll behaviour for overflow content. */
+.panel .card > table,
+.panel .card2 > table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. PHONE — ≤ 480 px (covers 320, 375, 390, 412, 480)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  /* ── Panel container: edge-to-edge breathing room ─────────────────────── */
+  .panel {
+    padding: 12px 10px !important;
+    /* dvh prevents iOS Safari URL-bar from chopping the panel viewport */
+    min-height: 100dvh;
+  }
+
+  /* ── ALL inline-style grids inside panels collapse to single column ───── */
+  /* Targets every `style="...grid-template-columns:repeat(N,1fr)..."` /
+     `...grid-template-columns:Npx 1fr...` panel-level grid that the source
+     emits inline (panel6 360px 1fr, panel15 280px 1fr + repeat(5,1fr),
+     panel11 spec-calc 3-col, etc.). */
+  .panel div[style*="grid-template-columns:repeat(3"],
+  .panel div[style*="grid-template-columns: repeat(3"],
+  .panel div[style*="grid-template-columns:repeat(4"],
+  .panel div[style*="grid-template-columns: repeat(4"],
+  .panel div[style*="grid-template-columns:repeat(5"],
+  .panel div[style*="grid-template-columns: repeat(5"],
+  .panel div[style*="grid-template-columns:1fr 1fr 1fr"],
+  .panel div[style*="grid-template-columns: 1fr 1fr 1fr"],
+  .panel div[style*="grid-template-columns:1fr 1fr 1fr 1fr"],
+  .panel div[style*="grid-template-columns: 1fr 1fr 1fr 1fr"],
+  .panel div[style*="grid-template-columns:280px"],
+  .panel div[style*="grid-template-columns: 280px"],
+  .panel div[style*="grid-template-columns:360px"],
+  .panel div[style*="grid-template-columns: 360px"],
+  .panel div[style*="grid-template-columns:380px"],
+  .panel div[style*="grid-template-columns: 380px"] {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* spec-calc-row (Property-type income calculator) uses
+     `1fr 22px 1fr 22px 1fr 22px auto` — op symbols look bad stacked.
+     Stack everything; hide the math operators (×/=/etc) in the gap rows. */
+  .spec-calc-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .spec-calc-op { display: none !important; }
+  .spec-calc-result {
+    min-width: 0 !important;
+    font-size: 16px;
+  }
+
+  /* noi-3col (NOI input → arrow → NOI output) — stack arrows hidden */
+  .noi-3col {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .noi-arrow { display: none !important; }
+
+  /* ── Admin panel forms (flex + min-width: 220/200/160/140) ────────────── */
+  /* The inline `style="flex:N;min-width:Npx"` keeps email + name + role on
+     one row even at 360px viewport, overflowing right safe-area. Force
+     full-width stacking. */
+  #panel17 form .field,
+  #panel17 .field[style*="min-width"],
+  .panel form .field[style*="min-width"] {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  /* Trailing inline checkbox label + button on same flex row → wrap nicely */
+  #panel17 form > label,
+  #panel17 form > button {
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  /* ── Active Financing 5-col PITI mc grid in Dashboard ──────────────────── */
+  #dash_piti_card div[style*="grid-template-columns:repeat(5,1fr)"],
+  #dash_piti_card div[style*="grid-template-columns: repeat(5,1fr)"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ── Snowball results 4-col → 2x2 ────────────────────────────────────── */
+  #sb_results {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  /* ── KPI tiles — auto-fit floor too high at 160px on 320px screen ─────── */
+  .mx-kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+  }
+  .mx-kpi { padding: 10px 11px; }
+  .mx-kpi-label { font-size: 11px; }
+  .mx-kpi-val { font-size: 19px; }
+  .mx-kpi-sub { font-size: 11.5px; line-height: 1.35; }
+  /* On 320px viewport, force 2-col grid even if minmax doesn't trigger */
+  @media (max-width: 360px) {
+    .mx-kpi-grid { grid-template-columns: 1fr 1fr !important; }
+  }
+
+  /* ── Metric cards (.mc-grid auto-fit minmax(130)) — same problem ──────── */
+  .mc-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+    gap: 7px !important;
+  }
+  .mc { padding: 9px 7px; }
+  .mc-val { font-size: 17px; }
+  .mc-sub { font-size: 11px; }
+  .mc-label { font-size: 10.5px; }
+
+  /* ── INPUTS: prevent iOS focus-zoom (must be ≥16px) ───────────────────── */
+  /* Targets every input/select/textarea inside a panel, including the
+     emit-as-inline ones (filters, admin fields, ymo-pair). Existing source
+     covers .field — this catches the inline orphans (e.g. #adminFilter). */
+  .panel input[type="text"],
+  .panel input[type="number"],
+  .panel input[type="email"],
+  .panel input[type="password"],
+  .panel input[type="date"],
+  .panel input[type="search"],
+  .panel input[type="tel"],
+  .panel input[type="url"],
+  .panel input:not([type]),
+  .panel select,
+  .panel textarea {
+    font-size: 16px !important;
+    /* keep height proportional — don't blow up small inline inputs */
+    min-height: 38px;
+  }
+  /* Filter / search input in admin / partners — keep usable width */
+  #adminFilter {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+  /* Read-only LOI calc fields stay readable but don't trigger zoom */
+  .loi-calc-field { font-size: 14px !important; }
+
+  /* ── TABLES: ensure wrapper scrolls, body wraps long content ──────────── */
+  .amort-wrap,
+  .sens-wrap,
+  .panel div[style*="overflow-x:auto"],
+  .panel div[style*="overflow-x: auto"] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    /* visible scrollbar so users know it scrolls */
+    scrollbar-width: thin;
+    max-width: 100%;
+  }
+  .amort-wrap::-webkit-scrollbar,
+  .sens-wrap::-webkit-scrollbar { height: 4px; }
+  .amort-wrap::-webkit-scrollbar-thumb,
+  .sens-wrap::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+  /* Inline-styled wide tables (`min-width:640/900px`) inside an inline
+     overflow-x:auto wrapper — make sure the wrapper actually scrolls. */
+  .panel table[style*="min-width:640"],
+  .panel table[style*="min-width: 640"],
+  .panel table[style*="min-width:900"],
+  .panel table[style*="min-width: 900"] {
+    display: table;  /* keep table semantics */
+  }
+  /* Table text size + cell padding compact */
+  .panel table {
+    font-size: 11.5px;
+  }
+  .amort-wrap th, .amort-wrap td,
+  .proj-table th, .proj-table td,
+  .pn-table th, .pn-table td,
+  .sens-table th, .sens-table td {
+    padding: 5px 6px !important;
+    white-space: nowrap;  /* keep numeric columns aligned, scroll handles width */
+  }
+  /* First column (labels) — allow wrap so "Net Operating Income" doesn't
+     blow out the table */
+  .amort-wrap td:first-child,
+  .proj-table td:first-child,
+  .pn-table td:first-child {
+    white-space: normal;
+    word-break: break-word;
+    min-width: 70px;
+  }
+
+  /* ── Charts: prevent fixed-pixel canvases from overflowing ────────────── */
+  .chart-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .chart-card {
+    padding: 12px;
+    min-width: 0;  /* defeat default grid-item min-content sizing */
+  }
+  .chart-card canvas {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 240px;
+    min-height: 180px;
+  }
+  /* Inline-styled chart container (`style="height:240px"` on vb_chart) */
+  .panel div[style*="height:240px"] > canvas,
+  .panel div[style*="height: 240px"] > canvas {
+    max-width: 100% !important;
+  }
+  /* Generic canvas guard */
+  .panel canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* ── Finance Calc hub sub-tabs (#fcHubNav) ────────────────────────────── */
+  /* Already scrolls horizontally per source. Tighten so 5 tabs fit, label
+     icons still visible. The source hides .fc-tab-lbl at ≤768px which is
+     correct — but the wrapping container can still overflow the panel pad. */
+  .fc-hub-nav {
+    /* Allow tabs to flex-shrink correctly inside a tight panel */
+    margin-left: -2px;
+    margin-right: -2px;
+    padding: 6px;
+    /* Snap so tabs land flush, not mid-tab */
+    scroll-snap-type: x proximity;
+  }
+  .fc-hub-nav::-webkit-scrollbar { display: none; }
+  .fc-hub-tab {
+    scroll-snap-align: start;
+    min-height: 44px;  /* WCAG tap target */
+    min-width: 48px;
+    justify-content: center;
+  }
+  /* When emoji-only mode kicks in (≤768), don't let emoji collapse */
+  .fc-hub-tab > span { display: none !important; }
+  .fc-hub-tab { font-size: 18px; padding: 10px 14px; }
+
+  /* ── Calc sub-tabs (.ctabs/.ctab — Conv/Creative/Morby internal tabs) ─── */
+  /* Source has horizontal scroll already; make the tab itself a real tap
+     target and prevent label text from being clipped. */
+  .ctab {
+    min-height: 44px;
+    min-width: 60px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+  }
+  .ctabs {
+    /* Edge-bleed scroll so leading/trailing tabs don't get cut by panel pad */
+    margin-left: -10px;
+    margin-right: -10px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  /* ── Button tap targets across panels ─────────────────────────────────── */
+  .panel .btn { min-height: 40px; }
+  .panel .btn-sm { min-height: 36px; padding: 7px 12px; }
+  .panel .goto-btn { min-height: 40px; padding: 9px 16px; }
+  /* Tiny inline buttons (sync, close X, etc.) */
+  .panel button[style*="padding:3px"],
+  .panel button[style*="padding: 3px"],
+  .panel button[style*="padding:2px"],
+  .panel button[style*="padding: 2px"] {
+    min-height: 32px;
+    min-width: 32px;
+    padding: 6px 10px !important;
+  }
+  .pn-row-rm { min-width: 36px; min-height: 36px; }
+
+  /* ── Forms: long labels, dual rows, etc. ──────────────────────────────── */
+  .field label {
+    word-break: break-word;
+    line-height: 1.35;
+  }
+  /* dual-wrap (% + $ input) at 320px — keep on one row but allow narrower % */
+  .dual-wrap { gap: 4px; flex-wrap: wrap; }
+  .dual-pct {
+    max-width: 64px !important;
+    flex: 0 0 64px !important;
+  }
+  .dual-or { display: none; }  /* hide "or" separator to save space */
+
+  /* Field rows where the source uses display:flex on .label (e.g. LOI sync) */
+  .field label[style*="display:flex"],
+  .field label[style*="display: flex"] {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* ── Card spacing tighter, but never collapse to invisible ────────────── */
+  .panel .card { padding: 12px 11px; margin-bottom: 12px; }
+  .panel .card2 { padding: 10px 9px; }
+  .panel .card-title { font-size: 12px; margin-bottom: 10px; gap: 5px; }
+
+  /* ── Section divider (sec-title) — readable, not chopped ──────────────── */
+  .sec-title { font-size: 11.5px; margin: 14px 0 8px; }
+
+  /* ── Rec cards (Best Strategy panel) — auto-fit floor too high ────────── */
+  .rec-cards {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .rec-card { padding: 14px 12px; }
+  .rec-name { font-size: 15px; }
+
+  /* ── Highlight box and gonogo (Dashboard verdict) — tighten ───────────── */
+  .gonogo { font-size: 15px; padding: 12px 14px; }
+  .highlight-box { padding: 11px; }
+
+  /* ── Safe-area-right: kill the eaten edge in landscape iPhones ────────── */
+  .panel {
+    padding-right: max(10px, env(safe-area-inset-right, 10px)) !important;
+    padding-left:  max(10px, env(safe-area-inset-left, 10px)) !important;
+  }
+
+  /* ── Drop-zone (file upload inside panels) — bigger tap area ──────────── */
+  .drop-zone { padding: 20px 14px; }
+  .drop-zone-icon { font-size: 24px; }
+  .drop-zone-text { font-size: 12.5px; }
+
+  /* ── Long label-only rows wrap (scr-row, sum-row, fin-sumrow) ─────────── */
+  .scr-row, .sum-row, .fin-sumrow {
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+  .scr-label { flex: 1 1 100%; }
+  .scr-val   { text-align: left; min-width: 0; }
+
+  /* Morby hero flow — already wraps but boxes can shrink too small */
+  .morby-flow { gap: 8px; }
+  .morby-box { min-width: 0; flex: 1 1 130px; padding: 10px 12px; }
+  .morby-box-val { font-size: 17px; }
+  .morby-op { font-size: 18px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. TABLET — 481-768 px (in-between zone iPad mini portrait, large phones land)
+   The desktop styles look cramped here; the source already handles ≤768
+   for the .panel padding but inline grids still misbehave.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 481px) and (max-width: 768px) {
+  /* Inline 4-col / 5-col / 3-col grids → 2-col (don't stack everything) */
+  .panel div[style*="grid-template-columns:repeat(4"],
+  .panel div[style*="grid-template-columns: repeat(4"],
+  .panel div[style*="grid-template-columns:repeat(5"],
+  .panel div[style*="grid-template-columns: repeat(5"],
+  .panel div[style*="grid-template-columns:1fr 1fr 1fr 1fr"],
+  .panel div[style*="grid-template-columns: 1fr 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  /* 360px/280px 1fr left-rail layouts (panel6 LOI, panel15 snowball) — stack */
+  .panel div[style*="grid-template-columns:280px"],
+  .panel div[style*="grid-template-columns: 280px"],
+  .panel div[style*="grid-template-columns:360px"],
+  .panel div[style*="grid-template-columns: 360px"],
+  .panel div[style*="grid-template-columns:380px"],
+  .panel div[style*="grid-template-columns: 380px"] {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  /* Chart canvases — keep responsive */
+  .chart-card canvas { max-height: 260px; height: auto !important; max-width: 100% !important; }
+  /* KPI tiles — tighter floor */
+  .mx-kpi-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  /* Snowball results 2x2 */
+  #sb_results { grid-template-columns: 1fr 1fr !important; }
+  /* Admin form inputs stay multi-col but cap minwidth lower */
+  .panel form .field[style*="min-width:220"] { min-width: 180px !important; }
+  .panel form .field[style*="min-width:200"] { min-width: 160px !important; }
+
+  /* Tables: prevent text shrink below readable threshold */
+  .panel table { font-size: 12.5px; }
+  /* Sub-tabs in finance calc — keep label visible on tablet */
+  .fc-hub-tab > .fc-tab-lbl { display: inline !important; }
+  .fc-hub-tab { min-height: 42px; }
+  .ctab { min-height: 40px; }
+
+  /* Inputs anti-zoom */
+  .panel input, .panel select, .panel textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   4. ULTRA-NARROW PHONES (≤ 360 px — Galaxy S8/S9 portrait, foldable cover)
+   Source covers 240-300px; this fills the 301-360 gap.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 360px) {
+  .panel { padding: 10px 8px !important; }
+  .panel .card { padding: 10px 9px; }
+  /* KPI tiles: hard 2-col, smaller font */
+  .mx-kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 6px; }
+  .mx-kpi-val { font-size: 17px; }
+  .mc-grid { grid-template-columns: 1fr 1fr !important; }
+  /* Snowball results 1-col — too cramped for 2-col at this width */
+  #sb_results { grid-template-columns: 1fr !important; }
+  /* PITI 5-col → 1-col here */
+  #dash_piti_card div[style*="grid-template-columns:repeat(5"],
+  #dash_piti_card div[style*="grid-template-columns: repeat(5"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* Hide non-essential decorations in finance hub */
+  .fc-hub-tab { padding: 9px 12px; font-size: 16px; }
+  /* Tables font shrink (still readable, scroll preserved) */
+  .panel table { font-size: 10.5px; }
+  .amort-wrap th, .amort-wrap td,
+  .proj-table th, .proj-table td,
+  .pn-table th, .pn-table td { padding: 4px 5px !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   5. NUMERIC INPUT KEYBOARD UX (no inputmode in source — CSS can't add it,
+   but we can guarantee that number inputs accept numeric input naturally
+   by sizing them right + by guarding against `type="text"` numeric fields
+   getting alpha-keyboard).
+   This block exists for documentation; the real fix needs an HTML edit
+   to add inputmode="decimal". Listed in panels.md risk notes.
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* (intentionally empty — see panels.md risk notes) */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   6. LANDSCAPE PHONES — keep content above mobile tab bar
+   The source mTabBar is 52-60px tall. Add bottom padding to panel so the
+   user can scroll past the last card without it being trapped under the bar.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .panel.active {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   7. DEFENSIVE: any `<div style="...flex...min-width:160-220px">` form group
+   should NEVER cause a horizontal page scroll. Force shrink past their
+   declared min-width on phone. (Targets admin panel inline-styled rows.)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .panel [style*="min-width:140"],
+  .panel [style*="min-width: 140"],
+  .panel [style*="min-width:160"],
+  .panel [style*="min-width: 160"],
+  .panel [style*="min-width:180"],
+  .panel [style*="min-width: 180"],
+  .panel [style*="min-width:200"],
+  .panel [style*="min-width: 200"],
+  .panel [style*="min-width:220"],
+  .panel [style*="min-width: 220"] {
+    min-width: 0 !important;
+  }
+  /* Inline tables with min-width:640/900px keep their width but the wrapper
+     div they live in actually scrolls instead of pushing the page wider. */
+  .panel table[style*="min-width:640"],
+  .panel table[style*="min-width: 640"] { min-width: 540px; }
+  .panel table[style*="min-width:900"],
+  .panel table[style*="min-width: 900"] { min-width: 720px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   8. Final guard: no panel content should overflow the viewport horizontally.
+   This catches inline-styled wide content that escapes earlier rules.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .panel,
+  .panel > div,
+  .panel .card,
+  .panel .card2 {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+}
+
+/* ─── END PANELS MOBILE v2 ─── */
+/* ╰── /panels.css ──╯ */
+
+/* ╭── modals.css ──╮ */
+/* ─── MODALS MOBILE v2 ─── */
+/* Zone: all modals/overlays (auth, referral, save-as, project, bug-report,
+   teams/workspaces, user-chip dropdown, teams popup).
+   Structural focus: centering, scroll containment, safe-area, tap targets,
+   iOS-no-zoom inputs, z-index sanity, stack containment, viewport units.
+   Additive only. No source HTML edits. Applies at <=768px primarily,
+   with extra tightening at 480 and 375. */
+
+/* ══════════════════════════════════════════════════════════════════════
+   Z-INDEX MAP (consolidated, prevents collisions)
+   bootSplash:    1000000 (untouched)
+   bug-overlay:   100002 (top — must beat auth)
+   auth-overlay:   99998
+   tmPopup:        10002
+   tm-overlay:     10003 -> 99996 (was below modal-overlay; promote so it
+                   sits above panel chrome but below bug-overlay)
+   refOv:          99997 (was original; bump above msheet, below auth)
+   saveAsOverlay: 100000 (lazy-built; outranks auth so save can show over login modal)
+   user-menu:        200 (positioned dropdown — fine)
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Global modal scaffolding (applies to every overlay regardless of vp) ─ */
+.auth-overlay,
+.refOv,
+.bug-overlay,
+.tm-overlay,
+#tmPopup,
+#saveAsOverlay,
+.proj-modal-overlay,
+.modal-overlay,
+.settings-overlay,
+#settingsOverlay {
+  /* Use dynamic viewport units everywhere to dodge mobile browser-chrome
+     resize jitter (iOS Safari URL bar collapse/expand). */
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+/* Lock body scroll while ANY of these modal-state classes are set.
+   The page already toggles body.auth-locked and body.bug-open;
+   add safe defaults for the others. position:fixed approach is the
+   only reliable way to stop iOS rubber-band scroll behind the modal. */
+body.bug-open,
+body.auth-locked,
+body.ref-open,
+body.modal-open {
+  overflow: hidden !important;
+  /* Belt-and-suspenders for iOS — touch-action stops momentum scroll
+     from leaking past the overlay. */
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   PHONE (≤768px) — restructured modals
+   ══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ────────────────────────────────────────────────────────────────────
+     AUTH MODAL — keep fullscreen sheet from existing patch but FIX
+     the structural bugs: clipping under safe-area-inset-top, lost
+     scroll-y inside, animation breaking position:fixed on iOS.
+     ──────────────────────────────────────────────────────────────────── */
+  .auth-overlay {
+    /* Existing rule sets padding:0 + align-items:stretch.
+       Re-assert with dynamic vh so the modal never clips top notch. */
+    padding: 0 !important;
+    align-items: stretch !important;
+    /* svh stops the modal from shrinking when virtual keyboard opens
+       (which used to crop the Submit button). */
+    height: 100vh;
+    height: 100svh;
+    /* Belt-and-suspenders: allow modal-internal scroll if it overflows. */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Stop the conic-gradient ::before/::after from rendering off-screen
+       and creating phantom scroll. */
+  }
+  .auth-overlay::before,
+  .auth-overlay::after {
+    /* On phone, decorative bg animations are pointless and burn battery.
+       Killing them also stops a known iOS Safari paint-jank bug that
+       caused the modal to visibly drift on input focus. */
+    animation: none !important;
+    display: none !important;
+  }
+  .auth-modal {
+    /* Override existing rule: change to a centered viewport-fit card,
+       NOT a full-bleed sheet — Parth reported "stuck to top" before. */
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh !important;
+    height: 100svh !important;
+    max-height: 100svh !important;
+    border-radius: 0 !important;
+    /* Stack the inner sections in a flex column so scroll happens INSIDE
+       not on body. */
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    /* Honor BOTH top and bottom safe-area insets (top was missing). */
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    /* Disable transform/animation on iOS — `transform` containing-block
+       weirdness has bitten this app before (FAB bug). */
+    animation: none !important;
+    transform: none !important;
+  }
+  /* iOS no-zoom inputs (16px is the magic threshold) — reaffirm even
+     stronger so any later cascade can't undo it. */
+  .auth-field input,
+  .auth-field select,
+  .auth-field textarea {
+    font-size: 16px !important;
+    /* 44px min tap target per Apple HIG. */
+    min-height: 44px;
+    padding: 12px 14px;
+  }
+  /* Auth tabs: make them taller for tap, and prevent the row from
+     becoming a horizontal scroll trap. */
+  .auth-tab {
+    min-height: 44px;
+    padding: 12px 8px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ────────────────────────────────────────────────────────────────────
+     REFERRAL MODAL — convert to bottom sheet, fix scroll
+     ──────────────────────────────────────────────────────────────────── */
+  .refOv {
+    padding: 0 !important;
+    align-items: flex-end !important;
+    z-index: 99997;
+    overflow: hidden;
+    /* Lock the overlay layer; modal scrolls internally. */
+  }
+  .refMod {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: 92vh !important;
+    max-height: 92svh !important;
+    border-radius: 18px 18px 0 0 !important;
+    padding: 22px 18px calc(22px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    /* Pull-tab affordance */
+    position: relative;
+  }
+  .refMod::before {
+    content: '';
+    display: block;
+    width: 40px; height: 4px;
+    background: var(--border, #2e3352);
+    border-radius: 2px;
+    margin: -8px auto 12px;
+  }
+  .refMod .refClose {
+    /* 44x44 tap target — was 22px font-size button only. */
+    width: 44px !important;
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    top: 6px !important;
+    right: 8px !important;
+    font-size: 22px;
+    border-radius: 10px;
+  }
+  /* Stack referral stats vertically on tightest viewport. */
+  .refStats { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* ────────────────────────────────────────────────────────────────────
+     BUG-REPORT MODAL — center properly, prevent overflow clip,
+     fix mic button reach.
+     ──────────────────────────────────────────────────────────────────── */
+  .bug-overlay {
+    padding: 16px !important;
+    /* Was align-items:flex-start with 48px padding — that caused the
+       close button to clip the top safe-area on iPhone with notch.
+       Center on phone so it's reachable without scroll. */
+    align-items: flex-start !important;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 16px) !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px) !important;
+    /* Make overlay itself scrollable in case modal is taller than vh
+       (long bug-description + ctx blob + status). */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: 100002;
+  }
+  .bug-modal {
+    width: 100% !important;
+    max-width: 560px !important;
+    margin: 0 auto;
+    /* Cap height so on tiny phones the modal still has air. */
+    max-height: calc(100vh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100svh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Kill the rise animation on iOS to prevent transform creating a
+       new containing block that traps position:fixed children. */
+    animation: none !important;
+    transform: none !important;
+  }
+  .bug-modal .bug-close {
+    /* 44x44 tap target. Was 32x32. */
+    width: 44px !important;
+    height: 44px !important;
+    top: 6px !important;
+    right: 6px !important;
+    font-size: 22px;
+  }
+  /* Mic button: keep within textarea, but enlarge for thumbs. */
+  .bug-mic-btn {
+    width: 44px !important;
+    height: 44px !important;
+    bottom: 6px !important;
+    right: 6px !important;
+    font-size: 18px;
+  }
+  /* Bug action buttons: stack on phone, full-width primary on top */
+  .bug-actions {
+    flex-direction: column-reverse;
+    gap: 10px !important;
+  }
+  .bug-actions .bug-submit,
+  .bug-actions .bug-cancel {
+    width: 100%;
+    min-height: 48px;
+    padding: 14px 16px !important;
+  }
+  .bug-modal .bug-field input,
+  .bug-modal .bug-field textarea,
+  .bug-modal .bug-field select {
+    font-size: 16px !important; /* prevent iOS zoom */
+    min-height: 44px;
+  }
+  .bug-modal .bug-field textarea {
+    min-height: 140px !important;
+  }
+
+  /* ────────────────────────────────────────────────────────────────────
+     SAVE-AS OVERLAY (lazy-built) — bottom sheet, scrollable, safe-area
+     The existing 768 rules already force flex-end alignment. Add
+     stronger structural defaults + tap targets.
+     ──────────────────────────────────────────────────────────────────── */
+  #saveAsOverlay {
+    z-index: 100000 !important;
+    /* Ensure overlay scrolls if children overflow. */
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  #saveAsOverlay > div {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: 88vh !important;
+    max-height: 88svh !important;
+    border-radius: 18px 18px 0 0 !important;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  /* Save-As inputs — iOS no-zoom */
+  #saveAsOverlay input,
+  #saveAsOverlay select,
+  #saveAsOverlay textarea {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+  /* Save-As buttons */
+  #saveAsOverlay button {
+    min-height: 44px;
+  }
+
+  /* ────────────────────────────────────────────────────────────────────
+     PROJECT MODAL — currently 700px wide / 90vh; restructure for phone
+     ──────────────────────────────────────────────────────────────────── */
+  .proj-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    max-height: 100svh !important;
+    border-radius: 0 !important;
+    height: 100vh !important;
+    height: 100svh !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .proj-modal-header {
+    /* Account for safe-area on devices with top notch. */
+    padding-top: calc(16px + env(safe-area-inset-top, 0px)) !important;
+    position: sticky;
+    top: 0;
+    background: var(--surface2, #22263a);
+    z-index: 2;
+  }
+  .proj-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  /* .proj-modal-close already bumped to 40x40 in mobile.css — push to 44 */
+  .proj-modal-close {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 18px !important;
+  }
+  /* Inputs in project modal — iOS no-zoom */
+  .proj-modal-body input,
+  .proj-modal-body select,
+  .proj-modal-body textarea {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+
+  /* ────────────────────────────────────────────────────────────────────
+     TEAMS / WORKSPACES MODAL — already-bad on phone (fixed 860×600)
+     Restructure to fullscreen sheet with internal pane stacking.
+     ──────────────────────────────────────────────────────────────────── */
+  .tm-overlay {
+    padding: 0 !important;
+    z-index: 99996;
+    align-items: stretch !important;
+    overflow: hidden;
+  }
+  .tm-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    height: 100svh !important;
+    max-height: 100vh !important;
+    max-height: 100svh !important;
+    border-radius: 0 !important;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  /* Stack the two-pane layout vertically on phone */
+  .tm-body { flex-direction: column !important; }
+  .tm-pane {
+    width: 100% !important;
+    max-height: 38vh;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border, #2a2d3e);
+  }
+  .tm-detail { flex: 1; min-height: 0; }
+  .tm-close-btn {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  /* Teams forms — iOS no-zoom */
+  .tm-form-row input,
+  .tm-form-row select,
+  .tm-form-row textarea {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+  /* Teams popup (confirm dialog) — keep centered, fix tap targets */
+  #tmPopup {
+    z-index: 100001;
+    padding: 16px;
+  }
+  .tm-pop-box {
+    width: 100% !important;
+    max-width: 420px !important;
+    padding: 22px 20px calc(22px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .tm-pop-box button {
+    min-height: 44px !important;
+    padding: 12px 20px !important;
+  }
+
+  /* ────────────────────────────────────────────────────────────────────
+     USER-CHIP DROPDOWN — convert dropdown to bottom-sheet on phone
+     so it never overflows viewport-right and is reachable.
+     The existing .user-menu is position:absolute, top:calc(100% + 8px),
+     right:0, width:288px — on a 320px viewport that clips badly.
+     ──────────────────────────────────────────────────────────────────── */
+  .user-menu {
+    /* Detach from chip and full-bleed at the bottom of viewport. */
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 18px 18px 0 0 !important;
+    z-index: 99999;
+    /* Add pull-tab affordance */
+    padding-top: 8px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    max-height: 80vh;
+    max-height: 80svh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 0 -16px 40px rgba(0,0,0,.5);
+  }
+  .user-menu.open::before {
+    content: '';
+    display: block;
+    width: 40px; height: 4px;
+    background: var(--border, #2e3352);
+    border-radius: 2px;
+    margin: 0 auto 6px;
+  }
+  /* Add backdrop behind the menu (CSS-only fake via pseudo on body trick
+     is impossible — but we can darken via fixed::before alternative:
+     use a sibling block already in DOM. Skip: rely on visual contrast). */
+  .um-header {
+    padding: 14px 18px 12px !important;
+  }
+  .um-item, .um-action {
+    /* 44px min tap target across the board. */
+    min-height: 44px !important;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+  }
+  .um-section { padding: 4px 4px 2px !important; }
+
+  /* ────────────────────────────────────────────────────────────────────
+     GENERIC MODAL FALLBACK (.modal, .modal-overlay used by various
+     ad-hoc dialogs)
+     ──────────────────────────────────────────────────────────────────── */
+  .modal-overlay {
+    padding: 16px !important;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal {
+    width: 100% !important;
+    max-width: 560px !important;
+    max-height: calc(100svh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+    margin: 0 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal input,
+  .modal select,
+  .modal textarea {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+
+  /* ────────────────────────────────────────────────────────────────────
+     SETTINGS MODAL (if present) — apply same generic full-sheet rule
+     ──────────────────────────────────────────────────────────────────── */
+  #settingsOverlay,
+  .settings-overlay {
+    padding: 0 !important;
+    align-items: stretch !important;
+  }
+  #settingsOverlay > *,
+  .settings-overlay > * {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    height: 100svh !important;
+    max-height: 100svh !important;
+    border-radius: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   PHONE TIGHT (≤480px) — extra padding/font tightening
+   ══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .auth-modal-top { padding: 22px 16px 0 !important; }
+  .auth-tabs { margin: 0 16px !important; }
+  .auth-body { padding: 16px 16px 22px !important; }
+
+  .refMod { padding: 18px 14px calc(18px + env(safe-area-inset-bottom, 0px)) !important; }
+  .refStats { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+
+  .bug-modal { padding: 18px 16px 16px !important; }
+  .bug-modal h2 { font-size: 16px !important; }
+
+  .tm-pane { max-height: 32vh; }
+
+  /* User menu items slightly tighter to fit more on tiny viewports
+     without sacrificing 44px tap height. */
+  .um-item, .um-action { padding: 12px 14px !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   PHONE TINIEST (≤375px — iPhone SE / mini)
+   ══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 375px) {
+  /* On a 320×568 device, the auth modal-top + tabs eat 130px of vertical
+     space before the form. Tighten further. */
+  .auth-modal-top { padding: 18px 14px 0 !important; }
+  .auth-modal-top .auth-logo { font-size: 16px !important; }
+  .auth-tabs { margin: 0 14px !important; }
+  .auth-tab { padding: 10px 6px !important; font-size: 12px !important; }
+  .auth-body { padding: 14px 14px 18px !important; }
+  .auth-field { margin-bottom: 10px !important; }
+  .auth-field label { font-size: 11px !important; }
+
+  .refMod h2 { font-size: 18px !important; }
+  .refMod .refSub { font-size: 12px !important; margin-bottom: 14px !important; }
+  .refStats { grid-template-columns: 1fr 1fr !important; }
+  .refStat .val { font-size: 18px !important; }
+
+  .bug-modal h2 { font-size: 15px !important; }
+  .bug-modal .bug-sub { font-size: 12px !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   PHONE LANDSCAPE (≤768px landscape, short height)
+   ══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) and (orientation: landscape) and (max-height: 500px) {
+  /* In landscape on short phones the bottom-sheet pattern collapses
+     awkwardly — fall back to centered card with internal scroll. */
+  .refOv,
+  .bug-overlay,
+  .tm-overlay,
+  #saveAsOverlay {
+    align-items: center !important;
+    padding: 8px !important;
+  }
+  .refMod,
+  .bug-modal,
+  #saveAsOverlay > div {
+    max-height: 96vh !important;
+    max-height: 96svh !important;
+    border-radius: 14px !important;
+    width: min(560px, 96vw) !important;
+    max-width: 96vw !important;
+  }
+  /* Auth: keep full-bleed but compress chrome */
+  .auth-modal-top { padding: 14px 18px 0 !important; }
+  .auth-tabs { margin: 0 18px !important; }
+  .auth-body { padding: 12px 18px 16px !important; }
+
+  /* User menu: don't bottom-sheet in landscape, use a centered modal */
+  .user-menu {
+    bottom: auto !important;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translate(-50%, -50%) !important;
+    width: min(360px, 90vw) !important;
+    max-height: 90vh !important;
+    max-height: 90svh !important;
+    border-radius: 14px !important;
+  }
+  .user-menu.open::before { display: none !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TABLET PORTRAIT (769–1024px) — keep most modals centered cards
+   ══════════════════════════════════════════════════════════════════════ */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Bug modal stays centered but cap height to leave breathing room */
+  .bug-overlay { padding: 32px 24px; }
+  .bug-modal { max-width: 560px; max-height: calc(100svh - 64px); }
+
+  /* Project modal: keep at 700/96vw cap, ensure scrollable body */
+  .proj-modal { max-height: calc(100svh - 48px); }
+  .proj-modal-body { -webkit-overflow-scrolling: touch; }
+
+  /* Teams modal — slightly narrower than 860px to fit iPad portrait */
+  .tm-modal {
+    width: min(720px, 94vw);
+    max-width: 94vw;
+    height: min(620px, 90vh);
+    max-height: 90vh;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   GLOBAL SAFETY GUARDS (all viewports)
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Backdrop tap-to-dismiss visual hint — already wired in JS via
+   onclick="if(event.target===this)close...()". Make sure the overlay
+   itself is the click target (no child overlay sibling intercepts). */
+.auth-overlay,
+.refOv,
+.bug-overlay,
+.tm-overlay,
+#tmPopup,
+#saveAsOverlay,
+.modal-overlay,
+.proj-modal-overlay {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent rare iOS bug where a transformed ancestor of position:fixed
+   makes the modal disappear when the keyboard opens. Belt-and-suspenders
+   reset on all known overlays. */
+.auth-modal,
+.refMod,
+.bug-modal,
+.tm-modal,
+.tm-pop-box,
+.proj-modal,
+.modal,
+.user-menu {
+  transform: none;
+  -webkit-transform: none;
+}
+
+/* When ANY of the page-modal overlays is open, ensure the mobile
+   bottom tab bar (.mtabbar) and AI FAB (.ai-fab) do not sit on top —
+   they are below in z-index but with iOS Safari's transform layer
+   shenanigans they can render through. */
+body.bug-open .mtabbar,
+body.bug-open .ai-fab,
+body.auth-locked .mtabbar,
+body.auth-locked .ai-fab,
+body.ref-open .mtabbar,
+body.ref-open .ai-fab,
+body.modal-open .mtabbar,
+body.modal-open .ai-fab {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+/* ╰── /modals.css ──╯ */
+
+/* ╭── chat.css ──╮ */
+/* ─── CHAT MOBILE v2 ─── */
+/* Additive overrides for #aiChat / #aiFab / #aiChatBackdrop and friends.
+   Targets the AI side-panel ONLY. Other zones (modals, livebar, topbar)
+   handled by sibling patches — do not touch.
+   Viewports verified: 320 / 360 / 375 / 390 / 412 / 480 / 768.
+   Uses 100dvh + 100svh + env(keyboard-inset-height) — falls back gracefully
+   on iOS < 16 which doesn't support dvh/svh. */
+
+/* ═══════════════════════════════════════════════════════════════════════
+   1. BODY SCROLL LOCK — when chat is open on mobile, freeze the page
+      underneath so two-finger / momentum scroll can't move it.
+      Mirrors the existing body.auth-locked pattern (line 106 source).
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  body.ai-chat-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    top: 0 !important;
+    left: 0 !important;
+    /* Prevent iOS rubber-band from peeking the page through */
+    overscroll-behavior: none !important;
+    -webkit-overflow-scrolling: auto !important;
+    touch-action: none !important;
+  }
+  /* Re-enable scroll INSIDE the chat panel (which is a child of body) */
+  body.ai-chat-open #aiChat,
+  body.ai-chat-open .ai-chat-msgs {
+    touch-action: auto !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   2. PANEL GEOMETRY — full-screen takeover, viewport-aware height.
+      Existing rules use a mix of 100vh / 100dvh / 100svh — collapse to a
+      deterministic order so the input row never sits below the keyboard.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .ai-chat {
+    /* Full-screen — no gaps */
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    width: 100dvw !important;
+    max-width: 100vw !important;
+    /* Height fallback chain — last value wins on supporting browsers */
+    height: 100vh !important;
+    height: 100dvh !important;
+    /* Layout */
+    display: flex !important;
+    flex-direction: column !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    /* CRITICAL: kill the double safe-area-inset-top that comes from the
+       base mobile rule painting padding-top on BOTH .ai-chat and
+       .ai-chat-hdr — pick the header, not the container. */
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    /* iOS Safari rendering hint — promote to its own layer so scroll
+       inside .ai-chat-msgs doesn't repaint the whole tree */
+    transform: translateZ(0);
+    will-change: transform;
+    /* Keep above existing chrome but BELOW the auth overlay (z-index 99999) */
+    z-index: 9989 !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   3. HEADER — single safe-area-top inset, fixed at top, never clipped
+      by the notch. Min-height ensures the close-X is always reachable.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .ai-chat-hdr {
+    flex-shrink: 0 !important;
+    padding-top: calc(10px + env(safe-area-inset-top, 0px)) !important;
+    padding-left: calc(12px + env(safe-area-inset-left, 0px)) !important;
+    padding-right: calc(8px + env(safe-area-inset-right, 0px)) !important;
+    padding-bottom: 10px !important;
+    min-height: calc(56px + env(safe-area-inset-top, 0px)) !important;
+    /* Stay above the messages scroll on iOS momentum scroll */
+    position: relative;
+    z-index: 2;
+    background: var(--surface2) !important;
+  }
+  .ai-chat-actions button,
+  .ai-chat-back-mobile {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 17px !important;
+    padding: 6px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   4. MESSAGES LIST — scroll containment, no rubber-band leak to body.
+      Bottom-padding accounts for input row height (so last message isn't
+      hidden behind the input).
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .ai-chat-msgs {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;       /* fix flex children that won't shrink */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 12px 14px 16px !important;
+    /* Smooth scrolling that doesn't get interrupted when keyboard opens */
+    scroll-behavior: smooth;
+  }
+  /* Wider bubbles on phones — the 88% rule from desktop is too narrow */
+  .ai-chat-msg { max-width: 92% !important; }
+  .ai-chat-msg-bubble {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    padding: 10px 13px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   5. INPUT ROW — pinned to bottom, lifts above iOS keyboard via
+      env(keyboard-inset-height) on iOS 17+, falls back to safe-area
+      bottom on older devices. Textarea ≥16px to prevent iOS zoom.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .ai-chat-input {
+    flex-shrink: 0 !important;
+    display: flex !important;
+    gap: 8px !important;
+    align-items: flex-end !important;
+    padding: 8px 10px !important;
+    padding-left: calc(8px + env(safe-area-inset-left, 0px)) !important;
+    padding-right: calc(8px + env(safe-area-inset-right, 0px)) !important;
+    /* The fallback chain: keyboard-inset (iOS 17+) → safe-area → 12px */
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 12px)) !important;
+    padding-bottom: calc(8px + env(keyboard-inset-height, env(safe-area-inset-bottom, 12px))) !important;
+    border-top: 1px solid var(--border) !important;
+    background: var(--surface2) !important;
+    /* Always above the message scroll layer */
+    position: relative;
+    z-index: 3;
+  }
+  /* Textarea: 16px+ font kills iOS auto-zoom on focus */
+  .ai-chat-input textarea,
+  #aiChatInput {
+    font-size: 16px !important;
+    line-height: 1.45 !important;
+    min-height: 44px !important;
+    max-height: 120px !important;
+    padding: 11px 12px !important;
+    border-radius: 10px !important;
+    /* Prevent iOS from auto-capitalizing every word in a question */
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   6. MIC + SEND BUTTONS — square 44×44 tap targets, defeat the inline
+      style on the mic element (HTML has inline width:36/height:36 — we
+      need !important to win against the inline rule). Position above
+      keyboard with the input row.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .ai-chat-mic,
+  #aiChatMicBtn {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 0 !important;
+    font-size: 18px !important;
+    border-radius: 10px !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .ai-chat-send,
+  #aiChatSendBtn {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 0 !important;
+    font-size: 18px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   7. FOOTER — shrink on small screens so it doesn't steal scroll area;
+      hide entirely below 360px (where every pixel counts).
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .ai-chat-footer {
+    flex-shrink: 0 !important;
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+    /* Footer should never compete with input for safe-area space */
+    padding-bottom: 4px !important;
+  }
+}
+@media (max-width: 360px) {
+  .ai-chat-footer { display: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   8. BACKDROP — on mobile fullscreen the chat covers the whole viewport
+      so the backdrop is invisible. But on iOS it can still capture
+      pointer events through the chat (rare bug). Make sure backdrop sits
+      strictly BELOW the chat (z-index 9988 vs chat 9989 — already true
+      in source — but reinforce) AND hide pointer-events when chat-open
+      and viewport is full-screen (no exposed backdrop area to tap). */
+@media (max-width: 768px) {
+  .ai-chat-backdrop {
+    z-index: 9988 !important;
+    /* Fullscreen takeover means no visible backdrop edge — disable taps
+       to remove a phantom hit zone; user closes via X / back button.   */
+    pointer-events: none !important;
+  }
+  /* Re-enable on tablet where backdrop is actually exposed */
+}
+@media (min-width: 481px) and (max-width: 768px) {
+  .ai-chat-backdrop {
+    pointer-events: auto !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   9. FAB — when chat is open, hide it COMPLETELY (not just opacity 0
+      with pointer-events:none — defeats edge-case iOS Safari hit-test
+      bugs where a 0-opacity element still steals taps if it overlaps
+      the chat's close X).
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  body.ai-chat-open .ai-fab,
+  body.ai-chat-open #aiFab {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  /* When closed, FAB sits above the mobile tab bar with safe-area */
+  .ai-fab,
+  #aiFab {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+    right: calc(14px + env(safe-area-inset-right, 0px)) !important;
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    min-height: 56px !important;
+    font-size: 22px !important;
+    z-index: 9990 !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   10. Z-INDEX COLLISIONS — the unsaved-restore-banner uses z-index 9998
+       which would sit OVER the chat header (9989). When chat is open,
+       drop the banner below the chat so it doesn't cover the close X.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  body.ai-chat-open .unsaved-restore-banner {
+    z-index: 9987 !important;       /* below backdrop, hidden by chat */
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   11. NARROW PHONES (≤360px) — iPhone SE 1st-gen, foldable cover.
+       Reduce action-button paddings so header doesn't wrap.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 360px) {
+  .ai-chat-hdr {
+    padding-left: calc(10px + env(safe-area-inset-left, 0px)) !important;
+    padding-right: calc(6px + env(safe-area-inset-right, 0px)) !important;
+  }
+  .ai-chat-actions { gap: 0 !important; }
+  .ai-chat-actions button {
+    min-width: 40px !important;
+    min-height: 40px !important;
+    font-size: 16px !important;
+    padding: 4px !important;
+  }
+  .ai-chat-sub {
+    font-size: 11px !important;
+    max-width: 160px !important;
+  }
+  .ai-chat-input {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    gap: 6px !important;
+  }
+  .ai-chat-input textarea,
+  #aiChatInput {
+    padding: 10px 11px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   12. LANDSCAPE PHONES — short viewport, header eats vertical space.
+       Trim header padding so the messages list isn't squeezed.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) and (orientation: landscape) and (max-height: 500px) {
+  .ai-chat {
+    height: 100vh !important;
+    height: 100dvh !important;
+  }
+  .ai-chat-hdr {
+    padding-top: calc(6px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: 6px !important;
+    min-height: calc(44px + env(safe-area-inset-top, 0px)) !important;
+  }
+  .ai-chat-av {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 14px !important;
+  }
+  .ai-chat-name { font-size: 12px !important; }
+  .ai-chat-sub  { display: none !important; }
+  .ai-chat-msgs { padding: 8px 14px 10px !important; }
+  .ai-chat-input { padding-top: 6px !important; padding-bottom: calc(6px + env(safe-area-inset-bottom, 6px)) !important; }
+  .ai-chat-input textarea,
+  #aiChatInput { min-height: 38px !important; max-height: 80px !important; }
+  .ai-chat-footer { display: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   13. REDUCED MOTION — respect the user pref for the slide-in.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .ai-chat,
+  .ai-chat-backdrop,
+  .ai-fab,
+  #aiChat,
+  #aiChatBackdrop,
+  #aiFab {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ─── /CHAT MOBILE v2 ─── */
+/* ╰── /chat.css ──╯ */
+</style>
+<!-- ════════ MOBILE PATCHES BUNDLE v2 — end ════════ -->
 <script>
 (function(){
   // ── Casual-copy deterrent. NOT a security boundary. ──────────────────────
