@@ -21226,6 +21226,17 @@ body.bug-open{overflow:hidden}
       </div>
       <div class="bug-mic-hint" id="bugMicHint"></div>
     </div>
+    <div class="bug-field">
+      <label for="bugAttachInput">Attachments <span style="color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400">(optional — screenshots, PDFs, logs)</span></label>
+      <div class="bug-attach-zone" id="bugAttachZone" tabindex="0" role="button" aria-label="Attach files">
+        <span class="bug-attach-icon">📎</span>
+        <div class="bug-attach-prompt">Tap to attach or drop files here</div>
+        <div class="bug-attach-hint">PNG, JPG, PDF, MP4, TXT, logs. Up to <strong>10 MB/file</strong>, <strong>25 MB total</strong>. Paste a screenshot with <code>Cmd+V</code>.</div>
+      </div>
+      <input type="file" id="bugAttachInput" multiple accept="image/*,application/pdf,video/mp4,video/quicktime,text/plain,text/csv,application/json,.log,.txt,.md" style="display:none">
+      <div class="bug-attach-list" id="bugAttachList"></div>
+      <div class="bug-attach-total" id="bugAttachTotal"></div>
+    </div>
     <button class="bug-ctx-toggle" onclick="bugReportToggleCtx()" id="bugCtxToggle">▸ Diagnostic info attached (browser, panel, viewport)</button>
     <div class="bug-ctx" id="bugCtx" style="display:none"></div>
     <div class="bug-actions">
@@ -23283,8 +23294,442 @@ body.modal-open .ai-fab {
   }
 }
 
+
+/* ── BUG REPORT v2 — attachments UI ── */
+.bug-attach-zone{
+  border: 1.5px dashed var(--border);
+  border-radius: 10px;
+  padding: 14px 12px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--surface2);
+  transition: border-color .15s, background .15s, transform .08s;
+  margin-bottom: 12px;
+  user-select: none;
+}
+.bug-attach-zone:hover{ border-color: var(--accent); background: var(--surface3); }
+.bug-attach-zone.dragover{
+  border-color: var(--accent);
+  background: rgba(99,102,241,.10);
+  transform: scale(1.01);
+}
+.bug-attach-zone .bug-attach-icon{ font-size: 22px; display: block; margin-bottom: 4px; line-height: 1; }
+.bug-attach-zone .bug-attach-prompt{ font-size: 13px; color: var(--text); font-weight: 600; margin: 0 0 2px; }
+.bug-attach-zone .bug-attach-hint{ font-size: 11px; color: var(--muted); line-height: 1.4; }
+.bug-attach-zone .bug-attach-hint code{
+  font-family: ui-monospace,SFMono-Regular,Menlo,monospace;
+  background: var(--surface3); padding: 1px 5px; border-radius: 4px;
+  color: var(--text2); font-size: 10.5px;
+}
+.bug-attach-list{ display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.bug-attach-list:empty{ display: none; }
+.bug-attach-item{
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; font-size: 12.5px;
+}
+.bug-attach-item .bug-attach-thumb{
+  width: 36px; height: 36px; border-radius: 6px; background: var(--surface3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0; overflow: hidden;
+}
+.bug-attach-item .bug-attach-thumb img{
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.bug-attach-item .bug-attach-meta{
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px;
+}
+.bug-attach-item .bug-attach-name{
+  font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bug-attach-item .bug-attach-size{ font-size: 11px; color: var(--muted); }
+.bug-attach-item .bug-attach-remove{
+  background: transparent; border: 1px solid var(--border); color: var(--text2);
+  border-radius: 6px; width: 28px; height: 28px; cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.bug-attach-item .bug-attach-remove:hover{
+  background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.4); color: #ef4444;
+}
+.bug-attach-total{
+  font-size: 11px; color: var(--muted);
+  margin: -6px 0 10px; display: none; text-align: right;
+}
+.bug-attach-total.show{ display: block; }
+.bug-attach-total.is-warn{ color: #f59e0b; font-weight: 600; }
+.bug-attach-total.is-err{ color: #ef4444; font-weight: 700; }
+
 </style>
 <!-- ════════ MOBILE PATCHES BUNDLE v2 — end ════════ -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   Bug Report v2 (2026-05-17) — attachment support, XSS-safe DOM only.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+  function _id(x){ return document.getElementById(x); }
+
+  var MAX_FILE_BYTES  = 10 * 1024 * 1024;
+  var MAX_TOTAL_BYTES = 25 * 1024 * 1024;
+  var MAX_FILES       = 8;
+
+  window.__bugAttachments = [];
+
+  function fmtSize(n){
+    if (n < 1024) return n + ' B';
+    if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+    return (n/1024/1024).toFixed(2) + ' MB';
+  }
+  function totalSize(){
+    return window.__bugAttachments.reduce(function(a, x){ return a + (x.size||0); }, 0);
+  }
+  function setStatus(text, cls){
+    var st = _id('bugStatus'); if (!st) return;
+    st.textContent = text || '';
+    st.className = 'bug-status' + (cls ? ' ' + cls : '');
+  }
+  function updateTotalsUI(){
+    var tot = totalSize();
+    var el = _id('bugAttachTotal'); if (!el) return;
+    if (window.__bugAttachments.length === 0){
+      el.classList.remove('show', 'is-warn', 'is-err');
+      el.textContent = '';
+      return;
+    }
+    el.classList.add('show');
+    el.classList.remove('is-warn', 'is-err');
+    var pct = (tot / MAX_TOTAL_BYTES) * 100;
+    if (pct >= 100) el.classList.add('is-err');
+    else if (pct >= 75) el.classList.add('is-warn');
+    el.textContent = window.__bugAttachments.length + ' file' +
+      (window.__bugAttachments.length === 1 ? '' : 's') +
+      ' · ' + fmtSize(tot) + ' / ' + fmtSize(MAX_TOTAL_BYTES);
+  }
+  function fileIcon(type){
+    if (!type) return '📄';
+    if (type.indexOf('image/') === 0) return '🖼';
+    if (type === 'application/pdf') return '📄';
+    if (type.indexOf('video/') === 0) return '🎬';
+    if (type.indexOf('text/') === 0 || type === 'application/json') return '📝';
+    return '📎';
+  }
+
+  // SAFE: build DOM with createElement + replaceChildren. No innerHTML.
+  function renderList(){
+    var list = _id('bugAttachList'); if (!list) return;
+    var rows = window.__bugAttachments.map(function(att, i){
+      var row = document.createElement('div');
+      row.className = 'bug-attach-item';
+
+      var thumb = document.createElement('div');
+      thumb.className = 'bug-attach-thumb';
+      if (att.type && att.type.indexOf('image/') === 0 && att._url){
+        var img = document.createElement('img');
+        img.src = att._url; img.alt = '';
+        thumb.appendChild(img);
+      } else {
+        thumb.textContent = fileIcon(att.type);
+      }
+
+      var meta = document.createElement('div');
+      meta.className = 'bug-attach-meta';
+      var nm = document.createElement('div');
+      nm.className = 'bug-attach-name';
+      nm.title = att.name;
+      nm.textContent = att.name;
+      var sz = document.createElement('div');
+      sz.className = 'bug-attach-size';
+      sz.textContent = fmtSize(att.size) + ' · ' + (att.type || 'file');
+      meta.appendChild(nm); meta.appendChild(sz);
+
+      var rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'bug-attach-remove';
+      rm.title = 'Remove';
+      rm.setAttribute('aria-label', 'Remove ' + att.name);
+      rm.textContent = '×';
+      rm.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); removeAt(i); };
+
+      row.appendChild(thumb); row.appendChild(meta); row.appendChild(rm);
+      return row;
+    });
+    list.replaceChildren.apply(list, rows);
+    updateTotalsUI();
+  }
+
+  function removeAt(i){
+    var att = window.__bugAttachments[i];
+    if (att && att._url) { try { URL.revokeObjectURL(att._url); } catch(_){} }
+    window.__bugAttachments.splice(i, 1);
+    renderList();
+    setStatus('', '');
+  }
+
+  function clearAttachments(){
+    window.__bugAttachments.forEach(function(att){
+      if (att._url) { try { URL.revokeObjectURL(att._url); } catch(_){} }
+    });
+    window.__bugAttachments = [];
+    renderList();
+  }
+  window.__bugClearAttachments = clearAttachments;
+
+  function fileToBase64(file){
+    return new Promise(function(resolve, reject){
+      var r = new FileReader();
+      r.onload = function(){
+        var s = r.result || '';
+        var i = s.indexOf(',');
+        resolve(i >= 0 ? s.slice(i + 1) : s);
+      };
+      r.onerror = function(){ reject(new Error('Read failed: ' + (file.name||'unknown'))); };
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function addFiles(fileList){
+    if (!fileList || !fileList.length) return;
+    var arr = Array.from(fileList);
+    var errors = [];
+    for (var i = 0; i < arr.length; i++){
+      var f = arr[i];
+      if (!f) continue;
+      if (window.__bugAttachments.length >= MAX_FILES){
+        errors.push('Reached ' + MAX_FILES + '-file limit.');
+        break;
+      }
+      if (f.size > MAX_FILE_BYTES){
+        errors.push('Skipped "' + f.name + '" — ' + fmtSize(f.size) + ' exceeds 10 MB cap.');
+        continue;
+      }
+      if (totalSize() + f.size > MAX_TOTAL_BYTES){
+        errors.push('Skipped "' + f.name + '" — would exceed 25 MB total cap.');
+        continue;
+      }
+      var dup = window.__bugAttachments.some(function(x){
+        return x.name === f.name && x.size === f.size;
+      });
+      if (dup){ errors.push('Skipped duplicate: ' + f.name); continue; }
+      try {
+        var b64 = await fileToBase64(f);
+        var url = null;
+        if (f.type && f.type.indexOf('image/') === 0){
+          try { url = URL.createObjectURL(f); } catch(_){}
+        }
+        window.__bugAttachments.push({
+          name: f.name || ('paste-' + Date.now() + (f.type === 'image/png' ? '.png' : '')),
+          type: f.type || 'application/octet-stream',
+          size: f.size,
+          contentBase64: b64,
+          _url: url,
+        });
+      } catch(e){
+        errors.push('Failed to read "' + (f.name || 'file') + '": ' + (e.message || 'unknown'));
+      }
+    }
+    renderList();
+    if (errors.length){
+      setStatus(errors.join(' '), 'is-err');
+      setTimeout(function(){
+        var st = _id('bugStatus');
+        if (st && st.classList.contains('is-err') && st.textContent === errors.join(' ')){
+          setStatus('', '');
+        }
+      }, 4000);
+    } else {
+      setStatus('', '');
+    }
+  }
+  window.__bugAddFiles = addFiles;
+
+  function wire(){
+    var zone  = _id('bugAttachZone');
+    var input = _id('bugAttachInput');
+    if (!zone || !input) return;
+
+    zone.addEventListener('click', function(){ input.click(); });
+    zone.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); input.click(); }
+    });
+    input.addEventListener('change', function(){
+      addFiles(input.files);
+      input.value = '';
+    });
+
+    ['dragenter', 'dragover'].forEach(function(evt){
+      zone.addEventListener(evt, function(e){
+        e.preventDefault(); e.stopPropagation();
+        zone.classList.add('dragover');
+      });
+    });
+    ['dragleave', 'dragend', 'drop'].forEach(function(evt){
+      zone.addEventListener(evt, function(e){
+        e.preventDefault(); e.stopPropagation();
+        zone.classList.remove('dragover');
+      });
+    });
+    zone.addEventListener('drop', function(e){
+      if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+    });
+
+    var ov = _id('bugOverlay');
+    if (ov){
+      ['dragenter', 'dragover'].forEach(function(evt){
+        ov.addEventListener(evt, function(e){
+          if (!ov.classList.contains('open')) return;
+          e.preventDefault();
+        });
+      });
+      ov.addEventListener('drop', function(e){
+        if (!ov.classList.contains('open')) return;
+        e.preventDefault();
+        if (e.target && (e.target.closest && e.target.closest('#bugAttachZone'))) return;
+        if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+      });
+    }
+
+    document.addEventListener('paste', function(e){
+      var ov2 = _id('bugOverlay');
+      if (!ov2 || !ov2.classList.contains('open')) return;
+      var items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      var files = [];
+      for (var i = 0; i < items.length; i++){
+        var it = items[i];
+        if (it.kind === 'file'){
+          var f = it.getAsFile();
+          if (f) files.push(f);
+        }
+      }
+      if (files.length){
+        e.preventDefault();
+        addFiles(files);
+        setStatus('Pasted ' + files.length + ' screenshot' + (files.length === 1 ? '' : 's') + ' from clipboard.', 'is-load');
+        setTimeout(function(){
+          var st = _id('bugStatus');
+          if (st && st.textContent.indexOf('Pasted') === 0) setStatus('', '');
+        }, 2200);
+      }
+    });
+  }
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', wire);
+  } else { wire(); }
+
+  // Hook close → clear attachments
+  if (typeof window.bugReportClose === 'function'){
+    var _origClose = window.bugReportClose;
+    window.bugReportClose = function(){
+      try { clearAttachments(); } catch(_){}
+      return _origClose.apply(this, arguments);
+    };
+  }
+
+  // Monkey-patch submit to include attachments + still call backend
+  if (typeof window.bugReportSubmit === 'function'){
+    window.bugReportSubmit = async function(){
+      var subjEl = _id('bugSubject'), descEl = _id('bugDesc'), catEl = _id('bugCategory');
+      var btn = _id('bugSubmitBtn');
+      var subject = (subjEl && subjEl.value || '').trim();
+      var description = (descEl && descEl.value || '').trim();
+      var category = catEl ? catEl.value : 'bug';
+
+      if (!subject && !description){ setStatus('Add a subject or description first.', 'is-err'); return; }
+      if (description.length > 6000){ setStatus('Description too long — keep it under 6000 characters.', 'is-err'); return; }
+      if (totalSize() > MAX_TOTAL_BYTES){ setStatus('Attachments exceed 25 MB total — remove some files.', 'is-err'); return; }
+
+      setStatus('Sending' + (window.__bugAttachments.length ? ' (uploading attachments)…' : '…'), 'is-load');
+      if (btn) btn.disabled = true;
+
+      var ctx = {};
+      try {
+        ctx.url = location.href; ctx.path = location.pathname;
+        var ap = document.querySelector('.panel.active');
+        ctx.panel = ap && ap.id ? ap.id : 'unknown';
+        ctx.ua = (navigator.userAgent||'').slice(0, 320);
+        ctx.viewport = (window.innerWidth||0) + 'x' + (window.innerHeight||0);
+        ctx.dpr = window.devicePixelRatio || 1;
+        ctx.lang = navigator.language || '';
+        try { ctx.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch(_){}
+        ctx.platform = navigator.platform || '';
+        ctx.online = (navigator.onLine === false) ? 'offline' : 'online';
+        try { ctx.build = document.documentElement.getAttribute('data-build') || ''; } catch(_){}
+        try { ctx.sid = document.documentElement.getAttribute('data-sid') || ''; } catch(_){}
+        try {
+          var sess = (typeof _getSession === 'function') ? _getSession() : null;
+          if (sess){
+            ctx.user_id = sess.userId || sess.id || '';
+            ctx.email = sess.email || '';
+            ctx.username = sess.username || '';
+          }
+        } catch(_){}
+        if (Array.isArray(window.__bugRecentErrors)){
+          ctx.recent_errors = window.__bugRecentErrors.slice(-3);
+        }
+      } catch(_){}
+
+      if (window.__bugAttachments.length){
+        ctx.attachments_meta = window.__bugAttachments.map(function(a){
+          return { name: a.name, type: a.type, size: a.size };
+        });
+      }
+
+      var payload = {
+        category: category,
+        subject: subject || ('Untitled — ' + category),
+        description: description || '(no description)',
+        context: ctx,
+        attachments: window.__bugAttachments.map(function(a){
+          return { filename: a.name, content_type: a.type, content_base64: a.contentBase64 };
+        })
+      };
+
+      try {
+        var sbUrl  = (typeof SUPABASE_URL  !== 'undefined' ? SUPABASE_URL  : '');
+        var sbAnon = (typeof SUPABASE_ANON !== 'undefined' ? SUPABASE_ANON : '');
+        var url = sbUrl + '/functions/v1/bug-report';
+        var headers = { 'Content-Type': 'application/json' };
+        if (sbAnon) headers['apikey'] = sbAnon;
+        try {
+          var sb = window._supabase || (typeof _sbClient === 'function' ? _sbClient() : null);
+          if (sb){
+            var sess2 = await sb.auth.getSession();
+            var tok = sess2 && sess2.data && sess2.data.session && sess2.data.session.access_token;
+            if (tok) headers['Authorization'] = 'Bearer ' + tok;
+            else if (sbAnon) headers['Authorization'] = 'Bearer ' + sbAnon;
+          } else if (sbAnon){
+            headers['Authorization'] = 'Bearer ' + sbAnon;
+          }
+        } catch(_){
+          if (sbAnon) headers['Authorization'] = 'Bearer ' + sbAnon;
+        }
+
+        var resp = await fetch(url, { method: 'POST', headers: headers, body: JSON.stringify(payload) });
+        var body;
+        try { body = await resp.json(); } catch(_){ body = { ok: resp.ok }; }
+        if (!resp.ok){
+          var msg = (body && (body.error || body.detail)) || ('HTTP ' + resp.status);
+          setStatus('Could not send: ' + msg, 'is-err');
+          if (btn) btn.disabled = false; return;
+        }
+        setStatus('✓ Report sent. Thank you — we read every one.', 'is-ok');
+        if (subjEl) subjEl.value = '';
+        if (descEl) descEl.value = '';
+        try { clearAttachments(); } catch(_){}
+        if (btn) btn.disabled = false;
+        setTimeout(function(){ bugReportClose(); }, 1400);
+      } catch (e){
+        setStatus('Network error: ' + (e && e.message || 'unknown'), 'is-err');
+        if (btn) btn.disabled = false;
+      }
+    };
+  }
+})();
+</script>
+
 <script>
 (function(){
   // ── Casual-copy deterrent. NOT a security boundary. ──────────────────────
