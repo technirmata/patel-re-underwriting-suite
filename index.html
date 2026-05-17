@@ -23369,6 +23369,88 @@ body.modal-open .ai-fab {
 .bug-attach-total.is-warn{ color: #f59e0b; font-weight: 600; }
 .bug-attach-total.is-err{ color: #ef4444; font-weight: 700; }
 
+
+/* ── MOBILE NAV CLEANUP v2.5 (2026-05-17) ──────────────────────────────────
+   1. KILL mTabBar on phones — it duplicates the scrollable top tab bar.
+   2. Reclaim the panel padding-bottom that was reserved for the mTabBar.
+   3. Shrink the AI FAB on mobile (44×44) and make it semi-transparent at rest
+      so it doesn't visually dominate form-heavy panels (LOI Builder, Exec
+      Report, Strategy Agents). It comes back to full opacity on hover/active.
+   4. Auto-hide both FABs while ANY input/textarea/select on the page is
+      focused — so the chat button never sits on top of a field the user is
+      typing into. Restores when the user blurs out.
+   5. Lower the FABs (no mTabBar to clear anymore — bottom: safe-area + 16px). */
+
+@media (max-width: 768px){
+  /* Kill the redundant mobile bottom tab bar */
+  .mtabbar,
+  #mTabBar{
+    display: none !important;
+    visibility: hidden !important;
+  }
+  /* Reclaim the bottom padding panels reserved for the mTabBar */
+  .panel.active,
+  .panel{
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  /* AI FAB: smaller + semi-transparent until interacted */
+  .ai-fab,
+  #aiFab{
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 18px !important;
+    opacity: 0.55 !important;
+    /* Drop the +60px / +88px lift that was needed to clear mTabBar */
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    right: calc(16px + env(safe-area-inset-right, 0px)) !important;
+    box-shadow: 0 6px 16px rgba(99,102,241,.28) !important;
+    transition: opacity .15s, transform .15s, box-shadow .2s !important;
+  }
+  .ai-fab:hover,
+  .ai-fab:active,
+  .ai-fab:focus-visible,
+  #aiFab:hover,
+  #aiFab:active,
+  #aiFab:focus-visible{
+    opacity: 1 !important;
+    box-shadow: 0 10px 24px rgba(99,102,241,.5) !important;
+  }
+  /* Bug FAB: same treatment, opposite side */
+  .bug-fab,
+  #bugFab{
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 16px !important;
+    opacity: 0.45 !important;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    left: calc(16px + env(safe-area-inset-left, 0px)) !important;
+    transition: opacity .15s, transform .15s !important;
+  }
+  .bug-fab:hover,
+  .bug-fab:active,
+  .bug-fab:focus-visible,
+  #bugFab:hover,
+  #bugFab:active,
+  #bugFab:focus-visible{
+    opacity: 1 !important;
+  }
+  /* Auto-hide BOTH FABs while user is typing in a form input.
+     Uses CSS :has() — widely supported (Safari 15.4+, Chrome 105+, FF 121+).
+     A simple test of `body:has(:focus)` was too broad (any focused element
+     including the FAB itself would trigger). Scoping to text-entry types only. */
+  body:has(input:focus, textarea:focus, select:focus, [contenteditable="true"]:focus) .ai-fab,
+  body:has(input:focus, textarea:focus, select:focus, [contenteditable="true"]:focus) .bug-fab,
+  body:has(input:focus, textarea:focus, select:focus, [contenteditable="true"]:focus) #aiFab,
+  body:has(input:focus, textarea:focus, select:focus, [contenteditable="true"]:focus) #bugFab{
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: scale(.85) !important;
+  }
+}
+
+/* The existing rule `body.ai-chat-open #mTabBar { display:none }` (line 124) is
+   now a no-op on phones because mTabBar itself is display:none. Harmless to keep. */
+
 </style>
 <!-- ════════ MOBILE PATCHES BUNDLE v2 — end ════════ -->
 
