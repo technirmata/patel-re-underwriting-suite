@@ -11261,7 +11261,10 @@ function _getSession() {
   try { return JSON.parse(localStorage.getItem(JP_SESSION_KEY)) || null; }
   catch(e) { return null; }
 }
-function _setSession(obj) { localStorage.setItem(JP_SESSION_KEY, JSON.stringify(obj)); }
+function _setSession(obj) {
+  try { localStorage.setItem(JP_SESSION_KEY, JSON.stringify(obj)); }
+  catch (e) { console.error('Session save failed (storage full?):', e); }
+}
 function _clearSession() { localStorage.removeItem(JP_SESSION_KEY); }
 
 // (removed dead: authGetCurrentUser — audit-deadcode #1, zero callers)
@@ -11269,7 +11272,10 @@ function _clearSession() { localStorage.removeItem(JP_SESSION_KEY); }
 // ── localStorage-only fallback (when Supabase not configured) ─────────────────
 const _JP_USERS_KEY = 'jp_auth_users';
 function _getUsers() { try { return JSON.parse(localStorage.getItem(_JP_USERS_KEY))||{}; } catch(e){ return {}; } }
-function _setUsers(obj) { localStorage.setItem(_JP_USERS_KEY, JSON.stringify(obj)); }
+function _setUsers(obj) {
+  try { localStorage.setItem(_JP_USERS_KEY, JSON.stringify(obj)); }
+  catch (e) { console.error('User store save failed (storage full?):', e); }
+}
 async function _hashPassword(pass) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -11577,6 +11583,9 @@ window.authOAuthGoogle = authOAuthGoogle;
 // re-query Supabase on every banner refresh. Re-fetched on auth-state change.
 let _profileCache = null;
 let _profileFetchedAt = 0;
+// Session-scoped admin-access cache: avoid repeated 42501 RLS denials in console
+// for non-admin users (audit-visual-qa console-noise item).
+let _grantAccessCache = {};
 async function _fetchProfile(force){
   const session = _getSession();
   if(!session) { _profileCache = null; return null; }
@@ -11600,7 +11609,11 @@ async function _userHasPanelAccess(){
   const profile = await _fetchProfile();
   if(!profile) return false;
   if(profile.is_admin) return true;
-  // Admin OR moderator only — viewer role no longer grants admin-panel access
+  // Admin OR moderator only — viewer role no longer grants admin-panel access.
+  // Session-cached: non-admins shouldn't keep hitting RLS-denied user_role_grants.
+  if (typeof _grantAccessCache !== 'undefined' && profile.user_id in _grantAccessCache) {
+    return _grantAccessCache[profile.user_id];
+  }
   try {
     const sb = _sbClient();
     const { data, error } = await sb.from('user_role_grants')
@@ -11609,8 +11622,14 @@ async function _userHasPanelAccess(){
       .is('revoked_at', null)
       .in('role', ['admin','moderator'])
       .limit(1);
-    return !error && data && data.length > 0;
-  } catch(e){ return false; }
+    // 42501 = RLS denied (expected for non-admins) — cache the negative
+    const hasAccess = !error && data && data.length > 0;
+    if (typeof _grantAccessCache !== 'undefined') _grantAccessCache[profile.user_id] = hasAccess;
+    return hasAccess;
+  } catch(e){
+    if (typeof _grantAccessCache !== 'undefined') _grantAccessCache[profile.user_id] = false;
+    return false;
+  }
 }
 
 // Stricter check: ONLY admins (logs section visibility)
@@ -11618,6 +11637,9 @@ async function _userIsAdmin(){
   const profile = await _fetchProfile();
   if(!profile) return false;
   if(profile.is_admin) return true;
+  if (typeof _grantAccessCache !== 'undefined' && ('strict:'+profile.user_id) in _grantAccessCache) {
+    return _grantAccessCache['strict:'+profile.user_id];
+  }
   try {
     const sb = _sbClient();
     const { data, error } = await sb.from('user_role_grants')
@@ -11853,7 +11875,8 @@ function _trialHook(){ try { trialUpdateBanner(); } catch(e){} }
 // Initial fire + recurring (every 60s — covers banner aging into the warn / expired states)
 if(document.readyState !== 'loading') setTimeout(_trialHook, 800);
 else document.addEventListener('DOMContentLoaded', function(){ setTimeout(_trialHook, 800); });
-setInterval(_trialHook, 60000);
+// Tracked so authLogout can clear it (audit-reliability medium #2 — was leaking forever).
+const _trialIntervalId = setInterval(_trialHook, 60000);
 
 // ── Admin dashboard ─────────────────────────────────────────────────────
 // Fetches all profiles (RLS gates — only admins can read all). Renders
@@ -12430,6 +12453,9 @@ window.adminDeleteUser = async function(uid, email){
 
 async function authLogout() {
   _tmConfirm('Sign out? Your projects stay saved locally.','Sign Out', async function(){
+    // Stop the trial banner refresh interval + clear caches before signOut
+    try { if (typeof _trialIntervalId !== 'undefined') clearInterval(_trialIntervalId); } catch(_){}
+    try { _profileCache = null; _profileFetchedAt = 0; _grantAccessCache = {}; } catch(_){}
     if(_sbOk()) await _sbClient().auth.signOut().catch(()=>{});
     _clearSession();
     document.getElementById('authOverlay').style.display = 'flex';
@@ -23586,6 +23612,49 @@ body.modal-open .ai-fab {
   /* Force the wrapping card to clip any descendant that still escapes */
   #panel6 > .card{
     overflow: hidden !important;
+  }
+}
+
+
+/* ── v4 (2026-05-17): tap targets + iOS-zoom prevention on labels ────────── */
+@media (max-width: 768px){
+  /* Dashboard "⚙️" settings button + "🌐 Fetch" button under-sized.
+     WCAG 2.5.5 (Apple HIG) requires 44×44 minimum hit area. */
+  #panel0 button.btn,
+  #panel0 button[onclick]:not(.tab):not(.tb-tab),
+  #panel0 a.btn{
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+  /* Comps panel: "×" remove-row buttons were 36×36 / 30×33 */
+  #panel11 .investor-row .remove-btn,
+  .investor-row .remove-btn,
+  button.remove-btn{
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+  /* Universal mobile fix for label font-size — checkbox labels at 13.3px
+     trigger iOS zoom-on-tap on adjacent form fields. */
+  .panel label,
+  .panel .field label,
+  .panel input[type="checkbox"] + label,
+  .panel label[for]{
+    font-size: 14.5px !important;  /* slightly larger, ≤16px keeps non-zoom */
+    line-height: 1.4 !important;
+  }
+  /* But the actual INPUT must be ≥16px to fully prevent iOS zoom */
+  .panel input[type="text"],
+  .panel input[type="number"],
+  .panel input[type="email"],
+  .panel input[type="password"],
+  .panel input[type="search"],
+  .panel input[type="tel"],
+  .panel input[type="url"],
+  .panel input[type="date"],
+  .panel input[type="datetime-local"],
+  .panel select,
+  .panel textarea{
+    font-size: 16px !important;
   }
 }
 
