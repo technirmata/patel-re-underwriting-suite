@@ -23393,11 +23393,20 @@ body.modal-open .ai-fab {
   .panel{
     padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)) !important;
   }
-  /* AI FAB: smaller + semi-transparent until interacted */
+  /* AI FAB: smaller + semi-transparent until interacted.
+     CRITICAL: chat.css's earlier rule sets `min-width: 56px !important` and
+     `min-height: 56px !important`. CSS sizing computes
+     `width = max(min-width, min(max-width, width))`, so without resetting
+     min-* here, our width:44px would clamp UP to 56px. Always neutralize
+     existing min-* floors when shrinking. */
   .ai-fab,
   #aiFab{
     width: 44px !important;
     height: 44px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 44px !important;
+    max-height: 44px !important;
     font-size: 18px !important;
     opacity: 0.55 !important;
     /* Drop the +60px / +88px lift that was needed to clear mTabBar */
@@ -23415,11 +23424,16 @@ body.modal-open .ai-fab {
     opacity: 1 !important;
     box-shadow: 0 10px 24px rgba(99,102,241,.5) !important;
   }
-  /* Bug FAB: same treatment, opposite side */
+  /* Bug FAB: same treatment, opposite side — also reset min-* per the
+     same chat.css min-width:56 trap that bit the AI FAB. */
   .bug-fab,
   #bugFab{
     width: 40px !important;
     height: 40px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 40px !important;
+    max-height: 40px !important;
     font-size: 16px !important;
     opacity: 0.45 !important;
     bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
