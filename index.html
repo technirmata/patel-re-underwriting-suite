@@ -23465,6 +23465,41 @@ body.modal-open .ai-fab {
 /* The existing rule `body.ai-chat-open #mTabBar { display:none }` (line 124) is
    now a no-op on phones because mTabBar itself is display:none. Harmless to keep. */
 
+
+/* ── v2.5.3 (2026-05-17): Hide AI FAB entirely on form-heavy panels ────────
+   User reported "deal assistant is there in different tabs like LOI / Exec".
+   These panels are 100% form inputs — the chat button hovering on them is
+   noise. Use :has() to detect when an .active panel is a form-heavy one
+   and remove BOTH FABs. Dashboard / Brain still have the FABs available. */
+@media (max-width: 768px){
+  /* Form-heavy panels: LOI Builder (panel6), Exec Report (panel7),
+     Strategy Agents (panel9), Admin (panel17), Sub2 (panel8), Brain (panel16) */
+  body:has(#panel6.active) .ai-fab,
+  body:has(#panel6.active) #aiFab,
+  body:has(#panel7.active) .ai-fab,
+  body:has(#panel7.active) #aiFab,
+  body:has(#panel9.active) .ai-fab,
+  body:has(#panel9.active) #aiFab,
+  body:has(#panel17.active) .ai-fab,
+  body:has(#panel17.active) #aiFab{
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  /* Likewise hide the bug FAB on those form-heavy panels to reduce noise.
+     Bug reporting still accessible via Cmd+Shift+B or user-chip dropdown. */
+  body:has(#panel6.active) .bug-fab,
+  body:has(#panel6.active) #bugFab,
+  body:has(#panel7.active) .bug-fab,
+  body:has(#panel7.active) #bugFab,
+  body:has(#panel9.active) .bug-fab,
+  body:has(#panel9.active) #bugFab,
+  body:has(#panel17.active) .bug-fab,
+  body:has(#panel17.active) #bugFab{
+    display: none !important;
+  }
+}
+
 </style>
 <!-- ════════ MOBILE PATCHES BUNDLE v2 — end ════════ -->
 
@@ -23876,6 +23911,76 @@ body.modal-open .ai-fab {
   wrap();
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', wrap);
+  }
+})();
+</script>
+
+
+<script>
+/* ── Chat dismiss enhancements v1 (2026-05-17) ──────────────────────────────
+   Adds two extra dismiss paths on mobile so users never feel trapped:
+   1. Swipe down ≥80px from chat header → close
+   2. Reliable backdrop tap (override iOS Safari edge case where chat panel
+      steals the backdrop click event). */
+(function(){
+  'use strict';
+  function isPhone(){ return window.matchMedia('(max-width: 768px)').matches; }
+  function closeChat(){
+    var c = document.getElementById('aiChat');
+    if (!c || !c.classList.contains('open')) return;
+    if (typeof window.aiChatToggle === 'function') {
+      try { window.aiChatToggle(); } catch(_){}
+    } else {
+      c.classList.remove('open');
+      document.body.classList.remove('ai-chat-open');
+    }
+  }
+
+  function wire(){
+    var chat = document.getElementById('aiChat');
+    var hdr = chat && chat.querySelector('.ai-chat-hdr');
+    if (!hdr || hdr.__dismissWired) return;
+    hdr.__dismissWired = true;
+
+    // Swipe-down to close on mobile
+    var startY = null;
+    hdr.addEventListener('touchstart', function(e){
+      if (!isPhone()) return;
+      if (e.touches.length !== 1) return;
+      // Don't hijack touches on actual buttons in the header
+      if (e.target.closest('button')) return;
+      startY = e.touches[0].clientY;
+    }, {passive: true});
+    hdr.addEventListener('touchmove', function(e){
+      if (startY === null) return;
+      var dy = e.touches[0].clientY - startY;
+      if (dy > 80) { closeChat(); startY = null; }
+    }, {passive: true});
+    hdr.addEventListener('touchend', function(){ startY = null; });
+
+    // Reliable backdrop close — ALSO listen on chat overlay outside the chat content
+    // (iOS edge case: backdrop element below chat in z-order can't be tapped).
+    // Workaround: a tap on the chat container OUTSIDE the inner ai-chat-body
+    // also closes when chat is in fullscreen mode. Skip when user is interacting
+    // with input/textarea/button inside chat.
+    // NOTE: we don't enable this generic outer-tap-close because it would fight
+    // with users tapping inside the chat msg list. The X and ← buttons cover
+    // close UX adequately; swipe-down is the new natural gesture.
+  }
+
+  // Wire on DCL and re-check every chat open (chat is built before us)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wire);
+  } else { wire(); }
+
+  // Re-wire safety net: any aiChatToggle call may re-render header buttons
+  var origToggle = window.aiChatToggle;
+  if (typeof origToggle === 'function') {
+    window.aiChatToggle = function(){
+      var r = origToggle.apply(this, arguments);
+      setTimeout(wire, 60);
+      return r;
+    };
   }
 })();
 </script>
