@@ -20162,7 +20162,10 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 
   // ─── 2. Voice-to-text on chat input ──────────────────────────────────────
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  var _sr = null, _srBuffer = '';
+  // _srBaseline = whatever was in the input BEFORE the user started speaking.
+  // We never mutate _srBaseline during a session — we always rebuild input value
+  // as: baseline + ALL finals + current interim. Idempotent re-runs = same output.
+  var _sr = null, _srBaseline = '';
   window.aiChatToggleMic = function(){
     var btn = _id('aiChatMicBtn'); var inp = _id('aiChatInput');
     if(!SR){
@@ -20179,20 +20182,26 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     _sr.lang = 'en-US';
     _sr.interimResults = true;
     _sr.continuous = true;
-    _srBuffer = inp ? (inp.value || '') : '';
+    // Snapshot whatever is already in the input — we'll prepend it to all results
+    _srBaseline = inp ? (inp.value || '') : '';
     if(btn) btn.classList.add('listening');
     _sr.onresult = function(ev){
-      var finalT = '', interimT = '';
-      for(var i=ev.resultIndex; i<ev.results.length; i++){
+      // FIX (voice duplication): rebuild from scratch every event.
+      // Some browsers fire onresult with resultIndex=0 always, so iterating
+      // only from resultIndex AND accumulating produces N×duplicates of finals.
+      // Walk ALL results, concatenate clean each time. Idempotent.
+      var allFinal = '', interim = '';
+      for (var i = 0; i < ev.results.length; i++) {
         var t = ev.results[i][0].transcript;
-        if(ev.results[i].isFinal) finalT += t;
-        else interimT += t;
+        if (ev.results[i].isFinal) allFinal += t;
+        else                       interim  += t;
       }
-      if(inp){
-        if(finalT){ _srBuffer = (_srBuffer ? _srBuffer + ' ' : '') + finalT.trim(); }
-        inp.value = _srBuffer + (interimT ? (_srBuffer ? ' ' : '') + interimT : '');
-        inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 240) + 'px';
-      }
+      if (!inp) return;
+      var combined = _srBaseline;
+      if (allFinal) combined = (combined ? combined + ' ' : '') + allFinal.trim();
+      if (interim)  combined = (combined ? combined + ' ' : '') + interim;
+      inp.value = combined;
+      inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 240) + 'px';
     };
     _sr.onerror = function(ev){
       console.warn('SpeechRecognition error:', ev.error);
@@ -21429,16 +21438,22 @@ body.bug-open{overflow:hidden}
     if (btn) btn.classList.add('listening');
     if (hint) { hint.textContent='● Listening… tap 🎤 again to stop.'; hint.classList.add('is-listening'); }
     _bugSR.onresult = function(ev){
-      var finalT = '', interimT = '';
-      for (var i=ev.resultIndex; i<ev.results.length; i++){
+      // FIX (voice duplication): always rebuild from scratch by iterating ALL
+      // results, never just from ev.resultIndex. Some browsers reset
+      // resultIndex to 0 every event, causing N×duplicate finals when we
+      // accumulate. Use _bugSRBuffer as a fixed BASELINE only (set once when
+      // mic starts), and always recompute the full text.
+      var allFinal = '', interim = '';
+      for (var i = 0; i < ev.results.length; i++) {
         var t = ev.results[i][0].transcript;
-        if (ev.results[i].isFinal) finalT += t;
-        else interimT += t;
+        if (ev.results[i].isFinal) allFinal += t;
+        else                       interim  += t;
       }
-      if (ta) {
-        if (finalT) _bugSRBuffer = (_bugSRBuffer ? _bugSRBuffer + ' ' : '') + finalT.trim();
-        ta.value = _bugSRBuffer + (interimT ? (_bugSRBuffer ? ' ' : '') + interimT : '');
-      }
+      if (!ta) return;
+      var combined = _bugSRBuffer;
+      if (allFinal) combined = (combined ? combined + ' ' : '') + allFinal.trim();
+      if (interim)  combined = (combined ? combined + ' ' : '') + interim;
+      ta.value = combined;
     };
     _bugSR.onerror = function(ev){
       console.warn('Bug-report SpeechRecognition error:', ev.error);
