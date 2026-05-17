@@ -648,38 +648,22 @@ html, body{
   overflow-x: hidden !important;
 }
 /* Comparison <table> must fit within viewport and scroll INTERNALLY (swipeable).
-   The fix is: constrain the table itself to viewport width and let inner content
-   overflow inside that constrained container. */
-table{
-  display: block !important;
-  min-width: 0 !important;                    /* override existing min-width:680px in landing CSS */
-  max-width: calc(100vw - 32px) !important;  /* viewport minus standard side padding */
-  width: 100% !important;
-  overflow-x: auto !important;
+   The table's parent <div style="overflow-x:auto"> already has horizontal scroll;
+   we just need to cap the wrapper width so the scroll actually engages instead of
+   blowing past viewport. Leaves the <table> in its semantic display:table form. */
+.sec > .container > div[style*="overflow-x:auto"]{
+  max-width: calc(100vw - 32px) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
   -webkit-overflow-scrolling: touch !important;
-  white-space: nowrap !important;
 }
-/* Inside the now-block table, restore proper table semantics so cells align. */
-table thead, table tbody{
-  display: table !important;
-  width: max-content !important;
-  min-width: 100% !important;
-}
-table tr{
-  display: table-row !important;
-}
-table th, table td{
-  display: table-cell !important;
-  white-space: nowrap !important;
-  padding: 8px 12px !important;
-}
-@media (max-width: 768px){
-  table{
-    font-size: 13px !important;
+@media (max-width: 480px){
+  .sec > .container > div[style*="overflow-x:auto"] table{
+    font-size: 12.5px !important;
   }
-  table td, table th{
+  .sec > .container > div[style*="overflow-x:auto"] table th,
+  .sec > .container > div[style*="overflow-x:auto"] table td{
     padding: 8px 10px !important;
-    white-space: nowrap !important;
   }
 }
 /* Decorative .bg-glow that was 1075px wide → clip to viewport.
