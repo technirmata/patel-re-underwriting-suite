@@ -20203,7 +20203,7 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
   // _srBaseline      = input value when mic turned on (immutable per session)
   // _srCommitted     = accumulated final transcript as a STRING (not list)
   // _srAbsorbed      = Set of "i:transcript" keys we've already processed
-  var _sr = null, _srBaseline = '', _srAbsorbed = null, _srCommitted = '';
+  var _sr = null, _srBaseline = '', _srAbsorbed = null, _srCommitted = '', _srUserStopped = false, _srSessionStart = 0;
   window.aiChatToggleMic = function(){
     var btn = _id('aiChatMicBtn'); var inp = _id('aiChatInput');
     if(!SR){
@@ -20211,6 +20211,7 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
       return;
     }
     if(_sr){
+      _srUserStopped = true;  // signal onend NOT to auto-restart
       try { _sr.stop(); } catch(e){}
       _sr = null;
       if(btn) btn.classList.remove('listening');
@@ -20257,16 +20258,58 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     };
     _sr.onerror = function(ev){
       console.warn('SpeechRecognition error:', ev.error);
-      if(btn) btn.classList.remove('listening');
-      _sr = null;
       if(ev.error === 'not-allowed' || ev.error === 'service-not-allowed'){
+        // Permission denied — full stop, don't auto-restart.
+        _srUserStopped = true;
+        if(btn) btn.classList.remove('listening');
+        _sr = null;
         alert('Microphone permission denied. Allow microphone access in your browser settings.');
+        return;
       }
+      // Other errors (no-speech, network, audio-capture) — let onend handle restart.
     };
     _sr.onend = function(){
-      if(btn) btn.classList.remove('listening');
-      _sr = null;
+      // v6: auto-restart on mobile engine-auto-stop.
+      // If the user tapped the mic button to stop OR the safety cap fired, honor it.
+      // Otherwise, recreate + restart to overcome iOS/Android ~30s auto-stop.
+      var sessionAge = Date.now() - _srSessionStart;
+      var hitCap = sessionAge > 5 * 60 * 1000;  // 5-minute hard cap
+      if (_srUserStopped || hitCap) {
+        if (btn) btn.classList.remove('listening');
+        _sr = null;
+        if (hitCap && inp) {
+          // Subtle hint that the session ended due to time cap, not user action
+          var hint = _id('aiChatSub');
+          if (hint) { var prev = hint.textContent; hint.textContent = '🎤 paused after 5 min — tap mic to continue'; setTimeout(function(){ if(hint.textContent.indexOf('paused after')>=0) hint.textContent = prev; }, 4000); }
+        }
+        return;
+      }
+      // Engine ended prematurely on its own. Restart.
+      try {
+        _sr.start();
+      } catch(e) {
+        // Some browsers throw "InvalidStateError" if start() called while a previous
+        // recognition is still mid-shutdown. Create a fresh instance and try once more.
+        try {
+          var SR2 = window.SpeechRecognition || window.webkitSpeechRecognition;
+          var fresh = new SR2();
+          fresh.lang = 'en-US';
+          fresh.interimResults = true;
+          fresh.continuous = true;
+          fresh.onresult = _sr.onresult;
+          fresh.onerror  = _sr.onerror;
+          fresh.onend    = _sr.onend;
+          _sr = fresh;
+          _sr.start();
+        } catch(e2) {
+          console.warn('SR restart failed:', e2 && e2.message);
+          if (btn) btn.classList.remove('listening');
+          _sr = null;
+        }
+      }
     };
+    _srSessionStart = Date.now();
+    _srUserStopped = false;
     try { _sr.start(); } catch(e){
       if(btn) btn.classList.remove('listening');
       _sr = null;
@@ -21453,7 +21496,7 @@ body.bug-open{overflow:hidden}
     var ov = _id('bugOverlay'); if(!ov) return;
     ov.classList.remove('open');
     document.body.classList.remove('bug-open');
-    if (_bugSR) { try { _bugSR.stop(); } catch(_){} _bugSR = null; }
+    if (_bugSR) { _bugSRUserStopped = true; try { _bugSR.stop(); } catch(_){} _bugSR = null; }
     var btn = _id('bugMicBtn'); if (btn) btn.classList.remove('listening');
     var hint = _id('bugMicHint'); if (hint) { hint.textContent=''; hint.classList.remove('is-listening'); }
   };
@@ -21488,7 +21531,7 @@ body.bug-open{overflow:hidden}
     }
     return committed + ' ' + t;
   }
-  var _bugSR = null, _bugSRBuffer = '', _bugSRAbsorbed = null, _bugSRCommitted = '';
+  var _bugSR = null, _bugSRBuffer = '', _bugSRAbsorbed = null, _bugSRCommitted = '', _bugSRUserStopped = false, _bugSRSessionStart = 0;
   window.bugReportToggleMic = function(){
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     var btn = _id('bugMicBtn'); var ta = _id('bugDesc'); var hint = _id('bugMicHint');
@@ -21497,6 +21540,7 @@ body.bug-open{overflow:hidden}
       return;
     }
     if (_bugSR) {
+      _bugSRUserStopped = true;  // signal onend NOT to auto-restart
       try { _bugSR.stop(); } catch(_){}
       _bugSR = null;
       if (btn) btn.classList.remove('listening');
@@ -21535,18 +21579,53 @@ body.bug-open{overflow:hidden}
     };
     _bugSR.onerror = function(ev){
       console.warn('Bug-report SpeechRecognition error:', ev.error);
-      if (btn) btn.classList.remove('listening');
-      if (hint) { hint.textContent=''; hint.classList.remove('is-listening'); }
-      _bugSR = null;
       if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
+        _bugSRUserStopped = true;
+        if (btn) btn.classList.remove('listening');
+        if (hint) { hint.textContent=''; hint.classList.remove('is-listening'); }
+        _bugSR = null;
         alert('Microphone permission denied. Allow microphone access in your browser settings.');
+        return;
       }
+      // Other errors → let onend decide whether to restart
     };
     _bugSR.onend = function(){
-      if (btn) btn.classList.remove('listening');
-      if (hint) { hint.textContent=''; hint.classList.remove('is-listening'); }
-      _bugSR = null;
+      // v6 auto-restart on mobile engine-auto-stop. See AI chat mic for full notes.
+      var age = Date.now() - _bugSRSessionStart;
+      var hitCap = age > 5 * 60 * 1000;
+      if (_bugSRUserStopped || hitCap) {
+        if (btn) btn.classList.remove('listening');
+        if (hint) {
+          if (hitCap) { hint.textContent = '🎤 paused after 5 min — tap mic to continue'; hint.classList.remove('is-listening'); setTimeout(function(){ if(hint.textContent.indexOf('paused after')>=0) hint.textContent=''; }, 4000); }
+          else { hint.textContent=''; hint.classList.remove('is-listening'); }
+        }
+        _bugSR = null;
+        return;
+      }
+      try {
+        _bugSR.start();
+      } catch(e) {
+        try {
+          var SR2 = window.SpeechRecognition || window.webkitSpeechRecognition;
+          var fresh = new SR2();
+          fresh.lang = 'en-US';
+          fresh.interimResults = true;
+          fresh.continuous = true;
+          fresh.onresult = _bugSR.onresult;
+          fresh.onerror  = _bugSR.onerror;
+          fresh.onend    = _bugSR.onend;
+          _bugSR = fresh;
+          _bugSR.start();
+        } catch(e2) {
+          console.warn('Bug-report SR restart failed:', e2 && e2.message);
+          if (btn) btn.classList.remove('listening');
+          if (hint) { hint.textContent=''; hint.classList.remove('is-listening'); }
+          _bugSR = null;
+        }
+      }
     };
+    _bugSRSessionStart = Date.now();
+    _bugSRUserStopped = false;
     try { _bugSR.start(); } catch(e){
       if (btn) btn.classList.remove('listening');
       if (hint) { hint.textContent=''; hint.classList.remove('is-listening'); }
