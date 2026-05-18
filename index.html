@@ -23074,69 +23074,61 @@ body.modal-open .ai-fab {
       Existing rules use a mix of 100vh / 100dvh / 100svh — collapse to a
       deterministic order so the input row never sits below the keyboard.
    ═══════════════════════════════════════════════════════════════════════ */
-/* BOTTOM SHEET pattern on mobile (v3 update):
-   was fullscreen — user couldn't see the tab bar to navigate away without
-   first finding the small ✕ in chat header. Now leaves top ~88px exposed
-   so the topbar + tab bar stay visible AND tappable. Tapping a tab
-   triggers ST() → my wrapper auto-closes chat + switches panel.
-   Tapping the exposed area above chat = close chat (via overlay backdrop). */
+/* FULLSCREEN chat on mobile (v4 update — user prefers fullscreen UI):
+   Chat takes full viewport. Topbar + tab bar are boosted to z-index 9991
+   so they FLOAT on top of the chat content area — user can still tap any
+   tab to navigate, and window.ST() wrapper auto-closes chat on switch.
+   Chat header gets padding-top:100px so its avatar/title don't sit under
+   the overlaid app chrome.
+
+   Trade-off vs. bottom-sheet: looks more immersive (user preference) at
+   the cost of top 100px being shared between app chrome (foreground) and
+   chat content (background). The chat header simply doesn't render content
+   under the chrome strip. */
 @media (max-width: 768px) {
   .ai-chat.open {
     position: fixed !important;
-    top: 156px !important;           /* leave room for topbar(52) + tab-bar(45) + 59px margin */
+    top: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
     left: 0 !important;
     width: 100vw !important;
     width: 100dvw !important;
     max-width: 100vw !important;
-    /* Height = remaining viewport below the exposed 88px */
-    height: calc(100vh - 156px) !important;
-    height: calc(100dvh - 156px) !important;
+    height: 100vh !important;
+    height: 100dvh !important;
     display: flex !important;
     flex-direction: column !important;
     border: none !important;
-    border-top: 1px solid var(--border) !important;
-    border-radius: 14px 14px 0 0 !important;
-    box-shadow: 0 -8px 24px rgba(0,0,0,.4) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
-    transform: translateY(0) !important;
+    transform: translateX(0) !important;
     will-change: transform;
     z-index: 9989 !important;
-    animation: chatSheetUp .22s ease-out;
   }
-  @keyframes chatSheetUp {
-    from { transform: translateY(100%); }
-    to   { transform: translateY(0); }
+  /* App chrome floats ABOVE the chat so navigation never gets trapped */
+  .topbar {
+    z-index: 9991 !important;
+    background: var(--surface) !important;
   }
-  /* Make the backdrop above the chat (top 88px) tappable to close. */
-  .ai-chat-backdrop {
-    cursor: pointer !important;
+  .tabs {
+    position: sticky !important;
+    top: 56px !important;             /* sit directly below topbar */
+    z-index: 9991 !important;
+    background: var(--surface) !important;
   }
+  /* Chat header sits BELOW the overlaid app chrome strip (topbar 56 + tabs ~44 = 100px) */
+  body.ai-chat-open .ai-chat-hdr {
+    padding-top: calc(100px + env(safe-area-inset-top, 0px)) !important;
+    min-height: calc(156px + env(safe-area-inset-top, 0px)) !important;
+  }
+  /* Ensure backdrop sits between chat content and topbar — for tap-to-close */
   body.ai-chat-open .ai-chat-backdrop {
     display: block !important;
-    background: rgba(0,0,0,.35) !important;
+    background: rgba(0,0,0,.0) !important;  /* invisible — chat is opaque on top */
     z-index: 9988 !important;
-  }
-  /* Tiny drag handle at the top of the chat sheet for visual affordance */
-  .ai-chat.open::before {
-    content: '';
-    position: absolute;
-    top: 6px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: var(--text2);
-    opacity: 0.4;
-    border-radius: 2px;
-    pointer-events: none;
-    z-index: 10;
-  }
-  /* Account for the drag handle in the header padding */
-  .ai-chat.open .ai-chat-hdr {
-    padding-top: 16px !important;
   }
 }
 
