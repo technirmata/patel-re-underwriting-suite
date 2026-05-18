@@ -23153,17 +23153,13 @@ body.modal-open .ai-fab {
       Existing rules use a mix of 100vh / 100dvh / 100svh — collapse to a
       deterministic order so the input row never sits below the keyboard.
    ═══════════════════════════════════════════════════════════════════════ */
-/* FULLSCREEN chat on mobile (v4 update — user prefers fullscreen UI):
-   Chat takes full viewport. Topbar + tab bar are boosted to z-index 9991
-   so they FLOAT on top of the chat content area — user can still tap any
-   tab to navigate, and window.ST() wrapper auto-closes chat on switch.
-   Chat header gets padding-top:100px so its avatar/title don't sit under
-   the overlaid app chrome.
-
-   Trade-off vs. bottom-sheet: looks more immersive (user preference) at
-   the cost of top 100px being shared between app chrome (foreground) and
-   chat content (background). The chat header simply doesn't render content
-   under the chrome strip. */
+/* TRUE FULLSCREEN chat on mobile (v5 — user explicit preference):
+   Chat covers everything including the top tab bar. Topbar + tabs hidden
+   behind the chat. User dismisses via:
+     • ← back button (top-left of chat header, 44×44)
+     • ✕ close button (top-right of chat header, 44×44)
+     • Swipe down from chat header (added in earlier patch)
+   Once dismissed, the panel they were on is restored cleanly. */
 @media (max-width: 768px) {
   .ai-chat.open {
     position: fixed !important;
@@ -23187,27 +23183,25 @@ body.modal-open .ai-fab {
     will-change: transform;
     z-index: 9989 !important;
   }
-  /* App chrome floats ABOVE the chat so navigation never gets trapped */
-  .topbar {
-    z-index: 9991 !important;
-    background: var(--surface) !important;
+  /* Make the ← back button MORE prominent — it's the primary dismiss
+     affordance now that the tab bar is hidden. Larger, accent-colored,
+     with subtle background so the user can't miss it. */
+  body.ai-chat-open .ai-chat-back-mobile {
+    display: inline-flex !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    font-size: 22px !important;
+    background: var(--surface3) !important;
+    border-radius: 10px !important;
+    color: var(--accent) !important;
+    margin-right: 8px !important;
   }
-  .tabs {
-    position: sticky !important;
-    top: 56px !important;             /* sit directly below topbar */
-    z-index: 9991 !important;
-    background: var(--surface) !important;
-  }
-  /* Chat header sits BELOW the overlaid app chrome strip (topbar 56 + tabs ~44 = 100px) */
-  body.ai-chat-open .ai-chat-hdr {
-    padding-top: calc(100px + env(safe-area-inset-top, 0px)) !important;
-    min-height: calc(156px + env(safe-area-inset-top, 0px)) !important;
-  }
-  /* Ensure backdrop sits between chat content and topbar — for tap-to-close */
-  body.ai-chat-open .ai-chat-backdrop {
-    display: block !important;
-    background: rgba(0,0,0,.0) !important;  /* invisible — chat is opaque on top */
-    z-index: 9988 !important;
+  body.ai-chat-open .ai-chat-back-mobile:hover,
+  body.ai-chat-open .ai-chat-back-mobile:active {
+    background: var(--accent) !important;
+    color: #fff !important;
   }
 }
 
