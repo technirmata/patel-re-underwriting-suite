@@ -20162,11 +20162,48 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 
   // ─── 2. Voice-to-text on chat input ──────────────────────────────────────
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  // VOICE-TO-TEXT STATE
-  // _srBaseline       = input value snapshot when mic turned on (immutable per session)
-  // _srAbsorbed       = Set of "i:transcript" keys we've already committed
-  // _srCommittedFinals = ordered list of finals committed during this mic session
-  var _sr = null, _srBaseline = '', _srAbsorbed = null, _srCommittedFinals = null;
+
+  // Shared overlap-based dedup helper (used by both mic handlers).
+  // Speech engines on mobile emit finals with sliding-window overlap:
+  //   commit:"hello world" + final:"world how are" → "hello world how are"
+  //   commit:"hello world" + final:"hello world"   → "hello world" (no-op)
+  function _smartAppendFinal(committed, newFinal) {
+    var t = (newFinal || '').trim();
+    if (!t) return committed;
+    if (!committed) return t;
+    // Already there at the end? bail.
+    var cLow = committed.toLowerCase();
+    var tLow = t.toLowerCase();
+    if (cLow.endsWith(tLow)) return committed;
+    if (cLow.endsWith(' ' + tLow)) return committed;
+    // Find longest suffix of committed that matches a prefix of newFinal
+    var maxOverlap = 0;
+    var minLen = Math.min(committed.length, t.length);
+    // Cap at 200 chars to avoid pathological scan on huge transcripts
+    var scanLen = Math.min(minLen, 200);
+    for (var i = scanLen; i > 0; i--) {
+      // Anchor at word boundary on the committed side to avoid cutting mid-word
+      var sliceStart = committed.length - i;
+      if (sliceStart > 0 && committed.charAt(sliceStart - 1) !== ' ') continue;
+      if (cLow.slice(-i) === tLow.slice(0, i)) {
+        maxOverlap = i;
+        break;
+      }
+    }
+    if (maxOverlap > 0) {
+      var newPart = t.slice(maxOverlap).trim();
+      if (!newPart) return committed;  // entirely a duplicate
+      // If newPart starts mid-word, prepend a space; else word-already-anchored
+      return committed + (committed.endsWith(' ') ? '' : ' ') + newPart;
+    }
+    return committed + ' ' + t;
+  }
+  window._smartAppendFinal = _smartAppendFinal;
+  // VOICE-TO-TEXT STATE (v5: switched to committed-STRING + overlap dedup)
+  // _srBaseline      = input value when mic turned on (immutable per session)
+  // _srCommitted     = accumulated final transcript as a STRING (not list)
+  // _srAbsorbed      = Set of "i:transcript" keys we've already processed
+  var _sr = null, _srBaseline = '', _srAbsorbed = null, _srCommitted = '';
   window.aiChatToggleMic = function(){
     var btn = _id('aiChatMicBtn'); var inp = _id('aiChatInput');
     if(!SR){
@@ -20185,45 +20222,37 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     _sr.continuous = true;
     _srBaseline = inp ? (inp.value || '') : '';
     _srAbsorbed = new Set();
-    _srCommittedFinals = [];
+    _srCommitted = '';
     if(btn) btn.classList.add('listening');
     _sr.onresult = function(ev){
-      // v3 fix: real browsers (especially iOS Safari) emit DUPLICATE isFinal
-      // results for the same utterance after silence-detection restarts.
-      // v2 "rebuild from scratch" added all of them. v3 dedupes by:
-      //   (a) per-index absorption: each (i, transcript) committed once
-      //   (b) consecutive-finals dedup: skip if identical to the previous commit
-      var interimParts = [];
+      // v5: overlap-based dedup. Mobile engines emit sliding-window finals
+      // like "hello world" then "world how are" then "how are you" — pure
+      // adjacent-string dedup misses these. _smartAppendFinal() finds the
+      // suffix-of-committed/prefix-of-new overlap and appends only the
+      // genuinely new part.
+      var interimLatest = '';
       for (var i = 0; i < ev.results.length; i++) {
         var t = (ev.results[i][0].transcript || '').trim();
         if (!t) continue;
         if (ev.results[i].isFinal) {
           var key = i + ':' + t;
           if (_srAbsorbed.has(key)) continue;
-          var last = _srCommittedFinals[_srCommittedFinals.length - 1];
-          if (last && last === t) {
-            _srAbsorbed.add(key);  // mark seen so we don't re-evaluate
-            continue;
-          }
           _srAbsorbed.add(key);
-          _srCommittedFinals.push(t);
+          _srCommitted = _smartAppendFinal(_srCommitted, t);
         } else {
-          // Also dedupe interim against the last committed final — prevents
-          // transient "hello world hello world" display during silence-restart
-          // recognition window before the duplicate gets dropped by the final
-          // dedup pass.
-          var lastFinalInterim = _srCommittedFinals[_srCommittedFinals.length - 1];
-          if (lastFinalInterim && lastFinalInterim === t) continue;
-          interimParts.push(t);
+          // Track only the LATEST interim (highest index wins) — it's the
+          // current utterance still being recognized.
+          interimLatest = t;
         }
       }
       if (!inp) return;
-      // Display = baseline + committed-finals + current interim
-      var parts = [];
-      if (_srBaseline) parts.push(_srBaseline.trim());
-      if (_srCommittedFinals.length) parts.push(_srCommittedFinals.join(' '));
-      if (interimParts.length) parts.push(interimParts.join(' '));
-      inp.value = parts.join(' ');
+      // Display = baseline + committed + interim. Interim is rendered through
+      // the same overlap helper so a stale interim that duplicates committed
+      // doesn't display as "hello world hello world" mid-speech.
+      var display = _srBaseline ? _srBaseline.trim() : '';
+      if (_srCommitted) display = display ? display + ' ' + _srCommitted : _srCommitted;
+      if (interimLatest) display = (window._smartAppendFinal || _smartAppendFinalFallback)(display, interimLatest);
+      inp.value = display;
       inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 240) + 'px';
     };
     _sr.onerror = function(ev){
@@ -21437,8 +21466,29 @@ body.bug-open{overflow:hidden}
     tog.textContent = (open ? '▸' : '▾') + ' Diagnostic info attached (browser, panel, viewport)';
   };
 
-  // ── Voice-to-text (v3: dedupe duplicate finals from silence-restart) ────
-  var _bugSR = null, _bugSRBuffer = '', _bugSRAbsorbed = null, _bugSRCommittedFinals = null;
+  // ── Voice-to-text (v5: overlap-based dedup, shares _smartAppendFinal from AI chat IIFE) ────
+  // Fallback if AI chat IIFE hasn't loaded yet (defensive — both IIFEs run on DCL)
+  function _smartAppendFinalFallback(committed, newFinal) {
+    var t = (newFinal || '').trim();
+    if (!t) return committed;
+    if (!committed) return t;
+    var cL = committed.toLowerCase(), tL = t.toLowerCase();
+    if (cL.endsWith(tL) || cL.endsWith(' ' + tL)) return committed;
+    var minLen = Math.min(committed.length, t.length, 200);
+    var maxOverlap = 0;
+    for (var i = minLen; i > 0; i--) {
+      var sliceStart = committed.length - i;
+      if (sliceStart > 0 && committed.charAt(sliceStart - 1) !== ' ') continue;
+      if (cL.slice(-i) === tL.slice(0, i)) { maxOverlap = i; break; }
+    }
+    if (maxOverlap > 0) {
+      var newPart = t.slice(maxOverlap).trim();
+      if (!newPart) return committed;
+      return committed + (committed.endsWith(' ') ? '' : ' ') + newPart;
+    }
+    return committed + ' ' + t;
+  }
+  var _bugSR = null, _bugSRBuffer = '', _bugSRAbsorbed = null, _bugSRCommitted = '';
   window.bugReportToggleMic = function(){
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     var btn = _id('bugMicBtn'); var ta = _id('bugDesc'); var hint = _id('bugMicHint');
@@ -21459,41 +21509,29 @@ body.bug-open{overflow:hidden}
     _bugSR.continuous = true;
     _bugSRBuffer = ta ? (ta.value || '') : '';
     _bugSRAbsorbed = new Set();
-    _bugSRCommittedFinals = [];
+    _bugSRCommitted = '';
     if (btn) btn.classList.add('listening');
     if (hint) { hint.textContent='● Listening… tap 🎤 again to stop.'; hint.classList.add('is-listening'); }
     _bugSR.onresult = function(ev){
-      // v3 fix: iOS Safari + some Chromium builds emit duplicate isFinal
-      // results for the same utterance after silence-detection restarts.
-      // Dedupe via (a) per-(index,text) absorption set and (b) skip if a new
-      // final is identical to the immediately-previous committed one.
-      var interimParts = [];
+      // v5: overlap dedup (see _smartAppendFinal helper at top of AI chat block)
+      var interimLatest = '';
       for (var i = 0; i < ev.results.length; i++) {
         var t = (ev.results[i][0].transcript || '').trim();
         if (!t) continue;
         if (ev.results[i].isFinal) {
           var key = i + ':' + t;
           if (_bugSRAbsorbed.has(key)) continue;
-          var last = _bugSRCommittedFinals[_bugSRCommittedFinals.length - 1];
-          if (last && last === t) {
-            _bugSRAbsorbed.add(key);
-            continue;
-          }
           _bugSRAbsorbed.add(key);
-          _bugSRCommittedFinals.push(t);
+          _bugSRCommitted = (window._smartAppendFinal || _smartAppendFinalFallback)(_bugSRCommitted, t);
         } else {
-          // Dedupe interim against last committed final (silence-restart artifact)
-          var lastFinalInterim = _bugSRCommittedFinals[_bugSRCommittedFinals.length - 1];
-          if (lastFinalInterim && lastFinalInterim === t) continue;
-          interimParts.push(t);
+          interimLatest = t;
         }
       }
       if (!ta) return;
-      var parts = [];
-      if (_bugSRBuffer) parts.push(_bugSRBuffer.trim());
-      if (_bugSRCommittedFinals.length) parts.push(_bugSRCommittedFinals.join(' '));
-      if (interimParts.length) parts.push(interimParts.join(' '));
-      ta.value = parts.join(' ');
+      var display = _bugSRBuffer ? _bugSRBuffer.trim() : '';
+      if (_bugSRCommitted) display = display ? display + ' ' + _bugSRCommitted : _bugSRCommitted;
+      if (interimLatest) display = _smartAppendFinal(display, interimLatest);
+      ta.value = display;
     };
     _bugSR.onerror = function(ev){
       console.warn('Bug-report SpeechRecognition error:', ev.error);
