@@ -2300,6 +2300,14 @@ body.paywall-locked > *:not(#paywallOverlay):not(.paywall-overlay):not(script):n
       <div class="auth-err" id="auth_reset_ok" style="margin-bottom:10px;font-size:13px;color:var(--green)"></div>
       <button class="auth-btn" onclick="authResetPassword()">Update Password</button>
     </div>
+    <!-- v54 — ToS acceptance shown across all auth panels (Anthropic Usage-Policy
+         flow-down + standard ToS/Privacy consent at sign-up). /legal/ is root-level. -->
+    <div class="auth-consent" style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);text-align:center;font-size:11.5px;line-height:1.55;color:#9aa3b2">
+      By creating an account or signing in, you agree to our
+      <a href="/legal/terms.html" target="_blank" rel="noopener" style="color:#c08a3e;text-decoration:underline">Terms</a>,
+      <a href="/legal/privacy.html" target="_blank" rel="noopener" style="color:#c08a3e;text-decoration:underline">Privacy&nbsp;Policy</a>, and
+      <a href="/legal/acceptable-use.html" target="_blank" rel="noopener" style="color:#c08a3e;text-decoration:underline">Acceptable&nbsp;Use&nbsp;Policy</a>.
+    </div>
   </div>
 </div>
 
