@@ -11648,6 +11648,38 @@ async function aiChatExtractFromFile(file) {
         // the new file in _fileMemoryBlock().
         try { window._projectFilesCache = null; } catch(_){}
         console.log('[chat-upload] persisted', fname, 'as', fileId);
+
+        // ─── v53 — PARSE-ONCE-TO-JSON ─────────────────────────────────────
+        // Kick off ONE structured extraction of this deal into a compact
+        // ~1K-token JSON summary. Follow-up turns ("recompute DSCR at 7%",
+        // "what's the exit cap?") then answer from the JSON instead of
+        // re-sending the full 30-80K-token document → ~95% fewer input
+        // tokens per turn AND more consistent math (every answer runs off
+        // the same audited numbers). Background + non-blocking: the initial
+        // analysis (this upload turn) still uses the full doc.
+        (async function _extractDealSummaryBg(){
+          try {
+            var _su = (typeof SUPABASE_URL !== 'undefined' && SUPABASE_URL) || 'https://ykcvmlhpfnruucsgcxhd.supabase.co';
+            var _an = (typeof SUPABASE_ANON !== 'undefined' && SUPABASE_ANON) || '';
+            var _tok = null;
+            try { if (window._supabase) { var _s = await window._supabase.auth.getSession(); _tok = _s && _s.data && _s.data.session && _s.data.session.access_token; } } catch(_){}
+            if (!_tok) { try { var _r = localStorage.getItem('sb-ykcvmlhpfnruucsgcxhd-auth-token'); if (_r) _tok = JSON.parse(_r).access_token; } catch(_){} }
+            if (!_tok) return;
+            var _resp = await fetch(_su + '/functions/v1/extract-deal-summary', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + _tok, 'apikey': _an, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ file_id: fileId })
+            });
+            if (!_resp.ok) return;
+            var _d = await _resp.json();
+            if (_d && _d.ok && _d.summary) {
+              window._dealSummaries = window._dealSummaries || {};
+              window._dealSummaries[fname] = JSON.stringify(_d.summary);
+              try { console.log('[deal-summary]', fname, '→', window._dealSummaries[fname].length, 'chars; follow-up turns now answer from JSON'); } catch(_){}
+            }
+          } catch (e) { try { console.warn('[deal-summary] skipped:', e && e.message || e); } catch(_){} }
+        })();
+        // ──────────────────────────────────────────────────────────────────
       }
     } catch (e) {
       // Persistence failure is non-fatal — the chat still works.
