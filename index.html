@@ -23099,7 +23099,25 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
     // the CURRENT values of every set field, plus pending stage entries.
     // Only emits fields that have a non-empty/non-zero value, keeping
     // the payload small (typical empty deal: ~1KB; populated deal: ~6KB).
+    // v48 — budget-aware: on free tier, when a big document is attached this
+    // turn, the document is the priority. Shrink the suite-state block so the
+    // server-side trim doesn't have to shave the document to make room for it.
     try {
+      // Free-tier + big-attachment detection (cheap scan of recent turns)
+      var _ownPaidKey = (typeof _getAIKey === 'function') && (
+        _getAIKey('anthropic') || _getAIKey('openai') || _getAIKey('perplexity') || _getAIKey('groq'));
+      var _bigAttachPresent = false;
+      try {
+        var _recent = st.messages.slice(-6);
+        for (var _ri = 0; _ri < _recent.length; _ri++) {
+          var _att = _recent[_ri] && _recent[_ri].attachment;
+          if (_att && _att.type === 'text' && _att.text && _att.text.length > 8000) { _bigAttachPresent = true; break; }
+          if (_att && _att.type === 'image') { _bigAttachPresent = true; break; }
+        }
+      } catch(_e){}
+      var _stateTight = (!_ownPaidKey && _bigAttachPresent);
+      var _maxStateFields = _stateTight ? 40 : 250;
+
       var inv = window._AI_SUITE_INVENTORY;
       if (!inv || !inv.list || !inv.list.length) {
         if (typeof window._aiBuildInventory === 'function') window._aiBuildInventory();
@@ -23119,11 +23137,13 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
           lines.push(pfx + e.id + lab + '=' + (typeof v === 'string' ? v.slice(0, 60) : v));
         });
         if (lines.length) {
-          // Cap to 250 fields to bound size (most populated deals < 200)
-          if (lines.length > 250) lines = lines.slice(0, 250).concat('…(' + (lines.length - 250) + ' more fields omitted)');
+          var _omitted = 0;
+          if (lines.length > _maxStateFields) { _omitted = lines.length - _maxStateFields; lines = lines.slice(0, _maxStateFields); }
           sys += '\n\n═══ CURRENT SUITE STATE (live, updated each turn) ═══\n'
-              + 'These are the CURRENT values of populated fields. Empty/default fields omitted. Reference this when answering "what is X set to?" without needing a read_field tool call.\n'
-              + lines.join('\n') + '\n';
+              + 'These are the CURRENT values of populated fields. Empty/default fields omitted. Reference this when answering "what is X set to?" without needing a read_field tool call.'
+              + (_stateTight ? ' (Trimmed to the first ' + _maxStateFields + ' fields because a large document is attached this turn — use read_field for any others.)' : '') + '\n'
+              + lines.join('\n')
+              + (_omitted ? '\n…(' + _omitted + ' more fields omitted — use read_field/read_panel to query them)' : '') + '\n';
         }
         // Always tell AI about stage state
         if (window._aiStage && window._aiStage.entries && window._aiStage.entries.length) {
