@@ -2,16 +2,18 @@
    Patel RE Underwriting Suite — Service Worker
    Bump CACHE_VERSION whenever this file changes to bust old caches.
    Strategy:
-     - network-first  for HTML (index.html, landing.html) — always get fresh
+     - stale-while-revalidate for HTML — return cache instantly (150-400ms win
+       on repeat visits), refresh in background, swap on next reload. Was
+       network-first which forced a full HTML refetch (~1.36MB) every visit.
      - cache-first    for static CDN assets (fonts, pptxgenjs, xlsx, chart.js, pdf.js, mammoth, supabase-js)
      - bypass         for Supabase API + Stripe + internal analytics / api calls
      - bypass         for cross-origin POST/PUT/DELETE (non-GET) — never cache mutations
    ────────────────────────────────────────────────────────────────────────── */
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v47-universal-ai-brain-staging';
 const STATIC_CACHE  = `prsuite-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `prsuite-runtime-${CACHE_VERSION}`;
-const SCOPE_PREFIX  = '/patel-re-underwriting-suite/';
+const SCOPE_PREFIX  = '/underwriting-suite/';
 
 // Static assets we want available for fast repeat loads.
 // We DON'T precache these (their URLs are CDN-hosted with hashes already);
@@ -80,25 +82,32 @@ self.addEventListener('fetch', (event) => {
 
   if (shouldBypass(url, req)) return; // let the browser handle it directly
 
-  // 1) HTML — network-first, fall back to cache if offline
+  // 1) HTML — stale-while-revalidate.
+  // Return the cached HTML instantly (~0ms vs 150-400ms network fetch),
+  // refresh in background, swap on next reload. The HTML is 1.36MB; this
+  // saves a full network round-trip on every repeat visit while still
+  // picking up new deploys within one extra reload.
+  // The bumped CACHE_VERSION on each deploy guarantees no user is stuck on
+  // truly stale HTML for more than one visit after a release.
   if (isHtmlRequest(req)) {
     event.respondWith((async () => {
-      try {
-        const fresh = await fetch(req);
-        // Cache a clone for offline fallback (only same-origin scoped pages)
+      const cache = await caches.open(RUNTIME_CACHE);
+      const cached = await cache.match(req);
+      const fetchPromise = fetch(req).then((fresh) => {
         if (fresh.ok && url.origin === self.location.origin && url.pathname.startsWith(SCOPE_PREFIX)) {
-          const cache = await caches.open(RUNTIME_CACHE);
           cache.put(req, fresh.clone());
         }
         return fresh;
-      } catch (err) {
-        const cached = await caches.match(req);
+      }).catch((err) => {
+        // Network failed — fall back to last-resort cached shell if we have one
         if (cached) return cached;
-        // Last-resort offline shell — serve cached index if available
-        const shell = await caches.match(SCOPE_PREFIX + 'index.html');
-        if (shell) return shell;
-        throw err;
-      }
+        return caches.match(SCOPE_PREFIX + 'index.html').then(s => {
+          if (s) return s;
+          throw err;
+        });
+      });
+      // Return the cached copy instantly if we have it; otherwise wait for net.
+      return cached || fetchPromise;
     })());
     return;
   }
