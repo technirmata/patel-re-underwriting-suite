@@ -23257,11 +23257,36 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
       return { role: 'user', content: userBody, t: m.t, attachmentName: name };
     });
 
-    // Truncate the LAST attachment if oversized
+    // Truncate the LAST attachment if oversized — OR, on a follow-up turn,
+    // swap the full doc for the compact deal-summary JSON (v53 parse-once).
     if (lastAttachIdx !== -1) {
       var lastM = raw[lastAttachIdx];
       var att = lastM.attachment;
-      if (att && att.type === 'text' && att.text && att.text.length > MAX_ATTACH_CHARS) {
+
+      // v53 — PARSE-ONCE-TO-JSON. On a FOLLOW-UP turn (a newer user message
+      // exists after the upload), answer from the extracted ~1K-token deal
+      // summary instead of re-sending the 30-80K-token document. This is the
+      // big multi-turn cost lever (~95% fewer input tokens) + better math
+      // consistency. The UPLOAD turn itself still sends the full doc so the
+      // initial analysis is complete. FALLBACK-TO-SOURCE: if the question
+      // needs prose/clauses/page text not captured in the structured summary,
+      // keep sending the full doc that turn.
+      var _isFollowup = lastAttachIdx < raw.length - 1;
+      var _summary = null;
+      try { _summary = (window._dealSummaries && lastM.attachmentName) ? window._dealSummaries[lastM.attachmentName] : null; } catch(_){}
+      var _curQ = '';
+      try { var _lm = raw[raw.length - 1]; _curQ = (typeof _lm.content === 'string') ? _lm.content : ''; } catch(_){}
+      var _needsFullDoc = /\b(clause|page\s*\d|verbatim|exact wording|word[- ]for[- ]word|footnote|environmental|title report|tenant named|the full (doc|document|om)|read me the|what does (the )?(om|document|lease|page|it)\b)/i.test(_curQ);
+
+      if (_summary && _isFollowup && !_needsFullDoc) {
+        var _sumHdr = '[STRUCTURED DEAL SUMMARY for ' + (lastM.attachmentName || 'this deal') + ' — answer from this. All $ are full USD; rates are %. If a needed value is null, or the question needs prose/clauses not captured here, tell the user you need the source document re-attached.]\n\n';
+        raw[lastAttachIdx] = {
+          role: 'user',
+          content: _sumHdr + _summary + (lastM.content ? '\n\n' + lastM.content : ''),
+          t: lastM.t,
+          attachmentName: lastM.attachmentName
+        };
+      } else if (att && att.type === 'text' && att.text && att.text.length > MAX_ATTACH_CHARS) {
         var truncatedText = att.text.slice(0, MAX_ATTACH_CHARS)
           + '\n\n[…file truncated for AI: sent first '
           + MAX_ATTACH_CHARS.toLocaleString() + ' of '
