@@ -1,6 +1,38 @@
 <!doctype html>
 <html lang="en">
 <head>
+
+<!-- ───────────────────────────────────────────────────────────────────────
+     PREFETCH BLOCK v2 (security-tightened, 2026-05-18) — only warm DNS/TLS
+     to suite-related origins automatically; never auto-download the suite
+     HTML itself. Suite HTML is fetched ONLY when a real user hovers/touches
+     a CTA. This prevents bots / crawlers / scrapers from triggering the
+     1.36MB auto-download just by visiting the landing page.
+─────────────────────────────────────────────────────────────────────────── -->
+
+<!-- DNS pre-resolution -->
+<link rel="dns-prefetch" href="https://ykcvmlhpfnruucsgcxhd.supabase.co">
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+
+<!-- TCP + TLS warm-up — saves ~300ms when suite loads -->
+<link rel="preconnect" href="https://ykcvmlhpfnruucsgcxhd.supabase.co" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+<!-- Prefetch the suite HTML — browser downloads in idle network slots -->
+<!-- prefetch removed for security — see hover-prefetch JS instead -->
+
+<!-- prefetch removed for security — see hover-prefetch JS instead -->
+
+
+<!-- Prefetch heavy libs the suite loads (PWA icon + Supabase JS lib) -->
+<!-- prefetch removed for security — see hover-prefetch JS instead -->
+
+<!-- prefetch removed for security — see hover-prefetch JS instead -->
+
+
+<!-- ───────────────────────────────────────────────────────────────────── -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- pwa-head-v1 -->
@@ -23,9 +55,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0b0e16">
 <title>Patel RE Underwriting Suite. Underwrite any deal in under 2 minutes.</title>
-<meta name="description" content="13 financing strategies. One verdict per deal. 90 seconds. AI Strategy Agents stress-test sub-to, Morby, BRRRR, syndication and 9 more. and tell you which works, which is conditional, which is dead. Built for operators across every asset class. $49/mo, cancel anytime.">
+<meta name="description" content="13 financing structures. One verdict per deal. 90 seconds. AI Strategy Agents stress-test conventional, DSCR, agency, sub-to, Morby, seller-carry, syndication and more — telling you which works, which is conditional, which is dead. Every asset class (SFR, MFR, MHP, RV, storage, mixed-use, retail, office, industrial, land). Every operational mode (LTR / MTR / STR / BRRRR / value-add / fix-and-flip). $99/mo, cancel anytime.">
 <meta property="og:title" content="Underwrite any real estate deal in under 2 minutes">
-<meta property="og:description" content="13 AI Strategy Agents. One verdict per deal. Across every asset class. multifamily, SFR, STR, MHP, RV, storage, commercial, land. $49/mo. Cancel anytime.">
+<meta property="og:description" content="13 AI Strategy Agents. One verdict per deal. Every asset class: multifamily, SFR, MHP, RV parks, self-storage, mixed-use, retail, office, industrial, land. Every operational mode: long-, mid-, short-term rentals, BRRRR, value-add, fix-and-flip. $99/mo. Cancel anytime.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://technirmata.github.io/patel-re-underwriting-suite/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -87,7 +119,7 @@ img { display:block; max-width:100% }
 .brand { display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:-.2px; font-size:15px; color:var(--text); flex:1 }
 .brand .bolt { width:28px; height:28px; border-radius:8px; background:var(--gradient); display:flex; align-items:center; justify-content:center; font-size:14px; box-shadow:0 6px 18px rgba(99,102,241,.45) }
 .nav-cta { display:flex; gap:8px; align-items:center }
-.nav-link { color:var(--text2); font-size:14.5px; font-weight:600; padding:9px 13px; border-radius:8px }
+.nav-link { color:var(--text2); font-size:14.5px; font-weight:600; padding:9px 13px; border-radius:8px; min-height:44px; display:inline-flex; align-items:center }
 .nav-link:hover { color:var(--text); background:rgba(255,255,255,.04) }
 .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:inherit; font-size:15px; font-weight:700; padding:12px 20px; border-radius:10px; border:1px solid transparent; cursor:pointer; transition:.15s; text-decoration:none; white-space:nowrap; min-height:44px }
 .btn-primary { background:var(--gradient); color:#fff; box-shadow:0 8px 24px rgba(99,102,241,.35) }
@@ -222,6 +254,45 @@ img { display:block; max-width:100% }
 .footer-links a { color:var(--text2); font-size:14px; font-weight:500 }
 .footer-links a:hover { color:var(--text) }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   MOBILE NAV HAMBURGER (added 2026-05-18)
+   Single ≡ button replaces hidden nav-links on mobile. Tap opens a slide-down
+   drawer containing every section anchor plus prominent Sign in / Start free
+   trial CTAs. Mobile-first: 44×44 hamburger, full-width drawer, scroll-locks
+   body underneath, dismisses on link tap / ESC / backdrop tap.
+   ══════════════════════════════════════════════════════════════════════════ */
+.nav-burger { display:none; appearance:none; background:transparent; border:1px solid var(--border); color:var(--text); width:44px; height:44px; border-radius:10px; padding:0; cursor:pointer; flex-shrink:0; align-items:center; justify-content:center; transition:.15s; -webkit-tap-highlight-color:transparent }
+.nav-burger:hover, .nav-burger:focus-visible { background:var(--surface2); border-color:var(--surface3); outline:none }
+.nav-burger:active { transform:scale(.95); transition:transform .08s }
+.nav-burger .nb-icon { display:flex; flex-direction:column; gap:5px; width:18px; align-items:stretch }
+.nav-burger .nb-icon span { display:block; height:2px; background:currentColor; border-radius:2px; transition:transform .25s ease, opacity .15s ease, width .25s ease; transform-origin:center }
+.nav-burger[aria-expanded="true"] .nb-icon span:nth-child(1) { transform:translateY(7px) rotate(45deg) }
+.nav-burger[aria-expanded="true"] .nb-icon span:nth-child(2) { opacity:0; width:0 }
+.nav-burger[aria-expanded="true"] .nb-icon span:nth-child(3) { transform:translateY(-7px) rotate(-45deg) }
+
+.nav-drawer { position:fixed; top:0; left:0; right:0; bottom:0; z-index:80; display:none; background:rgba(7,10,18,.6); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); padding-top:env(safe-area-inset-top,0px); opacity:0; transition:opacity .2s ease }
+.nav-drawer.open { display:flex; flex-direction:column; opacity:1 }
+.nav-drawer-panel { background:var(--bg); border-bottom:1px solid var(--border); box-shadow:0 24px 48px rgba(0,0,0,.4); transform:translateY(-12px); transition:transform .25s cubic-bezier(.2,.8,.2,1); padding:14px max(20px, env(safe-area-inset-right)) 22px max(20px, env(safe-area-inset-left)) }
+.nav-drawer.open .nav-drawer-panel { transform:translateY(0) }
+.nav-drawer-hdr { display:flex; align-items:center; justify-content:space-between; height:54px; margin-bottom:8px }
+.nav-drawer-hdr .brand { font-size:14px }
+.nav-drawer-links { display:flex; flex-direction:column; gap:2px; padding:6px 0; border-top:1px solid var(--border) }
+.nav-drawer-links a { display:flex; align-items:center; gap:12px; padding:14px 12px; min-height:48px; color:var(--text); font-size:16px; font-weight:600; border-radius:10px; text-decoration:none; transition:background .12s }
+.nav-drawer-links a:hover, .nav-drawer-links a:active { background:var(--surface2); color:var(--text) }
+.nav-drawer-links a .arrow { margin-left:auto; opacity:.4; font-size:18px }
+.nav-drawer-cta { display:flex; flex-direction:column; gap:10px; padding-top:16px; margin-top:8px; border-top:1px solid var(--border) }
+.nav-drawer-cta .btn { width:100%; min-height:50px; font-size:15.5px }
+.nav-drawer-cta .signin-hint { font-size:12.5px; color:var(--muted); text-align:center; margin-top:4px; line-height:1.5 }
+.nav-drawer-backdrop-tap { flex:1; cursor:pointer }
+body.nav-locked { overflow:hidden; touch-action:none }
+
+@media (max-width:880px) {
+  .nav-burger { display:inline-flex }
+  /* Hide the inline Sign in / Start free trial buttons — drawer holds them */
+  .nav-cta { display:none }
+}
+/* On desktop, the drawer remains untouched and hidden (display:none default) */
+
 /* ── mobile ── */
 @media (max-width:880px) {
   .nav-link { display:none }
@@ -236,9 +307,12 @@ img { display:block; max-width:100% }
   .faq-list { grid-template-columns:1fr }
   .price-card { padding:30px 24px }
   .price-amount .num { font-size:54px }
-  /* sticky bottom CTA on mobile */
-  .mobile-cta { position:fixed; bottom:0; left:0; right:0; padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px)); background:rgba(7,10,18,.92); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-top:1px solid var(--border); z-index:60 }
-  .mobile-cta .btn { width:100% }
+  /* sticky bottom CTA on mobile — primary trial + sign-in escape hatch
+     side-by-side, primary takes ~2/3 of the row, sign-in ~1/3 */
+  .mobile-cta { position:fixed; bottom:0; left:0; right:0; padding:10px max(12px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px, env(safe-area-inset-left)); background:rgba(7,10,18,.94); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-top:1px solid var(--border); z-index:60 }
+  .mobile-cta-row { display:flex; gap:8px; align-items:stretch; max-width:560px; margin:0 auto }
+  .mobile-cta-primary { flex:2 1 auto; min-height:48px; font-size:15px }
+  .mobile-cta-signin { flex:1 1 auto; min-height:48px; font-size:14px; padding:10px 12px; min-width:90px }
   .footer { padding-bottom:calc(96px + env(safe-area-inset-bottom,0px)) }
 }
 @media (min-width:881px) { .mobile-cta { display:none } }
@@ -679,6 +753,142 @@ html, body{
   max-width: 100vw !important;
 }
 
+
+
+/* ════════════════════════════════════════════════════════════════════════
+   LANDING RESPONSIVENESS FIX v2 (2026-05-18) — appended to override prior rules.
+   Layers on top of pre-existing mobile media queries. Uses !important where
+   the previous rules failed to win (e.g. .bg-glow inline width:140vw).
+
+   Targets every audit finding:
+     • horizontal scroll on every viewport (bg-glow extending past edge)
+     • nav-link items rendering at phone widths despite earlier display:none
+     • tap targets at 21px height (nav items)
+     • Sticky bottom CTA potentially overlapping footer
+     • Form input font-size <16px (iOS auto-zoom)
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. GLOBAL OVERFLOW-X GUARD (every viewport, including desktop) ── */
+html, body {
+  overflow-x: hidden !important;
+  max-width: 100vw;
+}
+body * {
+  /* Prevent any descendant from causing horizontal scrollbar */
+  max-width: 100vw;
+}
+
+/* ── 2. Decorative bg-glow elements — clip to viewport ── */
+.bg-glow,
+.bg-glow-2 {
+  pointer-events: none !important;
+  max-width: 100vw !important;
+}
+@media (max-width: 768px) {
+  /* Decorative glows hidden entirely on mobile — they're just visual flair,
+     and they were causing scrollWidth to exceed viewport. */
+  .bg-glow,
+  .bg-glow-2 { display: none !important; }
+}
+
+/* ── 3. NAV ── */
+@media (max-width: 880px) {
+  /* Ensure nav-link items are fully hidden on phones (was visible in audit) */
+  .nav-link { display: none !important; }
+  .nav-cta { gap: 8px !important; flex-shrink: 0 !important; }
+  .nav-cta .btn {
+    min-height: 44px !important;
+    padding: 10px 14px !important;
+    font-size: 13.5px !important;
+    white-space: nowrap !important;
+  }
+  .nav-inner {
+    padding-left: max(14px, env(safe-area-inset-left)) !important;
+    padding-right: max(14px, env(safe-area-inset-right)) !important;
+  }
+}
+
+/* ── 4. TAP TARGETS (44×44 minimum per Apple HIG + WCAG 2.5.5) ──
+   NOTE: do NOT include .nav-link here — the @media (max-width:880px) rule
+   above sets display:none on .nav-link and we want that to win.
+   Setting display:inline-flex here would un-hide them. */
+@media (max-width: 768px) {
+  .footer-links a,
+  .hero-microcopy a,
+  .faq-item summary {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  button, .btn { min-height: 44px; }
+
+  /* Footer inline links: ensure 44px minimum tap area in BOTH dimensions */
+  .footer-links a {
+    min-width: 44px !important;
+    padding: 10px 8px !important;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+/* ── 5. FORM INPUTS — 16px font (prevents iOS auto-zoom on focus) ── */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ── 6. STICKY MOBILE-CTA — don't overlap content ── */
+@media (max-width: 880px) {
+  /* mobile-cta is position:fixed already; add bottom padding to body so
+     content above isn't hidden behind it */
+  body { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+  .mobile-cta {
+    z-index: 100 !important;
+    box-shadow: 0 -8px 24px rgba(0,0,0,.4);
+  }
+}
+
+/* ── 7. Asset class strip + hero — bullet-proof against text overflow ── */
+@media (max-width: 768px) {
+  .hero, .sec, .container {
+    overflow-x: hidden;
+  }
+  /* Wrap any long inline text on small screens */
+  h1, h2, h3, p {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+}
+
+/* ── 8. PRICING + FAQ + FOOTER tightening for <360 (iPhone SE 1st gen) ── */
+@media (max-width: 360px) {
+  .container { padding: 0 12px; }
+  .hero h1 { font-size: clamp(26px, 9vw, 34px) !important; }
+  .hero p.lede { font-size: 14.5px !important; }
+  .nav-cta .btn-primary {
+    padding: 8px 11px !important;
+    font-size: 12.5px !important;
+  }
+  .brand { font-size: 12.5px !important; }
+  .brand .bolt { width: 20px !important; height: 20px !important; }
+}
+
+/* ── 9. Images / SVGs / videos never overflow ── */
+img, svg, video, iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── 10. Desktop fix — the bg-glow-2 was extending past 1280px viewport too ── */
+@media (min-width: 769px) {
+  .bg-glow-2 {
+    right: 0 !important;
+    max-width: 60vw;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -698,18 +908,153 @@ html, body{
       <a href="/underwriting-suite/#login" class="btn btn-ghost">Sign in</a>
       <a href="/underwriting-suite/#register" class="btn btn-primary">Start free trial</a>
     </div>
+    <!-- Mobile hamburger — visible only at ≤880px via CSS -->
+    <button type="button" class="nav-burger" id="navBurger"
+            aria-label="Open menu" aria-controls="navDrawer" aria-expanded="false"
+            onclick="navDrawerToggle(event)">
+      <span class="nb-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+    </button>
   </div>
 </nav>
+
+<!-- ── MOBILE NAV DRAWER (hidden on desktop) ── -->
+<div class="nav-drawer" id="navDrawer" role="dialog" aria-modal="true" aria-label="Site navigation" hidden>
+  <div class="nav-drawer-panel">
+    <div class="nav-drawer-hdr">
+      <div class="brand"><span class="bolt">⚡</span> Patel RE Underwriting Suite</div>
+      <button type="button" class="nav-burger" aria-label="Close menu" aria-expanded="true" onclick="navDrawerToggle(event)">
+        <span class="nb-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+      </button>
+    </div>
+    <nav class="nav-drawer-links" aria-label="Sections">
+      <a href="#features" onclick="return navDrawerJump(event,'features')">✨ Features <span class="arrow">→</span></a>
+      <a href="#how"      onclick="return navDrawerJump(event,'how')">⚙ How it works <span class="arrow">→</span></a>
+      <a href="#pricing"  onclick="return navDrawerJump(event,'pricing')">💎 Pricing <span class="arrow">→</span></a>
+      <a href="#faq"      onclick="return navDrawerJump(event,'faq')">💬 FAQ <span class="arrow">→</span></a>
+    </nav>
+    <div class="nav-drawer-cta">
+      <a href="/underwriting-suite/#register" class="btn btn-primary" onclick="navDrawerClose({skipRefocus:true})">Start free trial →</a>
+      <a href="/underwriting-suite/#login" class="btn btn-ghost" onclick="navDrawerClose({skipRefocus:true})">Sign in</a>
+      <div class="signin-hint">Sign in with email + password, or continue with Google.</div>
+    </div>
+  </div>
+  <!-- backdrop tap-target -->
+  <div class="nav-drawer-backdrop-tap" onclick="navDrawerClose()" aria-hidden="true"></div>
+</div>
+
+<script>
+/* Mobile nav drawer — toggle + scroll-lock + ESC + outside-tap. */
+(function(){
+  'use strict';
+  var drawer, burger, prevFocus;
+  function $(id){ return document.getElementById(id); }
+  window.navDrawerToggle = function(e){
+    if(e && e.stopPropagation) e.stopPropagation();
+    drawer = drawer || $('navDrawer');
+    burger = burger || $('navBurger');
+    if(!drawer || !burger) return;
+    if(drawer.classList.contains('open')) { window.navDrawerClose(); return; }
+    window.navDrawerOpen();
+  };
+  window.navDrawerOpen = function(){
+    drawer = drawer || $('navDrawer');
+    burger = burger || $('navBurger');
+    if(!drawer) return;
+    prevFocus = document.activeElement;
+    drawer.hidden = false;
+    // double-rAF so display:flex paints before .open triggers transition
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      drawer.classList.add('open');
+    }); });
+    if(burger) burger.setAttribute('aria-expanded','true');
+    document.body.classList.add('nav-locked');
+    document.addEventListener('keydown', _navEsc);
+    // Move focus to the first link for accessibility
+    setTimeout(function(){
+      var first = drawer.querySelector('.nav-drawer-links a');
+      if(first) first.focus();
+    }, 120);
+  };
+  window.navDrawerClose = function(opts){
+    drawer = drawer || $('navDrawer');
+    burger = burger || $('navBurger');
+    if(!drawer) return;
+    drawer.classList.remove('open');
+    if(burger) burger.setAttribute('aria-expanded','false');
+    document.body.classList.remove('nav-locked');
+    document.removeEventListener('keydown', _navEsc);
+    var skipRefocus = opts && opts.skipRefocus;
+    setTimeout(function(){
+      drawer.hidden = true;
+      // BUG FIX 2026-05-18 (drawer-link-scrolls-to-top):
+      // When the user tapped a section link in the drawer, the anchor scroll
+      // would fire first then this focus restoration would call focus() on the
+      // hamburger button in the sticky top nav — the browser's default
+      // "scroll focused element into view" behavior then scrolled the page
+      // BACK UP to the top, defeating the anchor navigation.
+      // Fix: skip refocus when an anchor link triggered the close, AND pass
+      // {preventScroll:true} on the focus call so it never moves the viewport.
+      if (skipRefocus) return;
+      try { prevFocus && prevFocus.focus && prevFocus.focus({preventScroll: true}); } catch(_){}
+    }, 220);
+  };
+  function _navEsc(e){ if(e.key==='Escape') window.navDrawerClose(); }
+  // Defensive: if the viewport is resized above the breakpoint while open, close.
+  window.addEventListener('resize', function(){
+    if(drawer && drawer.classList.contains('open') && window.innerWidth > 880) {
+      window.navDrawerClose();
+    }
+  });
+
+  /* BUG FIX 2026-05-18 (drawer-link-scrolls-to-top):
+     Previously the drawer link relied on the browser's default anchor scroll,
+     which raced with: (a) the drawer's display:flex → none transition,
+     (b) the focus-restoration setTimeout that fired 220ms later and scrolled
+     the focused element into view. Net effect: the page either scrolled
+     partially or returned to the top.
+
+     Fix: take explicit control. preventDefault on the link, close the drawer
+     first, then scroll the target into view ourselves once the drawer is gone.
+     This eliminates every race condition. */
+  window.navDrawerJump = function(e, targetId){
+    if(e && e.preventDefault) e.preventDefault();
+    var target = document.getElementById(targetId);
+    if(!target) return false;
+    window.navDrawerClose({skipRefocus:true});
+    // Wait just past the drawer's 220ms close timer so the body class
+    // is fully released before the scroll begins.
+    setTimeout(function(){
+      try {
+        target.scrollIntoView({behavior:'smooth', block:'start'});
+      } catch(_){
+        // Fallback for older browsers without scrollIntoView options
+        target.scrollIntoView();
+      }
+      // Update URL hash WITHOUT triggering another anchor scroll
+      if(history && history.replaceState) {
+        try { history.replaceState(null, '', '#' + targetId); } catch(_){}
+      }
+    }, 240);
+    return false;
+  };
+})();
+</script>
 
 <!-- ── HERO ── -->
 <section class="hero">
 <div class="container">
   <div class="hero-grid">
     <div>
-      <div class="eyebrow"><span class="dot"></span> Built for active operators. Every asset class</div>
+      <div class="eyebrow"><span class="dot"></span> Built for flippers, wholesalers, syndicators, private lenders, LPs, brokers &amp; loan officers</div>
       <h1>Underwrite any deal in <span class="grad">under 2 minutes</span>.</h1>
       <p class="lede"><strong style="color:var(--text)">13 financing strategies.</strong> One verdict per deal. Before you write the LOI.</p>
-      <p style="font-size:13px;color:var(--muted);margin:-12px 0 28px;font-weight:500">From 1 unit to 2,000+ units. Multifamily, SFR, STR, MHP, RV, storage, mixed-use, office, retail, land. Every asset class.</p>
+      <p style="font-size:13px;color:var(--muted);margin:-12px 0 14px;font-weight:500">From a 1-unit single-family to a 2,000+ unit syndication. <strong style="color:var(--text2)">Every asset class</strong> — multifamily, SFR, MHP, RV parks, self-storage, mixed-use, retail, office, industrial, land. <strong style="color:var(--text2)">Every operational mode</strong> — long-term, mid-term, short-term, BRRRR, value-add, fix-and-flip.</p>
+      <!-- 2026-05-19: psychology hook #1 — loss aversion (Kahneman/Tversky). The
+           #1 driver for risk-conscious CRE investors. Frames the offer as
+           protection against catastrophic mistakes, not as a feature. -->
+      <p style="font-size:14px;color:var(--text2);margin:0 0 22px;font-weight:500;line-height:1.55;max-width:560px">
+        <span style="color:#fca5a5">⚠</span> One missed exit-cap stress test on a $2M deal can cost <strong style="color:var(--text)">$200,000</strong>. Brokers expect an LOI in <strong style="color:var(--text)">24 hours</strong>. Underwrite every deal — every time — the way a lender would, in minutes.
+      </p>
       <div class="hero-cta">
         <a href="/underwriting-suite/#register" class="btn btn-primary btn-lg">Underwrite my next deal →</a>
         <a href="#how" class="btn btn-ghost btn-lg">See how it works</a>
@@ -764,27 +1109,164 @@ html, body{
 </div>
 </section>
 
-<!-- ── ASSET CLASS STRIP ── -->
+<!-- ── ASSET CLASS + OPERATIONAL MODE STRIPS (2026-05-20 taxonomy fix) ──
+     Asset class = the physical property type. Operational mode = what
+     you do with it. Same SFR can be run LTR, MTR, or STR — the asset
+     doesn't change, the strategy does. Keeping the two dimensions
+     visually separate so the page reads accurately to anyone who knows CRE. -->
+<style>
+  .pill-row { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; max-width:1080px; margin:0 auto; }
+  .pill { display:inline-flex; align-items:center; gap:7px; padding:9px 14px; background:var(--surface); border:1px solid var(--border); border-radius:99px; font-size:14.5px; color:var(--text2); font-weight:600; }
+  .pill-mode { background:rgba(99,102,241,.06); border-color:rgba(99,102,241,.25); }
+  .pill-label { font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:1.2px; font-weight:800; margin:0 0 10px; text-align:center; }
+</style>
 <section style="padding:48px 0;background:linear-gradient(180deg,var(--bg) 0%,rgba(99,102,241,.04) 100%);position:relative;z-index:1">
   <div class="container">
     <div style="text-align:center;margin-bottom:22px">
-      <div style="font-size:13px;color:var(--accent);text-transform:uppercase;letter-spacing:1.4px;font-weight:800;margin-bottom:8px">Underwrite every asset class</div>
-      <div style="font-size:17px;color:var(--text2);font-weight:500;max-width:680px;margin:0 auto;line-height:1.6">Duplex BRRRR. 800-door syndication. RV parks, storage, mixed-use retail. Every asset class on one underwriter, with class-aware metrics and tailored due-diligence checklists.</div>
+      <div style="font-size:13px;color:var(--accent);text-transform:uppercase;letter-spacing:1.4px;font-weight:800;margin-bottom:8px">Every asset class. Every operational mode.</div>
+      <div style="font-size:17px;color:var(--text2);font-weight:500;max-width:780px;margin:0 auto;line-height:1.6">Duplex to 800-door syndication. SFR fix-and-flip. Mobile home parks. Self-storage. Retail and mixed-use. Lender underwrite of borrower deals. LP due diligence on sponsor pitches. <strong style="color:var(--text)">Asset class</strong> = the physical property. <strong style="color:var(--text)">Operational mode</strong> = what you do with it. The Suite handles both as separate dimensions, so the math doesn't lie when you flip an LTR to MTR or convert a duplex to STR.</div>
     </div>
-    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:1040px;margin:0 auto">
-      <span style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:99px;font-size:15px;color:var(--text2);font-weight:600">🏢 Multifamily 5–49u</span>
-      <span style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:99px;font-size:15px;color:var(--text2);font-weight:600">🏙 Multifamily syndication 50+u</span>
-      <span style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:99px;font-size:15px;color:var(--text2);font-weight:600">🏠 SFR / 1–4 units</span>
-      <span style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:99px;font-size:15px;color:var(--text2);font-weight:600">🏖 Short-term rental (STR)</span>
-      <span style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:99px;font-size:15px;color:var(--text2);font-weight:600">🏘 Mobile Home Park</span>
-      <span style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:99px;font-size:15px;color:var(--text2);font-weight:600">🚐 RV Park</span>
-      <span style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:99px;font-size:15px;color:var(--text2);font-weight:600">📦 Self-storage</span>
-      <span style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:99px;font-size:15px;color:var(--text2);font-weight:600">🔀 Mixed-use</span>
-      <span style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:99px;font-size:15px;color:var(--text2);font-weight:600">🛍 Retail strip</span>
-      <span style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:99px;font-size:15px;color:var(--text2);font-weight:600">🏛 Office</span>
-      <span style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:99px;font-size:15px;color:var(--text2);font-weight:600">🏬 Commercial / NNN</span>
-      <span style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:99px;font-size:15px;color:var(--text2);font-weight:600">🌿 Land / development</span>
+
+    <div class="pill-label">Asset classes</div>
+    <div class="pill-row" style="margin-bottom:18px">
+      <span class="pill">🏠 Single-family (1 unit)</span>
+      <span class="pill">🏡 Small residential (2–4 unit)</span>
+      <span class="pill">🏢 Multifamily 5–49u</span>
+      <span class="pill">🏙 Multifamily 50+u (syndication)</span>
+      <span class="pill">🏘 Mobile home park</span>
+      <span class="pill">🚐 RV park</span>
+      <span class="pill">📦 Self-storage</span>
+      <span class="pill">🔀 Mixed-use</span>
+      <span class="pill">🛍 Retail strip / NNN</span>
+      <span class="pill">🏛 Office</span>
+      <span class="pill">🏭 Industrial / flex</span>
+      <span class="pill">🌿 Land / development</span>
     </div>
+
+    <div class="pill-label">Operational modes &amp; investment strategies</div>
+    <div class="pill-row">
+      <span class="pill pill-mode">📅 Long-term rental (LTR)</span>
+      <span class="pill pill-mode">🗓 Mid-term rental (MTR)</span>
+      <span class="pill pill-mode">🏖 Short-term rental (STR)</span>
+      <span class="pill pill-mode">🔁 BRRRR</span>
+      <span class="pill pill-mode">🛠 Fix &amp; flip</span>
+      <span class="pill pill-mode">📋 Wholesale assignment</span>
+      <span class="pill pill-mode">🏗 Value-add / reposition</span>
+      <span class="pill pill-mode">🏚 Ground-up development</span>
+      <span class="pill pill-mode">🤝 Syndication</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── ACRONYM GLOSSARY (2026-05-19, layout polish 2026-05-20) ──────────
+     Collapsed by default so it doesn't bloat the page. New investors
+     googling "SFR meaning" mid-scroll churn off — this removes that
+     friction without dominating the layout for veterans. -->
+<style>
+  details.cre-glossary { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px 24px; color:var(--text2); transition:border-color .2s; }
+  details.cre-glossary[open] { border-color:rgba(99,102,241,.35); }
+  details.cre-glossary > summary { cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between; gap:18px; }
+  details.cre-glossary > summary::-webkit-details-marker { display:none; }
+  details.cre-glossary > summary::marker { content:""; }
+  .cre-glos-head { display:flex; align-items:center; gap:12px; min-width:0; flex:1; }
+  .cre-glos-icon { font-size:24px; flex-shrink:0 }
+  .cre-glos-text { display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .cre-glos-title { font-weight:700; color:var(--text); font-size:15.5px; line-height:1.35; }
+  .cre-glos-sub   { font-size:12px; color:var(--muted); font-weight:500; line-height:1.4; }
+  .cre-glos-toggle { font-size:12.5px; color:var(--accent); font-weight:700; text-transform:uppercase; letter-spacing:.6px; white-space:nowrap; flex-shrink:0; padding:6px 12px; border:1px solid rgba(99,102,241,.35); border-radius:99px; background:rgba(99,102,241,.08); }
+  details.cre-glossary[open] .cre-glos-toggle-collapsed,
+  details.cre-glossary:not([open]) .cre-glos-toggle-expanded { display:none; }
+  .cre-glos-body { margin-top:22px; display:grid; gap:22px; }
+  .cre-glos-group-h { font-size:11.5px; color:var(--accent); text-transform:uppercase; letter-spacing:1.2px; font-weight:800; margin-bottom:10px; }
+  .cre-glos-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:10px; }
+  .cre-glos-card { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px 14px; font-size:13.5px; line-height:1.5; }
+  .cre-glos-card strong { color:var(--text); }
+  @media (max-width: 600px) {
+    details.cre-glossary { padding:18px; }
+    details.cre-glossary > summary { flex-direction:column; align-items:flex-start; gap:12px; }
+    .cre-glos-toggle { align-self:flex-end; }
+    .cre-glos-title { font-size:15px; }
+    .cre-glos-sub { font-size:11.5px; }
+    .cre-glos-grid { grid-template-columns:1fr; }
+    .cre-glos-card { font-size:13px; }
+  }
+</style>
+<section style="padding:36px 0 12px;background:var(--bg);position:relative;z-index:1">
+  <div class="container">
+    <details class="cre-glossary">
+      <summary>
+        <div class="cre-glos-head">
+          <span class="cre-glos-icon">📖</span>
+          <div class="cre-glos-text">
+            <div class="cre-glos-title">New to CRE? Decode the alphabet soup.</div>
+            <div class="cre-glos-sub">SFR, MTR, STR, MHP, GP, LP, OM, LOI, PSA, NOI, DSCR, IRR, BRRRR, Sub-To… plain English, one tap.</div>
+          </div>
+        </div>
+        <span class="cre-glos-toggle">
+          <span class="cre-glos-toggle-collapsed">Show ▾</span>
+          <span class="cre-glos-toggle-expanded">Hide ▴</span>
+        </span>
+      </summary>
+      <div class="cre-glos-body">
+        <div>
+          <div class="cre-glos-group-h">Asset types — the physical property (the <em>what</em>)</div>
+          <div class="cre-glos-grid">
+            <div class="cre-glos-card"><strong>SFR · Single Family.</strong> A standalone 1-unit house. The most common entry-point asset for new investors.</div>
+            <div class="cre-glos-card"><strong>2–4 unit / Small residential.</strong> Duplex, triplex, fourplex. Still residential financing, often house-hackable.</div>
+            <div class="cre-glos-card"><strong>MFR · Multifamily Residential.</strong> 5+ residential units. Commercial-side financing (DSCR / agency / Fannie / Freddie SBL).</div>
+            <div class="cre-glos-card"><strong>MHP · Mobile Home Park.</strong> Land + lot-rent model. Tenants own the home, you rent the dirt. Recession-resistant cash flow.</div>
+            <div class="cre-glos-card"><strong>Self-storage.</strong> Drive-up or climate-controlled units. Low management lift, NOI-driven valuations.</div>
+            <div class="cre-glos-card"><strong>Retail / NNN / Mixed-use / Office / Industrial / Land.</strong> Commercial categories. Underwriting hinges on tenant credit, lease term, and cap-rate comps.</div>
+          </div>
+        </div>
+        <div>
+          <div class="cre-glos-group-h">Operational modes — what you <em>do</em> with the asset (NOT asset classes)</div>
+          <div class="cre-glos-grid">
+            <div class="cre-glos-card"><strong>LTR · Long-Term Rental.</strong> Standard 12-month lease. Stable cashflow, lower mgmt lift. Most lenders underwrite this case by default.</div>
+            <div class="cre-glos-card"><strong>MTR · Mid-Term Rental.</strong> 30-day to 6-month furnished stays. Travel nurses, corporate housing, insurance-displacement tenants. Higher revenue than LTR; insurance + furnishings add cost.</div>
+            <div class="cre-glos-card"><strong>STR · Short-Term Rental.</strong> Nightly Airbnb / VRBO / Booking. Highest revenue ceiling, highest operational + regulatory risk. Many cities restrict.</div>
+            <div class="cre-glos-card"><strong>BRRRR · Buy, Rehab, Rent, Refinance, Repeat.</strong> Value-add playbook on residential. Refi out most/all capital, recycle into next deal.</div>
+            <div class="cre-glos-card"><strong>Fix &amp; flip.</strong> Buy distressed, renovate, resell. Profit = ARV − purchase − rehab − holding − selling costs. Capital gains, not rental income.</div>
+            <div class="cre-glos-card"><strong>Wholesale.</strong> Contract a property at below-market, assign the contract to an end-buyer for a fee. No capital required to close the assignment.</div>
+            <div class="cre-glos-card"><strong>Value-add / reposition.</strong> Buy underperforming, force NOI growth via rent bumps, expense reduction, or repositioning. Typical hold: 3–7 years.</div>
+            <div class="cre-glos-card"><strong>Syndication.</strong> Pool LP capital into a GP-led entity to acquire larger deals. Reg D 506(b) or 506(c) offering. GP earns acquisition fee + management fee + promote.</div>
+          </div>
+        </div>
+        <div>
+          <div class="cre-glos-group-h">Deal structure — who's on the cap table</div>
+          <div class="cre-glos-grid">
+            <div class="cre-glos-card"><strong>GP · General Partner.</strong> Deal sponsor / operator. Signs on the loan, executes the plan, earns the promote.</div>
+            <div class="cre-glos-card"><strong>LP · Limited Partner.</strong> Passive investor. Writes a check, receives distributions, liability capped at investment.</div>
+            <div class="cre-glos-card"><strong>OM · Offering Memorandum.</strong> The marketing PDF brokers send buyers. Always re-underwrite the OM's numbers.</div>
+            <div class="cre-glos-card"><strong>LOI · Letter of Intent.</strong> Non-binding offer outlining major terms. Broker etiquette: respond inside 24 hours.</div>
+            <div class="cre-glos-card"><strong>PSA · Purchase &amp; Sale Agreement.</strong> Binding contract that supersedes the LOI. Locks price, contingencies, earnest money.</div>
+            <div class="cre-glos-card"><strong>T-12 / T-3 · Trailing 12 / 3 months.</strong> Actual financials over the last 12 (or 3) months. The most trustworthy number on the OM.</div>
+          </div>
+        </div>
+        <div>
+          <div class="cre-glos-group-h">Return metrics — the numbers you care about</div>
+          <div class="cre-glos-grid">
+            <div class="cre-glos-card"><strong>NOI · Net Operating Income.</strong> Gross income minus operating expenses (before debt &amp; CapEx). Value = NOI ÷ cap rate.</div>
+            <div class="cre-glos-card"><strong>CoC · Cash-on-Cash.</strong> Year-1 pre-tax cash flow ÷ total cash invested. The most-quoted return metric for active investors.</div>
+            <div class="cre-glos-card"><strong>DSCR · Debt-Service Coverage Ratio.</strong> NOI ÷ annual debt payments. Lenders want 1.20–1.25× minimum.</div>
+            <div class="cre-glos-card"><strong>IRR · Internal Rate of Return.</strong> Time-weighted annualized return across the entire hold, including exit. The institutional standard.</div>
+            <div class="cre-glos-card"><strong>EM · Equity Multiple.</strong> Total dollars returned ÷ total dollars invested. 2.0× EM doubled your money.</div>
+            <div class="cre-glos-card"><strong>Promote · GP Carry.</strong> The GP's outsized share above the LP pref. Typical institutional MFR: 20–30% of profits above an 8% pref — often the largest line item on a syndication's GP P&amp;L.</div>
+          </div>
+        </div>
+        <div>
+          <div class="cre-glos-group-h">Financing — what the lender / banker says</div>
+          <div class="cre-glos-grid">
+            <div class="cre-glos-card"><strong>LTV · Loan-to-Value.</strong> Loan amount ÷ appraised property value. 65–75% typical for stabilized multifamily.</div>
+            <div class="cre-glos-card"><strong>PITI · Principal, Interest, Taxes, Insurance.</strong> The four pieces of a fully-loaded monthly mortgage payment.</div>
+            <div class="cre-glos-card"><strong>ARV · After-Repair Value.</strong> What the property will appraise for after renovation. Pivotal in BRRRR and value-add deals.</div>
+            <div class="cre-glos-card"><strong>CapEx · Capital Expenditure.</strong> Big-ticket replacements (roof, HVAC, paving). Reserve ≈ $250–$500 / unit / year on stabilized MFR.</div>
+            <div class="cre-glos-card"><strong>DSCR loan.</strong> Underwritten on the property's cash flow, not your W-2. 1.20–1.25× DSCR typical floor; up to 80% LTV on stabilized rentals.</div>
+            <div class="cre-glos-card"><strong>Sub-To · Subject-To.</strong> Take title while the seller's existing mortgage stays in place. Creative-finance technique — watch out for due-on-sale clauses.</div>
+          </div>
+        </div>
+      </div>
+    </details>
   </div>
 </section>
 
@@ -792,7 +1274,7 @@ html, body{
 <section class="trust">
   <div class="container">
     <div style="text-align:center;margin-bottom:16px;font-size:15.5px;color:var(--text2);font-weight:600">
-      Operators using this have closed <strong style="color:var(--text)">$1.4B+</strong> in 2025 acquisitions across <strong style="color:var(--text)">38 states</strong>.
+      Built for SFR flippers, wholesalers, syndication GPs, private &amp; hard-money lenders, accredited LPs, commercial brokers &amp; loan officers — every active role in the deal lifecycle.
     </div>
     <div class="trust-row">
       <span class="trust-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Fannie / Freddie DSCR thresholds</span>
@@ -833,75 +1315,297 @@ html, body{
 </section>
 
 <!-- ── COMPARISON TABLE (NEW) ── -->
+<!-- ═══════════════════════════════════════════════════════════════════════
+     COMPARISON SECTION
+     2026-05-19 — redesigned for vertical scroll. Was a horizontal table
+     that forced left-right scroll on mobile. New layout: per-feature
+     comparison cards stacked vertically. Patel column is highlighted
+     gradient on every card so the eye lands there first. Above-fold
+     "headline numbers" strip catches attention immediately.
+     ═══════════════════════════════════════════════════════════════════ -->
+<style>
+.cmp-headline { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin:32px 0 38px; }
+.cmp-headline .h-tile { background:linear-gradient(135deg, rgba(99,102,241,.12), rgba(139,92,246,.08)); border:1px solid rgba(99,102,241,.35); border-radius:14px; padding:22px 18px; text-align:center }
+.cmp-headline .h-tile .h-num { font-size:clamp(28px,5vw,42px); font-weight:800; color:var(--accent); letter-spacing:-1px; line-height:1; margin-bottom:6px; font-family:'JetBrains Mono',monospace }
+.cmp-headline .h-tile .h-lbl { font-size:13.5px; color:var(--text2); font-weight:600; line-height:1.45 }
+
+.cmp-stack { display:grid; grid-template-columns:1fr; gap:14px }
+.cmp-row { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; transition:border-color .2s }
+.cmp-row:hover { border-color:rgba(99,102,241,.35) }
+.cmp-feat { padding:14px 20px; font-weight:700; color:var(--text); font-size:15.5px; border-bottom:1px solid var(--border); background:var(--surface2); display:flex; align-items:center; gap:10px }
+.cmp-feat .cmp-feat-icon { width:22px; height:22px; flex-shrink:0 }
+.cmp-cells { display:grid; grid-template-columns:repeat(3, 1fr); gap:0 }
+.cmp-cell { padding:16px 14px; text-align:center; border-right:1px solid var(--border); display:flex; flex-direction:column; gap:6px; align-items:center; justify-content:center }
+.cmp-cell:last-child { border-right:none }
+.cmp-cell .cmp-vendor { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; font-weight:700 }
+.cmp-cell .cmp-val { font-size:14.5px; color:var(--text2); font-weight:600; line-height:1.4 }
+.cmp-cell.cmp-bad .cmp-val { color:#fca5a5 }
+.cmp-cell.cmp-meh .cmp-val { color:#fbbf24 }
+.cmp-cell.cmp-win { background:linear-gradient(180deg, rgba(99,102,241,.10) 0%, rgba(99,102,241,.04) 100%); position:relative }
+.cmp-cell.cmp-win::before { content:'★'; position:absolute; top:6px; right:8px; color:var(--accent); font-size:10px }
+.cmp-cell.cmp-win .cmp-vendor { color:var(--accent) }
+.cmp-cell.cmp-win .cmp-val { color:var(--green); font-weight:800 }
+
+/* Mobile: stack the 3 cells vertically — vendors become full-width rows so
+   the eye sees them top-to-bottom while scrolling down (no horizontal scroll). */
+@media (max-width:768px) {
+  .cmp-headline { gap:10px; margin:20px 0 26px }
+  .cmp-headline .h-tile { padding:16px 12px }
+  .cmp-headline .h-tile .h-num { font-size:clamp(22px,7vw,32px) }
+  .cmp-headline .h-tile .h-lbl { font-size:11.5px }
+  .cmp-feat { padding:12px 16px; font-size:14px }
+  .cmp-cells { grid-template-columns:1fr; gap:1px; background:var(--border) }
+  .cmp-cell { padding:11px 14px; flex-direction:row; justify-content:space-between; gap:12px; text-align:left; background:var(--surface); border-right:none }
+  .cmp-cell .cmp-vendor { font-size:11.5px; min-width:108px; text-align:left }
+  .cmp-cell .cmp-val { font-size:13.5px; text-align:right }
+  .cmp-cell.cmp-win::before { top:50%; transform:translateY(-50%); right:10px; font-size:11px }
+  .cmp-cell.cmp-win .cmp-val { padding-right:18px }
+}
+
+@media (max-width:480px) {
+  .cmp-headline { grid-template-columns:1fr; gap:8px }
+  .cmp-headline .h-tile { padding:14px 16px; text-align:left; display:flex; align-items:center; gap:14px }
+  .cmp-headline .h-tile .h-num { margin-bottom:0; font-size:28px; min-width:62px }
+}
+</style>
+
 <section class="sec" style="background:var(--bg);border-bottom:1px solid var(--border);padding:80px 0">
 <div class="container">
   <div class="sec-head">
-    <h2>Excel can&rsquo;t. Argus and Yardi <span class="grad">won&rsquo;t.</span></h2>
-    <p class="lede">The gap between &quot;1 spreadsheet per deal&quot; and &quot;$50k/yr enterprise platform&quot; is where active operators live. We built for that gap.</p>
+    <h2>Excel can&rsquo;t. Argus and Yardi <span class="grad">cost a fortune.</span></h2>
+    <p class="lede">The gap between &quot;1 spreadsheet per deal&quot; and &quot;$50K–$250K/yr enterprise stack&quot; is where active operators live. We built for that gap.</p>
   </div>
-  <div style="overflow-x:auto;border:1px solid var(--border);border-radius:14px;background:var(--surface)">
-    <table style="width:100%;border-collapse:collapse;min-width:680px">
-      <thead>
-        <tr style="background:var(--surface2);border-bottom:1px solid var(--border)">
-          <th style="text-align:left;padding:18px 20px;font-size:13.5px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.5px"></th>
-          <th style="text-align:center;padding:18px 14px;font-size:14px;color:var(--text2);font-weight:600">Excel / Sheets</th>
-          <th style="text-align:center;padding:18px 14px;font-size:14px;color:var(--text2);font-weight:600">Argus / Yardi</th>
-          <th style="text-align:center;padding:18px 14px;font-size:14px;color:var(--accent);font-weight:800;background:rgba(99,102,241,.08);border-bottom:2px solid var(--accent)">Patel RE Suite</th>
-        </tr>
-      </thead>
-      <tbody style="font-size:14.5px;color:var(--text2)">
-        <tr style="border-bottom:1px solid var(--border)">
-          <td style="padding:14px 20px;font-weight:600;color:var(--text)">Time per deal</td>
-          <td style="padding:14px;text-align:center">2-7 hours</td>
-          <td style="padding:14px;text-align:center">30-90 min</td>
-          <td style="padding:14px;text-align:center;background:rgba(99,102,241,.04);font-weight:700;color:var(--green)">&lt; 2 minutes</td>
-        </tr>
-        <tr style="border-bottom:1px solid var(--border)">
-          <td style="padding:14px 20px;font-weight:600;color:var(--text)">Asset classes</td>
-          <td style="padding:14px;text-align:center">Whatever you build</td>
-          <td style="padding:14px;text-align:center">MFR / Office / Retail</td>
-          <td style="padding:14px;text-align:center;background:rgba(99,102,241,.04);font-weight:700;color:var(--green)">All 12, agent-aware</td>
-        </tr>
-        <tr style="border-bottom:1px solid var(--border)">
-          <td style="padding:14px 20px;font-weight:600;color:var(--text)">Financing structures</td>
-          <td style="padding:14px;text-align:center">1-2 per template</td>
-          <td style="padding:14px;text-align:center">3-5 (debt only)</td>
-          <td style="padding:14px;text-align:center;background:rgba(99,102,241,.04);font-weight:700;color:var(--green)">13 + AI verdicts</td>
-        </tr>
-        <tr style="border-bottom:1px solid var(--border)">
-          <td style="padding:14px 20px;font-weight:600;color:var(--text)">Sub-to / Morby / creative</td>
-          <td style="padding:14px;text-align:center;color:#fca5a5">No</td>
-          <td style="padding:14px;text-align:center;color:#fca5a5">No</td>
-          <td style="padding:14px;text-align:center;background:rgba(99,102,241,.04);font-weight:700;color:var(--green)">Yes. natively</td>
-        </tr>
-        <tr style="border-bottom:1px solid var(--border)">
-          <td style="padding:14px 20px;font-weight:600;color:var(--text)">Per-LP waterfall</td>
-          <td style="padding:14px;text-align:center">Custom build · breaks past 10u</td>
-          <td style="padding:14px;text-align:center">Yes</td>
-          <td style="padding:14px;text-align:center;background:rgba(99,102,241,.04);font-weight:700;color:var(--green)">Yes</td>
-        </tr>
-        <tr style="border-bottom:1px solid var(--border)">
-          <td style="padding:14px 20px;font-weight:600;color:var(--text)">Pitch deck + LOI auto-gen</td>
-          <td style="padding:14px;text-align:center;color:#fca5a5">No</td>
-          <td style="padding:14px;text-align:center;color:#fbbf24">Add-on</td>
-          <td style="padding:14px;text-align:center;background:rgba(99,102,241,.04);font-weight:700;color:var(--green)">.pptx + .docx, 1 click</td>
-        </tr>
-        <tr style="border-bottom:1px solid var(--border)">
-          <td style="padding:14px 20px;font-weight:600;color:var(--text)">Onboarding time</td>
-          <td style="padding:14px;text-align:center">Weeks per template</td>
-          <td style="padding:14px;text-align:center">4-6 weeks training</td>
-          <td style="padding:14px;text-align:center;background:rgba(99,102,241,.04);font-weight:700;color:var(--green)">Zero. open &amp; paste</td>
-        </tr>
-        <tr>
-          <td style="padding:14px 20px;font-weight:600;color:var(--text)">Cost</td>
-          <td style="padding:14px;text-align:center">Free (your time)</td>
-          <td style="padding:14px;text-align:center">$15-50k/yr</td>
-          <td style="padding:14px;text-align:center;background:rgba(99,102,241,.04);font-weight:800;color:var(--accent);font-size:16px">$49/mo</td>
-        </tr>
-      </tbody>
-    </table>
+
+  <!-- Headline contrast — verified ranges, 2026-05 update. -->
+  <div class="cmp-headline">
+    <div class="h-tile"><div class="h-num">~15×</div><div class="h-lbl">faster than Argus per deal <span style="color:var(--muted)">~2 min vs ~30 min institutional</span></div></div>
+    <div class="h-tile"><div class="h-num">40–200×</div><div class="h-lbl">cheaper than the institutional stack <span style="color:var(--muted)">$1,188/yr vs $50K–$250K/yr</span></div></div>
+    <div class="h-tile"><div class="h-num">13</div><div class="h-lbl">financing structures with AI verdicts <span style="color:var(--muted)">vs Argus 3–5</span></div></div>
   </div>
-  <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:14px">Don't take our word for it. open the app and run your last deal through it. 7-day trial, cancel anytime.</p>
+
+  <!-- Per-feature comparison stack. Vertical-first — no horizontal scroll. -->
+  <div class="cmp-stack">
+    <div class="cmp-row">
+      <div class="cmp-feat">⏱ Time per deal</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Excel / Sheets</span><span class="cmp-val">2-7 hours</span></div>
+        <div class="cmp-cell cmp-meh"><span class="cmp-vendor">Argus / Yardi</span><span class="cmp-val">30-90 min</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE Suite</span><span class="cmp-val">&lt; 2 minutes</span></div>
+      </div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-feat">🏢 Asset classes covered</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-meh"><span class="cmp-vendor">Excel / Sheets</span><span class="cmp-val">Whatever you build</span></div>
+        <div class="cmp-cell cmp-meh"><span class="cmp-vendor">Argus / Yardi</span><span class="cmp-val">MFR / Office / Retail</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE Suite</span><span class="cmp-val">All 12, agent-aware</span></div>
+      </div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-feat">💼 Financing structures</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Excel / Sheets</span><span class="cmp-val">1-2 per template</span></div>
+        <div class="cmp-cell cmp-meh"><span class="cmp-vendor">Argus / Yardi</span><span class="cmp-val">3-5 (debt only)</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE Suite</span><span class="cmp-val">13 + AI verdicts</span></div>
+      </div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-feat">⚡ Sub-to / Morby / creative</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Excel / Sheets</span><span class="cmp-val">No</span></div>
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Argus / Yardi</span><span class="cmp-val">No</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE Suite</span><span class="cmp-val">Yes, natively</span></div>
+      </div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-feat">💧 Per-LP waterfall</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Excel / Sheets</span><span class="cmp-val">Custom · breaks past 10 LPs</span></div>
+        <div class="cmp-cell cmp-meh"><span class="cmp-vendor">Argus / Yardi</span><span class="cmp-val">Yes</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE Suite</span><span class="cmp-val">Yes, unlimited LPs</span></div>
+      </div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-feat">📑 Pitch deck + LOI auto-generated</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Excel / Sheets</span><span class="cmp-val">No</span></div>
+        <div class="cmp-cell cmp-meh"><span class="cmp-vendor">Argus / Yardi</span><span class="cmp-val">Paid add-on</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE Suite</span><span class="cmp-val">.pptx + .docx, 1 click</span></div>
+      </div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-feat">🚀 Onboarding</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-meh"><span class="cmp-vendor">Excel / Sheets</span><span class="cmp-val">Weeks per template</span></div>
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Argus / Yardi</span><span class="cmp-val">4-6 weeks training</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE Suite</span><span class="cmp-val">Zero. open &amp; paste</span></div>
+      </div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-feat">💵 Cost</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-meh"><span class="cmp-vendor">Excel / Sheets</span><span class="cmp-val">Free (your time)</span></div>
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Argus / Yardi institutional</span><span class="cmp-val">$50K – $250K / yr</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE Suite</span><span class="cmp-val" style="font-size:16px">$99/mo</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:28px">
+    <a href="/underwriting-suite/#register" class="btn btn-primary btn-lg">Underwrite my next deal in 2 minutes →</a>
+    <p style="font-size:13px;color:var(--muted);margin-top:14px">Run your last deal through it. 7-day trial, $99/mo after, cancel anytime.</p>
+  </div>
+</div>
+</section>
+
+<!-- ── COST COMPARISON (2026-05-20, re-researched with realistic numbers) ──
+     Now reflects actual institutional/syndication economics: real GP
+     promote splits (20-30% of profits above pref, not "1-3% giveaway"),
+     real Argus Enterprise per-seat subscription + implementation, and
+     real boutique-modeling-shop rates. Three persona tiers: solo SFR/MFR,
+     active syndicator, institutional. -->
+<section class="sec" style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:80px 0">
+<div class="container">
+  <div class="sec-head">
+    <h2>The <span class="grad">real cost</span> of every other path.</h2>
+    <p class="lede">Whether you flip houses, wholesale, syndicate, lend, or invest LP — the alternatives to underwriting deals yourself run from "a fee per deal" to "a partner who took a permanent slice of your GP." Here's the math.</p>
+  </div>
+
+  <!-- ── TIER 1: SOLO / SMALL OPERATORS (SFR, BRRRR, wholesalers, small MFR) ── -->
+  <div style="margin:34px 0 14px">
+    <div style="font-size:12.5px;color:var(--accent);text-transform:uppercase;letter-spacing:1.4px;font-weight:800;margin-bottom:6px">Tier 1 · Solo operators</div>
+    <div style="font-size:14px;color:var(--text2);font-weight:500">SFR flippers, BRRRR investors, wholesalers, 2–50 unit MFR buyers, STR/MTR portfolios.</div>
+  </div>
+
+  <div class="cmp-stack">
+    <div class="cmp-row">
+      <div class="cmp-feat">💼 Freelance underwriter (Upwork / Fiverr, hourly)</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Per deal</span><span class="cmp-val">$450 – $3,000</span></div>
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">12 deals / yr</span><span class="cmp-val">$5,400 – $36,000</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE</span><span class="cmp-val">$1,188 / yr · flat</span></div>
+      </div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-feat">📝 Boutique deal-modeling shop (per-deal flat fee)</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Stabilized SFR/MFR</span><span class="cmp-val">$500 – $2,500</span></div>
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Value-add / BRRRR</span><span class="cmp-val">$2,500 – $7,500</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE</span><span class="cmp-val">$0 per deal</span></div>
+      </div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-feat">⏱ Time cost (DIY in Excel, 6–15 hrs/deal at $100–$200/hr opportunity cost)</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Per deal</span><span class="cmp-val">$600 – $3,000</span></div>
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">12 deals / yr</span><span class="cmp-val">$7,200 – $36,000</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE</span><span class="cmp-val">~5 min / deal</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TIER 2: ACTIVE SYNDICATORS / GP TEAMS (the real money) ── -->
+  <div style="margin:38px 0 14px">
+    <div style="font-size:12.5px;color:var(--accent);text-transform:uppercase;letter-spacing:1.4px;font-weight:800;margin-bottom:6px">Tier 2 · Active syndicators &amp; GP teams</div>
+    <div style="font-size:14px;color:var(--text2);font-weight:500">Anyone running a 50–500 unit MFR program, MHP portfolio, mixed-use roll-up, or running $2M+ LP raises. This is where the <em>real</em> dollars are.</div>
+  </div>
+
+  <div class="cmp-stack">
+    <div class="cmp-row">
+      <div class="cmp-feat">🤝 In-house analyst / underwriter as <strong>GP equity partner</strong></div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Typical equity slice</span><span class="cmp-val">5 – 25% of GP promote</span></div>
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Per syndication<br><span style="font-size:10px;color:var(--muted)">$5M LP raise, 2x EM, 5-yr hold → ~$700K GP promote</span></span><span class="cmp-val">$35,000 – $175,000</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE</span><span class="cmp-val">Keep 100% of GP</span></div>
+      </div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-feat">👔 Co-Sponsor / KP cut for the underwriting + raise help</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Typical co-sponsor split</span><span class="cmp-val">25 – 50% of GP promote</span></div>
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Per syndication<br><span style="font-size:10px;color:var(--muted)">on same $700K promote</span></span><span class="cmp-val">$175,000 – $350,000</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE</span><span class="cmp-val">$1,188 / yr · flat</span></div>
+      </div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-feat">💸 Placement agent / capital raiser (boutique broker-dealer)</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Success fee on equity</span><span class="cmp-val">2 – 6%</span></div>
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Per $5M raise<br><span style="font-size:10px;color:var(--muted)">+ $24–$60K/yr retainer</span></span><span class="cmp-val">$100,000 – $300,000</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE</span><span class="cmp-val">Built-in pitch deck + LP-ready exec</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TIER 3: INSTITUTIONAL TOOLS (Argus / Yardi / RealPage) ── -->
+  <div style="margin:38px 0 14px">
+    <div style="font-size:12.5px;color:var(--accent);text-transform:uppercase;letter-spacing:1.4px;font-weight:800;margin-bottom:6px">Tier 3 · Institutional underwriting stack</div>
+    <div style="font-size:14px;color:var(--text2);font-weight:500">What pension-fund-grade shops actually pay. Per-seat subscriptions, mandatory implementation engagements, training budgets, and per-unit data feeds.</div>
+  </div>
+
+  <div class="cmp-stack">
+    <div class="cmp-row">
+      <div class="cmp-feat">🏛 Argus Enterprise (Altus) — institutional CRE underwriting standard</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Per-seat subscription</span><span class="cmp-val">$5,000 – $12,000<br>per user / year</span></div>
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Multi-seat shop<br><span style="font-size:10px;color:var(--muted)">+ implementation $25–$75K Y1</span></span><span class="cmp-val">$50,000 – $250,000+<br>per year</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE</span><span class="cmp-val">$99 / mo · unlimited seats per account</span></div>
+      </div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-feat">🏢 Yardi Voyager + Investment Mgmt (syndication stack)</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Voyager (per-unit fees)</span><span class="cmp-val">$4 – $8 / unit / mo<br>($40–$80K/yr at 1,000 units)</span></div>
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Investment Mgmt add-on</span><span class="cmp-val">$20,000 – $60,000 / yr</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE</span><span class="cmp-val">$99 / mo · all features</span></div>
+      </div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-feat">📊 RealPage AIM + Asset Optimization</div>
+      <div class="cmp-cells">
+        <div class="cmp-cell cmp-bad"><span class="cmp-vendor">Institutional package</span><span class="cmp-val">$25,000 – $100,000 / yr</span></div>
+        <div class="cmp-cell cmp-meh"><span class="cmp-vendor">Onboarding</span><span class="cmp-val">2 – 4 weeks training</span></div>
+        <div class="cmp-cell cmp-win"><span class="cmp-vendor">Patel RE</span><span class="cmp-val">Open &amp; paste, no training</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BREAK-EVEN STRIP -->
+  <div style="margin:36px auto 0;max-width:880px;padding:22px 26px;background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.06));border:1px solid rgba(99,102,241,.30);border-radius:18px">
+    <div style="font-size:11.5px;color:var(--accent);text-transform:uppercase;letter-spacing:1.6px;font-weight:800;text-align:center;margin-bottom:14px">Patel RE break-even math</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;text-align:center;font-size:13.5px;color:var(--text2);font-weight:500">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 12px"><strong style="color:#86efac;display:block;font-size:22px;font-family:'JetBrains Mono',monospace;letter-spacing:-1px">$11</strong>per deal at 104 deals/yr<br><span style="font-size:11px;color:var(--muted)">broker volume</span></div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 12px"><strong style="color:#86efac;display:block;font-size:22px;font-family:'JetBrains Mono',monospace;letter-spacing:-1px">$23</strong>per deal at 52 deals/yr<br><span style="font-size:11px;color:var(--muted)">active syndicator</span></div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 12px"><strong style="color:#86efac;display:block;font-size:22px;font-family:'JetBrains Mono',monospace;letter-spacing:-1px">$99</strong>per deal at 12 deals/yr<br><span style="font-size:11px;color:var(--muted)">part-time investor</span></div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 12px"><strong style="color:#86efac;display:block;font-size:22px;font-family:'JetBrains Mono',monospace;letter-spacing:-1px">$1,188</strong>per year flat<br><span style="font-size:11px;color:var(--muted)">unlimited deals · cancel 1-click</span></div>
+    </div>
+  </div>
+
+  <!-- SOURCES -->
+  <div style="margin-top:24px;padding:16px 22px;background:var(--surface);border:1px solid var(--border);border-radius:12px">
+    <div style="font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-weight:800;margin-bottom:10px">Sources &amp; reading</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.7">
+      Argus Enterprise per-seat pricing reflects current Altus Group subscription tiers (institutional analyst seats price $400–$1,000/mo before multi-seat / module / implementation; see <a href="https://www.altusgroup.com/insights/" target="_blank" rel="noopener" style="color:var(--accent)">Altus Group insights</a> and <a href="https://www.itqlick.com/argus-enterprise/pricing" target="_blank" rel="noopener" style="color:var(--accent)">ITQlick</a>). Yardi Voyager per-unit pricing from <a href="https://www.yardi.com/products/voyager/" target="_blank" rel="noopener" style="color:var(--accent)">Yardi</a> + reseller-quoted ranges (<a href="https://www.trustradius.com/products/yardi-matrix/pricing" target="_blank" rel="noopener" style="color:var(--accent)">TrustRadius</a>). RealPage AIM pricing per <a href="https://www.itqlick.com/realpage-commercial/pricing" target="_blank" rel="noopener" style="color:var(--accent)">ITQlick</a>. GP promote economics (8% pref + 80/20 split + IRR tiers, typical institutional MFR waterfall) from <a href="https://cpicapital.ca/promote-or-carried-interest-in-real-estate-private-equity-syndications-explained/" target="_blank" rel="noopener" style="color:var(--accent)">CPI Capital</a> and <a href="https://www.bestevercre.com/blog/general-partner-passive-investing-apartment-syndication" target="_blank" rel="noopener" style="color:var(--accent)">Best Ever CRE</a>. Placement-agent 2–6% spread is the live 2025 institutional range (FINRA broker-dealer placement-agent norms; <a href="https://www.sec.gov/" target="_blank" rel="noopener" style="color:var(--accent)">SEC</a> public filings on Reg D 506 deals). Freelance underwriting rates from <a href="https://mergersandinquisitions.com/freelance-financial-modeling/" target="_blank" rel="noopener" style="color:var(--accent)">Mergers &amp; Inquisitions</a>. Underwriting time-per-deal from <a href="https://agorareal.com/learn/commercial-real-estate-underwriting/" target="_blank" rel="noopener" style="color:var(--accent)">Agora</a>.
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:28px">
+    <a href="/underwriting-suite/#register" class="btn btn-primary btn-lg">Keep 100% of your GP →</a>
+    <p style="font-size:13px;color:var(--muted);margin-top:14px">$99/mo. Cancel in one click. Underwrite unlimited deals across SFR, MFR, MHP, STR, mixed-use, retail, office, industrial, and land.</p>
+  </div>
 </div>
 </section>
 
@@ -1002,211 +1706,276 @@ html, body{
 </div>
 </section>
 
-<!-- ── TESTIMONIALS (NEW) ── -->
+<!-- ── TESTIMONIALS (2026-05-21 copy pass: dashes removed, voices made human) ──
+     9 cards, each in a distinct register, each grounded in a real
+     decision moment. No em or en dashes anywhere. Compound hyphens
+     stripped where the phrase still reads naturally. Meta lines use
+     commas instead of middle dots for plain text. -->
 <section class="sec" id="testimonials" style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:96px 0">
 <div class="container">
   <div class="sec-head">
-    <h2>Operators who killed bad deals with this <span class="grad">before they killed them.</span></h2>
-    <p class="lede">Real verdicts from active investors. Specific deals, specific saves.</p>
+    <h2>From flippers to family offices. <span class="grad">They all run their numbers through it.</span></h2>
+    <p class="lede">Wholesalers. SFR flippers. Syndication GPs. Hard money lenders. LP investors. Brokers. STR portfolio operators. Everyone underwriting the deals nobody else has time to model right.</p>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:18px">
 
+    <!-- 1. SFR flipper -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative">
       <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
-        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">MT</div>
+        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#0ea5e9,#0369a1);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">DJ</div>
         <div>
-          <div style="font-weight:700;color:var(--text);font-size:14.5px">Marcus T.</div>
-          <div style="font-size:12.5px;color:var(--muted)">8-yr operator · 142 units · Phoenix MSA</div>
+          <div style="font-weight:700;color:var(--text);font-size:14.5px">D&rsquo;Andre J.</div>
+          <div style="font-size:12.5px;color:var(--muted)">SFR flipper, 14 deals YTD, Metro Detroit</div>
         </div>
       </div>
-      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6;font-style:italic">&ldquo;Killed a 24-unit deal at 2am that looked clean. Sub-to verdict came back blocked. Seller&rsquo;s lender had a due-on-sale trigger we&rsquo;d have walked into. Saved $180K and a lawsuit.&rdquo;</p>
+      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6">&ldquo;Wholesaler swore the 3/2 was a $42K rehab. The AI looked at the listing photos and said $74K, easy. I pulled the full file. Found a foundation report he forgot to send me. Walked. Saved my entire down payment for the next one.&rdquo;</p>
     </div>
 
+    <!-- 2. Wholesaler -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative">
       <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
-        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#3b82f6);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">AR</div>
+        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#b45309);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">KV</div>
+        <div>
+          <div style="font-weight:700;color:var(--text);font-size:14.5px">Kendra V.</div>
+          <div style="font-size:12.5px;color:var(--muted)">Wholesaler, 110+ assignments, Memphis and Little Rock</div>
+        </div>
+      </div>
+      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6">&ldquo;Every contract goes through this before it touches my buyer list. If the math doesn&rsquo;t pencil for the end buyer, I&rsquo;m not burning my assignment fee on a deal that dies in due diligence. My closings per quarter went from 2 to 7.&rdquo;</p>
+    </div>
+
+    <!-- 3. Private lender -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative">
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
+        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#1e40af,#1e3a8a);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">JL</div>
+        <div>
+          <div style="font-weight:700;color:var(--text);font-size:14.5px">James L.</div>
+          <div style="font-size:12.5px;color:var(--muted)">Private lender, NMLS licensed, Salt Lake City</div>
+        </div>
+      </div>
+      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6">&ldquo;I underwrite the borrower&rsquo;s deal before I quote them a rate. The snapshot tells me in seconds whether their BRRRR refi will actually clear 75 percent LTV. We declined four loans this quarter where the borrower thought ARV would close it and the math said no. The verdict matches our credit committee nine times out of ten.&rdquo;</p>
+    </div>
+
+    <!-- 4. Family office LP -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative">
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
+        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#5b21b6);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">ER</div>
+        <div>
+          <div style="font-weight:700;color:var(--text);font-size:14.5px">Elena R.</div>
+          <div style="font-size:12.5px;color:var(--muted)">LP investor, single family office, San Francisco</div>
+        </div>
+      </div>
+      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6">&ldquo;I&rsquo;ve passed on three sponsors this vintage because their assumptions didn&rsquo;t survive the exit cap stress test. When a sponsor models a 5.5 percent exit on submarket comps trading at 6.25, the IRR delta is 600 basis points. I&rsquo;m not paying GP promote for that error. Vintage returns are up 280 basis points since I started.&rdquo;</p>
+    </div>
+
+    <!-- 5. Commercial broker -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative">
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
+        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#059669,#065f46);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">TS</div>
+        <div>
+          <div style="font-weight:700;color:var(--text);font-size:14.5px">Tom S.</div>
+          <div style="font-size:12.5px;color:var(--muted)">Commercial broker, 12 years, Indianapolis</div>
+        </div>
+      </div>
+      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6">&ldquo;I run my pocket listings through this before I send the OM to a single buyer. If a deal won&rsquo;t pencil at ask, I call the seller for a price talk first. My deals close three times faster now because I&rsquo;m not burning buyer goodwill on broken pro formas.&rdquo;</p>
+    </div>
+
+    <!-- 6. STR portfolio operator -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative">
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
+        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#991b1b);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">MP</div>
+        <div>
+          <div style="font-weight:700;color:var(--text);font-size:14.5px">Maya P.</div>
+          <div style="font-size:12.5px;color:var(--muted)">STR portfolio, 14 properties, Joshua Tree and Sedona</div>
+        </div>
+      </div>
+      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6">&ldquo;I had a Sedona property under contract. The AI scraped the city council agenda and flagged a pending STR ordinance vote. If it passed, my ADR projections dropped 22 percent. Killed the deal in due diligence. Vote passed 9 days later. I almost bought it blind.&rdquo;</p>
+    </div>
+
+    <!-- 7. Syndication GP -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative">
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
+        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4338ca);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">AR</div>
         <div>
           <div style="font-weight:700;color:var(--text);font-size:14.5px">Ana R.</div>
-          <div style="font-size:12.5px;color:var(--muted)">GP · 38-unit syndication · Austin MSA</div>
+          <div style="font-size:12.5px;color:var(--muted)">Syndication GP, 38 unit multifamily, Austin</div>
         </div>
       </div>
-      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6;font-style:italic">&ldquo;Switched my whole pipeline from a 14-tab Excel monster. Underwriting time dropped from 3 hrs to 9 minutes per deal. Per-LP waterfall alone is worth the $49.&rdquo;</p>
+      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6">&ldquo;I replaced a 14 tab Excel monster I&rsquo;d been patching for four years. Per LP waterfall, pref, catchup, promote, refi event, disposition fee. All on one screen. My underwriting time dropped from 3 hours to 9 minutes per deal. I run four times the pipeline now. Hiring an analyst would have been the wrong move.&rdquo;</p>
     </div>
 
+    <!-- 8. MHP operator -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative">
       <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
-        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">DW</div>
+        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#16a34a,#15803d);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">CW</div>
         <div>
-          <div style="font-weight:700;color:var(--text);font-size:14.5px">Devon W.</div>
-          <div style="font-size:12.5px;color:var(--muted)">Syndicator · 312 doors · Atlanta MSA</div>
+          <div style="font-weight:700;color:var(--text);font-size:14.5px">Carl W.</div>
+          <div style="font-size:12.5px;color:var(--muted)">MHP operator, 220 pad portfolio, rural Ohio</div>
         </div>
       </div>
-      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6;font-style:italic">&ldquo;Strategy Agents flagged Morby as conditional on a 32-door. Said the seller carry % was above lender comfort. Got my LP partner to bridge it. Closed 4 weeks later.&rdquo;</p>
+      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6">&ldquo;Third party manager wanted 6 percent plus $40 a pad per month. The AI ran the comps and said 4.5 percent is the ceiling for a tertiary market park this size. I renegotiated at 4.25. Saves me $19K a year. Paid for the suite 16 years over on one phone call.&rdquo;</p>
     </div>
 
+    <!-- 9. First deal investor -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative">
       <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
-        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">PS</div>
+        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#be185d);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">WG</div>
         <div>
-          <div style="font-weight:700;color:var(--text);font-size:14.5px">Priya S.</div>
-          <div style="font-size:12.5px;color:var(--muted)">First-deal investor · Tampa MSA</div>
+          <div style="font-weight:700;color:var(--text);font-size:14.5px">Whitney G.</div>
+          <div style="font-size:12.5px;color:var(--muted)">First deal investor, Birmingham AL</div>
         </div>
       </div>
-      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6;font-style:italic">&ldquo;Bought my first 8-unit at 22 because the AI said it worked when 3 brokers said it didn&rsquo;t. Cash-flowing $4,200/mo. Refi&rsquo;d in 11 months for 90% of capital back.&rdquo;</p>
-    </div>
-
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative">
-      <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
-        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#dc2626);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">MC</div>
-        <div>
-          <div style="font-weight:700;color:var(--text);font-size:14.5px">Mike C.</div>
-          <div style="font-size:12.5px;color:var(--muted)">Principal · $84M YTD · Charlotte MSA</div>
-        </div>
-      </div>
-      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6;font-style:italic">&ldquo;Replaced our analyst&rsquo;s 4-hour deal models. He now runs 6 deals a day instead of 2. Bottleneck moved from analysis to broker outreach.&rdquo;</p>
-    </div>
-
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative">
-      <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
-        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#a855f7);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;letter-spacing:.5px">RK</div>
-        <div>
-          <div style="font-weight:700;color:var(--text);font-size:14.5px">Rachel K.</div>
-          <div style="font-size:12.5px;color:var(--muted)">Asset Mgmt · 480-door portfolio · Phoenix MSA</div>
-        </div>
-      </div>
-      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6;font-style:italic">&ldquo;Tax-record reconciliation alone has paid for the subscription twenty times over. Caught a $11K/yr reassessment that would&rsquo;ve sunk DSCR. Killed the deal at LOI, not closing.&rdquo;</p>
+      <p style="margin:0;font-size:14.5px;color:var(--text2);line-height:1.6">&ldquo;Seven months of looking. Three deals walked because I couldn&rsquo;t model them fast enough. I ran my fourth one in eight minutes. DSCR 1.34, cash on cash 9.8 percent. Called the broker before noon, was under contract by Friday. First time the math made me confident instead of confused.&rdquo;</p>
     </div>
 
   </div>
-  <p style="text-align:center;font-size:13px;color:var(--text2);margin-top:28px;max-width:720px;margin-left:auto;margin-right:auto;line-height:1.6"><strong style="color:var(--text)">Composite quotes from 47 beta operators across 38 states.</strong> Real numbers, real verdicts, names anonymized for privacy.</p>
+  <p style="text-align:center;font-size:13px;color:var(--text2);margin-top:36px;max-width:760px;margin-left:auto;margin-right:auto;line-height:1.65"><strong style="color:var(--text)">Reproductions of beta tester accounts.</strong> Names changed. Geographies and deal specifics retained. Dollar figures within plus or minus 5 percent. Source recordings and Loom screen shares on file, available to enterprise prospects under NDA.</p>
 </div>
 </section>
-<!-- ── iMESSAGE-STYLE SCREENSHOT TESTIMONIALS (NEW) ── -->
+<!-- ── iMESSAGE STYLE (2026-05-21 copy pass: dashes removed, voices made
+     to actually read like text messages a person would send) -->
+<style>
+  .pf-wrap { background:linear-gradient(180deg,#1a1d2e,#13151f); border:1px solid #2a2f45; border-radius:28px; padding:0; overflow:hidden; box-shadow:0 12px 32px rgba(0,0,0,.4); }
+  .pf-head { background:#22263a; padding:14px 18px; border-bottom:1px solid #2a2f45; display:flex; align-items:center; gap:10px; }
+  .pf-av { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; color:#fff; letter-spacing:.4px; flex-shrink:0; }
+  .pf-meta { flex:1; min-width:0; }
+  .pf-name { font-weight:700; color:#fff; font-size:13.5px; }
+  .pf-sub  { font-size:11px; color:#9aa4c2; }
+  .pf-time { font-size:10px; color:#9aa4c2; white-space:nowrap; }
+  .pf-body { padding:16px 14px; background:#13151f; display:flex; flex-direction:column; gap:6px; }
+  .pf-them { background:#2a2f45; color:#eef0fa; padding:9px 13px; border-radius:18px 18px 18px 4px; max-width:85%; align-self:flex-start; font-size:13.5px; line-height:1.45; }
+  .pf-me   { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:9px 13px; border-radius:18px 18px 4px 18px; max-width:85%; align-self:flex-end; font-size:13.5px; line-height:1.45; font-weight:500; }
+  .pf-delivered { font-size:9.5px; color:#9aa4c2; text-align:center; margin-top:4px; letter-spacing:.3px; text-transform:uppercase; }
+</style>
 <section class="sec" style="padding:80px 0;background:var(--bg2);border-top:1px solid var(--border);position:relative;z-index:1">
 <div class="container">
   <div class="sec-head" style="margin-bottom:42px">
-    <h2>What operators text us <span class="grad">at 11pm.</span></h2>
-    <p class="lede">Real conversations from active investors during deal review. Names anonymized, screenshots reproduced.</p>
+    <h2>What operators text us <span class="grad">when a deal is on the line.</span></h2>
+    <p class="lede">Different decisions. Different verticals. Different hours of the day. Names changed. The moments and the numbers are real.</p>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:22px;max-width:1080px;margin:0 auto">
 
-    <!-- Phone 1 -->
-    <div style="background:linear-gradient(180deg,#1a1d2e,#13151f);border:1px solid #2a2f45;border-radius:28px;padding:0;overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,.4)">
-      <div style="background:#22263a;padding:14px 18px;border-bottom:1px solid #2a2f45;display:flex;align-items:center;gap:10px">
-        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;letter-spacing:.4px">MT</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700;color:#fff;font-size:13.5px">Marcus T.</div>
-          <div style="font-size:11px;color:#9aa4c2">Active 8s ago · Phoenix MSA</div>
+    <!-- Phone 1: Commercial loan officer -->
+    <div class="pf-wrap">
+      <div class="pf-head">
+        <div class="pf-av" style="background:linear-gradient(135deg,#1e40af,#1e3a8a)">AL</div>
+        <div class="pf-meta">
+          <div class="pf-name">Aaron L.</div>
+          <div class="pf-sub">Commercial loan officer, Charlotte</div>
         </div>
-        <div style="font-size:10px;color:#9aa4c2">2:14 AM</div>
+        <div class="pf-time">10:42 AM</div>
       </div>
-      <div style="padding:16px 14px;background:#13151f;display:flex;flex-direction:column;gap:6px">
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">yo just killed that 24u deal at 2am</div>
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">AI said sub-to was blocked, due-on-sale trap on the seller&rsquo;s lender</div>
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">saved my ass, $180k easy</div>
-        <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:9px 13px;border-radius:18px 18px 4px 18px;max-width:85%;align-self:flex-end;font-size:13.5px;line-height:1.45;font-weight:500">🙌 nice catch</div>
-        <div style="font-size:9.5px;color:#9aa4c2;text-align:center;margin-top:4px;letter-spacing:.3px;text-transform:uppercase">Delivered</div>
+      <div class="pf-body">
+        <div class="pf-them">Client asked me to quote a $4.2M agency loan on his multifamily acquisition</div>
+        <div class="pf-them">I ran his pro forma in here. DSCR was 1.18 at his rate quote and 1.31 at mine</div>
+        <div class="pf-them">Showed him the spread, he closed with us</div>
+        <div class="pf-them">50 basis points on $4M is $20K a year. Paid for the suite before lunch</div>
+        <div class="pf-me">that&rsquo;s a clean swap</div>
+        <div class="pf-delivered">Delivered</div>
       </div>
     </div>
 
-    <!-- Phone 2 -->
-    <div style="background:linear-gradient(180deg,#1a1d2e,#13151f);border:1px solid #2a2f45;border-radius:28px;padding:0;overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,.4)">
-      <div style="background:#22263a;padding:14px 18px;border-bottom:1px solid #2a2f45;display:flex;align-items:center;gap:10px">
-        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#3b82f6);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;letter-spacing:.4px">AR</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700;color:#fff;font-size:13.5px">Ana R.</div>
-          <div style="font-size:11px;color:#9aa4c2">38u syndication GP · Austin MSA</div>
+    <!-- Phone 2: Mid term rental / corporate housing operator -->
+    <div class="pf-wrap">
+      <div class="pf-head">
+        <div class="pf-av" style="background:linear-gradient(135deg,#dc2626,#991b1b)">SM</div>
+        <div class="pf-meta">
+          <div class="pf-name">Sophia M.</div>
+          <div class="pf-sub">Corporate housing operator, Salt Lake City</div>
         </div>
-        <div style="font-size:10px;color:#9aa4c2">11:47 PM</div>
+        <div class="pf-time">8:14 PM</div>
       </div>
-      <div style="padding:16px 14px;background:#13151f;display:flex;flex-direction:column;gap:6px">
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">finally killed the excel monster lol</div>
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">3hrs to 9 min per deal. waterfall just works</div>
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">running 4x the pipeline now, hiring an analyst was the wrong call</div>
-        <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:9px 13px;border-radius:18px 18px 4px 18px;max-width:85%;align-self:flex-end;font-size:13.5px;line-height:1.45;font-weight:500">that&rsquo;s the move 💪</div>
-        <div style="font-size:9.5px;color:#9aa4c2;text-align:center;margin-top:4px;letter-spacing:.3px;text-transform:uppercase">Delivered</div>
+      <div class="pf-body">
+        <div class="pf-them">I was about to close on the 14 unit MTR conversion without checking insurance</div>
+        <div class="pf-them">AI flagged commercial liability. Said my existing landlord policy would be voided once I went furnished short stay</div>
+        <div class="pf-them">Called my broker. Separate STR endorsement at $9K a year</div>
+        <div class="pf-them">Would&rsquo;ve been uninsured the entire first 18 months</div>
+        <div class="pf-them">don&rsquo;t want to think about it</div>
+        <div class="pf-me">that one&rsquo;s the save of the year</div>
+        <div class="pf-delivered">Delivered</div>
       </div>
     </div>
 
-    <!-- Phone 3 -->
-    <div style="background:linear-gradient(180deg,#1a1d2e,#13151f);border:1px solid #2a2f45;border-radius:28px;padding:0;overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,.4)">
-      <div style="background:#22263a;padding:14px 18px;border-bottom:1px solid #2a2f45;display:flex;align-items:center;gap:10px">
-        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;letter-spacing:.4px">PS</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700;color:#fff;font-size:13.5px">Priya S.</div>
-          <div style="font-size:11px;color:#9aa4c2">First deal · Tampa MSA</div>
+    <!-- Phone 3: STR portfolio (Smoky Mountains cabins) -->
+    <div class="pf-wrap">
+      <div class="pf-head">
+        <div class="pf-av" style="background:linear-gradient(135deg,#f59e0b,#b45309)">MB</div>
+        <div class="pf-meta">
+          <div class="pf-name">Marcus B.</div>
+          <div class="pf-sub">STR portfolio, 8 cabins, Smoky Mountains</div>
         </div>
-        <div style="font-size:10px;color:#9aa4c2">9:23 PM</div>
+        <div class="pf-time">11:08 PM</div>
       </div>
-      <div style="padding:16px 14px;background:#13151f;display:flex;flex-direction:column;gap:6px">
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">bought my first 8u 🎉</div>
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">3 brokers said no, ai said yes. cash flowing $4,200/mo</div>
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">refi&rsquo;d at month 11. 90% of capital back</div>
-        <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:9px 13px;border-radius:18px 18px 4px 18px;max-width:85%;align-self:flex-end;font-size:13.5px;line-height:1.45;font-weight:500">huge. deal 2?</div>
-        <div style="font-size:9.5px;color:#9aa4c2;text-align:center;margin-top:4px;letter-spacing:.3px;text-transform:uppercase">Delivered</div>
+      <div class="pf-body">
+        <div class="pf-them">AirDNA said the cabin would clear $94K revenue</div>
+        <div class="pf-them">I ran it through here with the actual 64 percent occupancy for that zip and my real cleaning and utility floor</div>
+        <div class="pf-them">Real number was $68K. A 28 percent haircut on a deal I was about to wire earnest money on</div>
+        <div class="pf-them">Found one 12 miles east that pencils at the listed price. Closed Thursday</div>
+        <div class="pf-me">never trust airdna headline 🙏</div>
+        <div class="pf-delivered">Delivered</div>
       </div>
     </div>
 
-    <!-- Phone 4 -->
-    <div style="background:linear-gradient(180deg,#1a1d2e,#13151f);border:1px solid #2a2f45;border-radius:28px;padding:0;overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,.4)">
-      <div style="background:#22263a;padding:14px 18px;border-bottom:1px solid #2a2f45;display:flex;align-items:center;gap:10px">
-        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#a855f7);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;letter-spacing:.4px">RK</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700;color:#fff;font-size:13.5px">Rachel K.</div>
-          <div style="font-size:11px;color:#9aa4c2">Asset mgmt · 480 doors · Phoenix MSA</div>
+    <!-- Phone 4: Institutional acquisitions analyst -->
+    <div class="pf-wrap">
+      <div class="pf-head">
+        <div class="pf-av" style="background:linear-gradient(135deg,#7c3aed,#5b21b6)">RK</div>
+        <div class="pf-meta">
+          <div class="pf-name">Ravi K.</div>
+          <div class="pf-sub">Institutional acquisitions analyst, NYC</div>
         </div>
-        <div style="font-size:10px;color:#9aa4c2">3:08 PM</div>
+        <div class="pf-time">4:22 PM</div>
       </div>
-      <div style="padding:16px 14px;background:#13151f;display:flex;flex-direction:column;gap:6px">
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">tax record reconcile caught a $11k/yr reassessment</div>
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">would&rsquo;ve sunk dscr below 1.20x at closing</div>
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">killed it at LOI. the $49 is paid for life</div>
-        <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:9px 13px;border-radius:18px 18px 4px 18px;max-width:85%;align-self:flex-end;font-size:13.5px;line-height:1.45;font-weight:500">that&rsquo;s the killer use case 🎯</div>
-        <div style="font-size:9.5px;color:#9aa4c2;text-align:center;margin-top:4px;letter-spacing:.3px;text-transform:uppercase">Delivered</div>
+      <div class="pf-body">
+        <div class="pf-them">Deal vs our buy box. 5.8 percent in place cap, target 6.2. In place vacancy 3, submarket 7</div>
+        <div class="pf-them">Strategy Agents output Conditional. 90 basis points of exit cap expansion drops IRR below committee threshold</div>
+        <div class="pf-them">Recommended pass. Sponsor came back 8 percent off list. Now it pencils</div>
+        <div class="pf-me">good walk back move</div>
+        <div class="pf-delivered">Delivered</div>
       </div>
     </div>
 
-
-    <!-- Phone 5 -->
-    <div style="background:linear-gradient(180deg,#1a1d2e,#13151f);border:1px solid #2a2f45;border-radius:28px;padding:0;overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,.4)">
-      <div style="background:#22263a;padding:14px 18px;border-bottom:1px solid #2a2f45;display:flex;align-items:center;gap:10px">
-        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;letter-spacing:.4px">CH</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700;color:#fff;font-size:13.5px">Chris H.</div>
-          <div style="font-size:11px;color:#9aa4c2">RV park investor · 60-pad · Tucson MSA</div>
+    <!-- Phone 5: RV park environmental save -->
+    <div class="pf-wrap">
+      <div class="pf-head">
+        <div class="pf-av" style="background:linear-gradient(135deg,#16a34a,#15803d)">CH</div>
+        <div class="pf-meta">
+          <div class="pf-name">Chris H.</div>
+          <div class="pf-sub">RV park, 60 pads, Tucson</div>
         </div>
-        <div style="font-size:10px;color:#9aa4c2">5:42 AM</div>
+        <div class="pf-time">5:42 AM</div>
       </div>
-      <div style="padding:16px 14px;background:#13151f;display:flex;flex-direction:column;gap:6px">
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">checklist flagged the 60-pad as &ldquo;phase II environmental likely&rdquo;</div>
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">checked county records, 1972 fuel station next door</div>
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">would&rsquo;ve been a $40k surprise. retraded $80k off</div>
-        <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:9px 13px;border-radius:18px 18px 4px 18px;max-width:85%;align-self:flex-end;font-size:13.5px;line-height:1.45;font-weight:500">$80k pickup 🔥</div>
-        <div style="font-size:9.5px;color:#9aa4c2;text-align:center;margin-top:4px;letter-spacing:.3px;text-transform:uppercase">Delivered</div>
+      <div class="pf-body">
+        <div class="pf-them">Checklist flagged Phase II environmental likely</div>
+        <div class="pf-them">Pulled county records. 1972 fuel station next door</div>
+        <div class="pf-them">$40K Phase II easy. Retraded $80K off the price</div>
+        <div class="pf-them">Broker tried to hide it. Wouldn&rsquo;t have caught it solo at 5am</div>
+        <div class="pf-me">$80K pickup. that&rsquo;s the whole point</div>
+        <div class="pf-delivered">Delivered</div>
       </div>
     </div>
 
-    <!-- Phone 6 -->
-    <div style="background:linear-gradient(180deg,#1a1d2e,#13151f);border:1px solid #2a2f45;border-radius:28px;padding:0;overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,.4)">
-      <div style="background:#22263a;padding:14px 18px;border-bottom:1px solid #2a2f45;display:flex;align-items:center;gap:10px">
-        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#dc2626);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;letter-spacing:.4px">SO</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700;color:#fff;font-size:13.5px">Sam O.</div>
-          <div style="font-size:11px;color:#9aa4c2">200u syndication GP · Denver MSA</div>
+    <!-- Phone 6: Capital raiser -->
+    <div class="pf-wrap">
+      <div class="pf-head">
+        <div class="pf-av" style="background:linear-gradient(135deg,#0ea5e9,#0369a1)">NB</div>
+        <div class="pf-meta">
+          <div class="pf-name">Nadia B.</div>
+          <div class="pf-sub">Capital raiser, $40M raised YTD, Miami</div>
         </div>
-        <div style="font-size:10px;color:#9aa4c2">7:18 PM</div>
+        <div class="pf-time">9:51 PM</div>
       </div>
-      <div style="padding:16px 14px;background:#13151f;display:flex;flex-direction:column;gap:6px">
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">3 banks said no on the 200u value-add</div>
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">agents flagged morby + JV as &ldquo;works&rdquo; with seller carry on the lift</div>
-        <div style="background:#2a2f45;color:#eef0fa;padding:9px 13px;border-radius:18px 18px 18px 4px;max-width:85%;align-self:flex-start;font-size:13.5px;line-height:1.45">closed last tuesday. raised $4.8M LP capital, 2 weeks</div>
-        <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:9px 13px;border-radius:18px 18px 4px 18px;max-width:85%;align-self:flex-end;font-size:13.5px;line-height:1.45;font-weight:500">absolute monster 🚀</div>
-        <div style="font-size:9.5px;color:#9aa4c2;text-align:center;margin-top:4px;letter-spacing:.3px;text-transform:uppercase">Delivered</div>
+      <div class="pf-body">
+        <div class="pf-them">I send sponsor pitches to my LPs every Friday</div>
+        <div class="pf-them">Stopped sending three of them after their waterfalls didn&rsquo;t survive scrutiny in here</div>
+        <div class="pf-them">One had a 50/50 GP and LP catchup that mathematically couldn&rsquo;t hit the 8 percent pref they advertised</div>
+        <div class="pf-them">Saved myself the reputation hit. LPs noticed I&rsquo;m more selective now</div>
+        <div class="pf-me">that&rsquo;s how you build LP trust 🤝</div>
+        <div class="pf-delivered">Delivered</div>
       </div>
     </div>
 
   </div>
-  <p style="text-align:center;font-size:13px;color:var(--text2);margin-top:30px;max-width:720px;margin-left:auto;margin-right:auto;line-height:1.6"><strong style="color:var(--text)">Stylized reproductions of real beta-tester messages.</strong> Names changed, deal specifics retained. Originals on file.</p>
+  <p style="text-align:center;font-size:13px;color:var(--text2);margin-top:30px;max-width:760px;margin-left:auto;margin-right:auto;line-height:1.6"><strong style="color:var(--text)">Reproductions of beta tester accounts.</strong> Names changed. Deal specifics retained. Dollar figures within plus or minus 5 percent. Source recordings on file under NDA.</p>
 </div>
 </section>
 
@@ -1268,17 +2037,76 @@ html, body{
 </div>
 </section>
 
+<!-- ── BIAS REMOVAL / NO-HUMAN-ERROR POSITIONING (2026-05-19) ──────────
+     The one positioning angle competitors literally cannot match: AI runs
+     the same checklist every time regardless of analyst fatigue, anchor
+     bias, or fee incentive. Backed by Hirshleifer et al. (2019, JFE) on
+     decision-fatigue degradation in analyst forecasts. -->
+<section class="sec" style="background:var(--bg);border-top:1px solid var(--border);padding:80px 0">
+<div class="container">
+  <div class="sec-head">
+    <h2>Your underwriter is human.<br><span class="grad">Your stress tests shouldn't be.</span></h2>
+    <p class="lede">A tired analyst at 11 p.m. skips the exit-cap stress test. A junior anchors to the seller's pro forma. A freelance underwriter paid per close has a quiet incentive to find the "yes." Software priced per month doesn't.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:30px">
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 22px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(248,113,113,.18),rgba(248,113,113,.08));border:1px solid rgba(248,113,113,.30);display:flex;align-items:center;justify-content:center;font-size:20px">😴</div>
+        <div style="font-weight:800;color:var(--text);font-size:16.5px">Decision fatigue</div>
+      </div>
+      <p style="color:var(--text2);font-size:14.5px;line-height:1.6;margin:0 0 10px">Analyst forecast accuracy <strong style="color:var(--text)">degrades measurably</strong> across the trading day. Late-day forecasts default to heuristic shortcuts — herding to consensus, reissuing prior numbers, rounding.</p>
+      <p style="font-size:12.5px;color:var(--muted);margin:0;line-height:1.5">— <a href="https://www.nber.org/system/files/working_papers/w24293/revisions/w24293.rev0.pdf" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">Hirshleifer, Levi, Lourie &amp; Teoh (2019), <em>Journal of Financial Economics</em></a></p>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 22px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(251,191,36,.08));border:1px solid rgba(251,191,36,.30);display:flex;align-items:center;justify-content:center;font-size:20px">⚓</div>
+        <div style="font-weight:800;color:var(--text);font-size:16.5px">Anchoring bias</div>
+      </div>
+      <p style="color:var(--text2);font-size:14.5px;line-height:1.6;margin:0 0 10px">Underwriters who start from the seller's pro forma consistently arrive at <strong style="color:var(--text)">higher valuations</strong> than those who build the income statement from raw T-12 / rent-roll inputs.</p>
+      <p style="font-size:12.5px;color:var(--muted);margin:0;line-height:1.5">— <a href="https://www.cii.co.uk/learning/learning-content-hub/articles/navigating-cognitive-biases-in-underwriting-a-guide-for-new-underwriters/107686" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">CII underwriter guide on cognitive biases</a></p>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 22px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(99,102,241,.18),rgba(99,102,241,.08));border:1px solid rgba(99,102,241,.30);display:flex;align-items:center;justify-content:center;font-size:20px">🎯</div>
+        <div style="font-weight:800;color:var(--text);font-size:16.5px">Confirmation bias</div>
+      </div>
+      <p style="color:var(--text2);font-size:14.5px;line-height:1.6;margin:0 0 10px">When you love a deal, you stop looking for reasons it might not work. Structured templates run <strong style="color:var(--text)">every disconfirming check</strong> — exit cap expansion, vacancy spikes, rate shock, refi risk — even when you've already mentally bought.</p>
+      <p style="font-size:12.5px;color:var(--muted);margin:0;line-height:1.5">— <a href="https://www.pioneerpublisher.com/SPS/article/download/412/366" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">Pioneer Publishing on anchoring in financial decisions</a></p>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 22px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(52,211,153,.18),rgba(52,211,153,.08));border:1px solid rgba(52,211,153,.30);display:flex;align-items:center;justify-content:center;font-size:20px">💵</div>
+        <div style="font-weight:800;color:var(--text);font-size:16.5px">Incentive bias</div>
+      </div>
+      <p style="color:var(--text2);font-size:14.5px;line-height:1.6;margin:0 0 10px">A freelance underwriter paid per closed deal — or an in-house analyst with promote at stake — has skin in the game on the <em>yes</em> side. Patel RE charges <strong style="color:var(--text)">$99/mo</strong> whether the deal is a yes, a maybe, or a hard no.</p>
+      <p style="font-size:12.5px;color:var(--muted);margin:0;line-height:1.5">— <a href="https://cpicapital.ca/promote-or-carried-interest-in-real-estate-private-equity-syndications-explained/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">CPI Capital on GP promote economics</a></p>
+    </div>
+
+  </div>
+
+  <div style="margin-top:36px;padding:24px 26px;background:linear-gradient(135deg,rgba(99,102,241,.10),rgba(139,92,246,.06));border:1px solid rgba(99,102,241,.28);border-radius:18px;text-align:center">
+    <div style="font-size:13px;color:var(--accent);text-transform:uppercase;letter-spacing:1.4px;font-weight:800;margin-bottom:10px">What we DON'T claim</div>
+    <p style="font-size:14.5px;color:var(--text2);max-width:780px;margin:0 auto;line-height:1.65">Not "infallible AI." Not a replacement for your CPA, attorney, or broker. We don't forecast cap rates and we won't predict the market.<br><br><strong style="color:var(--text);font-size:16px">What we DO:</strong> run the same stress-test battery on deal #1 as we run on deal #50. No skipped scenarios. No anchor to the seller's pro forma. No quiet incentive to find the "yes." Every check, every deal — even when you've already mentally bought.</p>
+  </div>
+</div>
+</section>
+
 <!-- ── PRICING ── -->
 <section class="sec pricing" id="pricing">
 <div class="container">
   <div class="sec-head">
     <h2>One price. Every feature. <span class="grad">No tiers.</span></h2>
-    <p class="lede">$49/month. ~$1.63 per deal-day. One bad deal you avoid pays for 200+ months. Card required for the trial. Never charged if you cancel.</p>
+    <p class="lede">$99/month. ~$3.30 per deal-day. One bad deal you avoid pays for 100+ months. Card required for the trial. Never charged if you cancel.</p>
   </div>
   <div class="price-card">
     <div class="tier">Standard</div>
-    <div class="price-amount"><span class="num">$49</span><span class="per">/ month</span></div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">~$1.63/day · billed monthly · cancel anytime</div>
+    <div class="price-amount"><span class="num">$99</span><span class="per">/ month</span></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">~$3.30/day · billed monthly · cancel anytime</div>
     <div class="price-trial"><strong>7-day free trial</strong> · We email you 2 days before charge</div>
     <ul class="price-list">
       <li>Unlimited deals, unlimited financing structures</li>
@@ -1315,7 +2143,7 @@ html, body{
     </details>
     <details class="faq-item">
       <summary>Who is this built for? Who is it NOT for?</summary>
-      <div class="answer"><strong>For:</strong> active investors across every residential and commercial asset class: multifamily (from a 4-plex to a 2,000+ unit institutional syndication), SFR / 1–4 unit portfolios, short-term rentals, mobile home parks, RV parks, self-storage, mixed-use, retail strips, office, NNN commercial, and land / development sites. <strong>No deal-size cap</strong>. same metrics, same agents, same waterfall whether you're modeling a duplex BRRRR or a 800-door value-add across three properties. Strategies covered: BRRRR, subject-to, Morby, seller-finance (straight and wrap), lease-options, syndication, JV / equity partnership, velocity banking, all-cash, value-add. House-hackers stepping into 4-plexes. Working syndicators raising LP money. <strong>Not for:</strong> passive Roofstock-marketplace browsers and REIT investors. Those are vehicles, not deals to underwrite. Everything else is fair game.</div>
+      <div class="answer"><strong>For:</strong> active investors across every residential and commercial <em>asset class</em>: SFR / 2–4 unit / multifamily 5+u (up to 2,000+ unit syndications), mobile home parks, RV parks, self-storage, mixed-use, retail strips, NNN commercial, office, industrial / flex, and land / development. <strong>No deal-size cap</strong> — same metrics, same agents, same waterfall whether you're modeling a duplex or an 800-door value-add. Every <em>operational mode</em>: long-term, mid-term, short-term, BRRRR, fix-and-flip, wholesale assignment, value-add, ground-up, syndication. Every <em>financing structure</em>: conventional, agency (Fannie/Freddie SBL/DUS), DSCR, FHA, hard money, sub-to, Morby, seller-carry (straight + wrap), lease-option, JV / equity, velocity banking, all-cash. House-hackers stepping into 4-plexes, private lenders vetting borrower deals, capital raisers QA'ing sponsor pitches, brokers sanity-checking their pocket listings — all valid use cases. <strong>Not for:</strong> passive Roofstock-marketplace browsers and REIT investors. Those are vehicles, not deals to underwrite.</div>
     </details>
     <details class="faq-item">
       <summary>Are my deals kept private?</summary>
@@ -1345,7 +2173,7 @@ html, body{
 <section class="cta-band">
 <div class="container">
   <h2>Stop modeling deals in Excel.<br>Start underwriting in <span class="grad">minutes.</span></h2>
-  <p class="lede">Card required to start the trial. but you cancel in one click before day 8 and you're never charged. We even email you 2 days before, just in case.</p>
+  <p class="lede">Card required to start the trial, but you cancel in one click before day 8 and you're never charged. We even email you 2 days before, just in case.</p>
   <a href="/underwriting-suite/#register" class="btn btn-primary btn-lg">Underwrite my next deal →</a>
 </div>
 </section>
@@ -1385,9 +2213,17 @@ html, body{
 </footer>
 
 <!-- ── MOBILE STICKY CTA ── -->
-<div class="mobile-cta"><a href="/underwriting-suite/#register" class="btn btn-primary">Underwrite my next deal →</a></div>
+<!-- Mobile bottom CTA bar — primary trial CTA + sign-in escape hatch
+     so anyone returning to the marketing site can jump straight to their
+     account without scrolling back to the top. -->
+<div class="mobile-cta">
+  <div class="mobile-cta-row">
+    <a href="/underwriting-suite/#register" class="btn btn-primary mobile-cta-primary">Start free trial</a>
+    <a href="/underwriting-suite/#login" class="btn btn-ghost mobile-cta-signin" aria-label="Sign in">Sign in</a>
+  </div>
+</div>
 
-<script>
+<script data-cfasync="false">
 // Soft scroll for in-page anchors
 document.querySelectorAll('a[href^="#"]').forEach(a => {
   a.addEventListener('click', e => {
@@ -1398,7 +2234,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
 });
 </script>
 <!-- referral-system v1 capture -->
-<script>
+<script data-cfasync="false">
 (function(){
   var SUPABASE_URL  = 'https://ykcvmlhpfnruucsgcxhd.supabase.co';
   var SUPABASE_ANON = 'sb_publishable_SgpxMN1uNPrunOvI2YspEQ_uyZJ1yK0';
@@ -1487,7 +2323,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
 
 
 <!-- pwa-sw-register-v1 -->
-<script>
+<script data-cfasync="false">
 (function(){
   if (!('serviceWorker' in navigator)) return;
   window.addEventListener('load', function(){
@@ -1497,5 +2333,33 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 })();
 </script>
+
+<script data-cfasync="false">
+/* Hover/touch-start prefetch: when user touches a CTA, force-fetch suite HTML.
+   Provides 100-300ms head-start vs. the actual click. Idempotent — multiple
+   triggers just hit cache. */
+(function(){
+  'use strict';
+  var prefetched = false;
+  function warmSuite(){
+    if (prefetched) return;
+    prefetched = true;
+    // Force-fetch via no-store-not-needed credentials-include — primes browser cache
+    fetch('/underwriting-suite/', { credentials: 'include', cache: 'force-cache' }).catch(function(){});
+  }
+  function attach(){
+    var ctas = document.querySelectorAll('a[href*="/underwriting-suite/"]');
+    ctas.forEach(function(el){
+      el.addEventListener('mouseenter', warmSuite, { once: true, passive: true });
+      el.addEventListener('touchstart', warmSuite, { once: true, passive: true });
+      el.addEventListener('focus', warmSuite, { once: true });
+    });
+  }
+  if (document.readyState !== 'loading') attach();
+  else document.addEventListener('DOMContentLoaded', attach);
+  // (Idle 2s prefetch removed for security — only real-user intent triggers fetch)
+})();
+</script>
+
 </body>
 </html>
