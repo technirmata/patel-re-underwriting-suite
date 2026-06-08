@@ -10,7 +10,7 @@
      - bypass         for cross-origin POST/PUT/DELETE (non-GET) — never cache mutations
    ────────────────────────────────────────────────────────────────────────── */
 
-const CACHE_VERSION = 'v53-parse-once-json-client';
+const CACHE_VERSION = 'v54-legal-pages-consent-links';
 const STATIC_CACHE  = `prsuite-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `prsuite-runtime-${CACHE_VERSION}`;
 const SCOPE_PREFIX  = '/underwriting-suite/';
