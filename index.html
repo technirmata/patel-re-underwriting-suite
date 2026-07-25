@@ -14387,12 +14387,18 @@ async function authResetPassword(){
   _authClearErrs('auth_reset_pass','auth_reset_pass2','auth_reset_pass_err','auth_reset_pass2_err','auth_reset_err','auth_reset_ok');
   const p1 = p1El ? p1El.value : '';
   const p2 = p2El ? p2El.value : '';
-  if(!p1 || p1.length < 6){ _authMarkErr('auth_reset_pass','auth_reset_pass_err','Password must be at least 6 characters'); return; }
+  var _pwErr = _pwPolicyError(p1);
+  if(_pwErr){ _authMarkErr('auth_reset_pass','auth_reset_pass_err',_pwErr); return; }
   if(p1 !== p2){ _authMarkErr('auth_reset_pass2','auth_reset_pass2_err','Passwords do not match'); return; }
   if(!_sbOk()){ _authShowErr('auth_reset_err','Supabase not configured.'); return; }
   const btn = document.querySelector('#authPanel_reset .auth-btn');
   if(btn){ btn.disabled = true; btn.textContent = 'Updating…'; }
   try {
+    const _brk = await _pwBreached(p1);
+    if(_brk.breached){
+      _authShowErr('auth_reset_err','This password has appeared in known data breaches (' + _brk.count.toLocaleString() + ' times). Pick a different one.');
+      return;
+    }
     const { data, error } = await _sbClient().auth.updateUser({ password: p1 });
     if(error){ _authShowErr('auth_reset_err', error.message || 'Could not update password.'); return; }
     if(okBox){ okBox.textContent = '✅ Password updated. Signing you in…'; okBox.classList.add('show'); }
@@ -14409,6 +14415,48 @@ async function authResetPassword(){
   } finally {
     if(btn){ btn.disabled = false; btn.textContent = 'Update Password'; }
   }
+}
+
+/* ── SECURITY 2026-07-25 ────────────────────────────────────────────────────
+   Free equivalent of Supabase Pro's "leaked password protection".
+   Uses the Have I Been Pwned *range* API (k-anonymity): we SHA-1 the password
+   locally and send ONLY the first 5 hex characters. The password — and even its
+   full hash — never leave the browser, and no API key or paid plan is needed.
+   Fails OPEN (returns not-breached) so an outage can never block a signup.
+   ──────────────────────────────────────────────────────────────────────────── */
+async function _pwBreached(pw){
+  try{
+    if(!pw || !(window.crypto && crypto.subtle)) return { breached:false, checked:false, count:0 };
+    const digest = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(pw));
+    const hex = Array.from(new Uint8Array(digest)).map(function(b){
+      return b.toString(16).padStart(2,'0');
+    }).join('').toUpperCase();
+    const prefix = hex.slice(0,5), suffix = hex.slice(5);
+    const ctl = new AbortController();
+    const timer = setTimeout(function(){ ctl.abort(); }, 4000);
+    let res;
+    try { res = await fetch('https://api.pwnedpasswords.com/range/' + prefix, { signal: ctl.signal }); }
+    finally { clearTimeout(timer); }
+    if(!res || !res.ok) return { breached:false, checked:false, count:0 };
+    const body = await res.text();
+    const lines = body.split('\n');
+    for(let i=0;i<lines.length;i++){
+      const parts = lines[i].trim().split(':');
+      if(parts[0] === suffix) return { breached:true, checked:true, count:parseInt(parts[1]||'0',10) };
+    }
+    return { breached:false, checked:true, count:0 };
+  }catch(_){ return { breached:false, checked:false, count:0 }; }
+}
+
+/* Mirrors the SERVER policy (min 10 chars + lower + upper + digit). Kept in sync
+   deliberately: a client that accepts 6 chars just produces a confusing
+   server-side rejection at signup. Returns an error string, or '' if OK. */
+function _pwPolicyError(pw){
+  if(!pw || pw.length < 10) return 'Password must be at least 10 characters';
+  if(!/[a-z]/.test(pw))     return 'Add at least one lowercase letter';
+  if(!/[A-Z]/.test(pw))     return 'Add at least one uppercase letter';
+  if(!/[0-9]/.test(pw))     return 'Add at least one number';
+  return '';
 }
 
 function authCheckStrength(pass) {
@@ -14440,7 +14488,8 @@ async function authRegister() {
   if(!username || username.length < 3) { _authMarkErr('auth_reg_user','auth_reg_user_err','Username must be at least 3 characters'); valid=false; }
   if(!/^[a-zA-Z0-9_.-]+$/.test(username)) { _authMarkErr('auth_reg_user','auth_reg_user_err','Only letters, numbers, _ . - allowed'); valid=false; }
   if(!email || !email.includes('@')) { _authMarkErr('auth_reg_email','auth_reg_email_err','Enter a valid email'); valid=false; }
-  if(!pass || pass.length < 6) { _authMarkErr('auth_reg_pass','auth_reg_pass_err','Password must be at least 6 characters'); valid=false; }
+  var _pwErr = _pwPolicyError(pass);
+  if(_pwErr) { _authMarkErr('auth_reg_pass','auth_reg_pass_err',_pwErr); valid=false; }
   if(pass !== pass2) { _authMarkErr('auth_reg_pass2','auth_reg_pass2_err','Passwords do not match'); valid=false; }
   if(!valid) return;
 
@@ -14453,6 +14502,15 @@ async function authRegister() {
 
     if(_sbOk()) {
       // ── Supabase path ──
+      // SECURITY: refuse passwords known to be in breach corpora (free HIBP
+      // k-anonymity check — see _pwBreached). Fails open on API trouble.
+      const _brk = await _pwBreached(pass);
+      if(_brk.breached){
+        if(btn){ btn.disabled=false; btn.textContent='Create Account'; }
+        _authMarkErr('auth_reg_pass','auth_reg_pass_err',
+          'This password has appeared in known data breaches (' + _brk.count.toLocaleString() + ' times). Pick a different one.');
+        return;
+      }
       const { data, error } = await _sbClient().auth.signUp({
         email,
         password: pass,
@@ -31254,6 +31312,72 @@ body.modal-open .ai-fab {
 })();
 </script>
 
+<script>
+/* ══════════════════════════════════════════════════════════════════════════
+   SESSION HYGIENE (2026-07-25) — free replacement for Supabase Pro's paid
+   "session timebox / inactivity timeout". A financial-data product shouldn't
+   leave a session valid forever on a shared, lost, or stolen device.
+   Enforced here, then signOut() revokes the refresh token server-side, so the
+   session is genuinely dead — not merely hidden in the UI.
+     • idle  > 24 hours → sign out
+     • age   > 30 days  → sign out (absolute cap)
+   Fails SAFE: if the session helpers aren't loaded yet it does nothing, so it
+   can never sign someone out spuriously.
+   ══════════════════════════════════════════════════════════════════════════ */
+(function(){
+  var IDLE_MS = 24*60*60*1000;
+  var MAX_MS  = 30*24*60*60*1000;
+  var K_LAST='pp_sess_last', K_START='pp_sess_start', K_WHY='pp_sess_expired';
+  function gi(k){ try{ return parseInt(localStorage.getItem(k)||'0',10)||0; }catch(_){ return 0; } }
+  function si(k,v){ try{ localStorage.setItem(k,String(v)); }catch(_){ } }
+  function signedIn(){
+    try{
+      var s = (typeof _getSession==='function') ? _getSession() : null;
+      return !!(s && s.userId && s.userId !== 'guest');
+    }catch(_){ return false; }
+  }
+  var lastWrite = 0;
+  function touch(){
+    if(!signedIn()) return;
+    var t = Date.now();
+    if(t - lastWrite < 60000) return;          // throttle writes to 1/min
+    lastWrite = t; si(K_LAST, t);
+    if(!gi(K_START)) si(K_START, t);
+  }
+  async function expire(reason){
+    try{ if(typeof _sbClient==='function') await _sbClient().auth.signOut(); }catch(_){ }
+    try{ localStorage.removeItem(K_LAST); localStorage.removeItem(K_START); }catch(_){ }
+    try{ sessionStorage.setItem(K_WHY, reason); }catch(_){ }
+    location.reload();
+  }
+  function check(){
+    if(!signedIn()) return;
+    var t = Date.now(), last = gi(K_LAST), start = gi(K_START);
+    if(!last){ si(K_LAST, t); return; }        // first observation — start the clock
+    if(!start){ si(K_START, t); return; }
+    if(t - last  > IDLE_MS) return expire('idle');
+    if(t - start > MAX_MS)  return expire('max');
+  }
+  ['click','keydown','pointerdown','visibilitychange'].forEach(function(ev){
+    document.addEventListener(ev, touch, { passive:true });
+  });
+  setTimeout(function(){ touch(); check(); }, 4000);   // let auth bootstrap first
+  setInterval(check, 5*60*1000);
+  try{
+    var why = sessionStorage.getItem(K_WHY);
+    if(why){
+      sessionStorage.removeItem(K_WHY);
+      setTimeout(function(){
+        var m = (why==='idle')
+          ? 'Signed out after 24 hours of inactivity — please sign in again.'
+          : 'Your session hit its 30-day limit — please sign in again.';
+        if(typeof showProjToast==='function') showProjToast('🔒 ' + m);
+        else console.info('[session] ' + m);
+      }, 1800);
+    }
+  }catch(_){ }
+})();
+</script>
 <script>
 (function(){
   // ── Casual-copy deterrent. NOT a security boundary. ──────────────────────
