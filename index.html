@@ -8687,8 +8687,10 @@ var JP_SHARED_DEALS_SQL = ''
   + '  expires_at timestamptz\n'
   + ');\n'
   + 'alter table jp_shared_deals enable row level security;\n'
-  + 'create policy "public read shared deals" on jp_shared_deals for select using (expires_at is null or expires_at > now());\n'
-  + 'create policy "anyone create shared deals" on jp_shared_deals for insert with check (true);';
+  + '-- NOTE: no public SELECT policy on purpose. Reads go through the\n'
+  + '-- get_shared_deal(p_code) SECURITY DEFINER rpc so a caller must know the\n'
+  + '-- code; a blanket select policy would expose every shared deal.\n'
+  + 'create policy "paid users create shared deals" on jp_shared_deals for insert to authenticated with check (public.is_paid(auth.uid()));';
 
 async function _sbCreateShareCode(payload){
   if(!_sbOk()) return null;
@@ -8720,10 +8722,15 @@ async function _sbCreateShareCode(payload){
 async function _sbLoadByCode(code){
   if(!_sbOk()) return null;
   try {
-    var resp = await _sbClient().from('jp_shared_deals')
-      .select('payload_json').eq('code', code).maybeSingle();
-    if(resp.error || !resp.data) return null;
-    return JSON.parse(resp.data.payload_json);
+    // SECURITY 2026-07-25: reads now go through the get_shared_deal RPC.
+    // The old direct table SELECT was world-readable (the RLS policy had no
+    // code predicate), so anyone holding the public anon key could dump every
+    // shared deal's financials. The RPC demands the code and returns one row.
+    var resp = await _sbClient().rpc('get_shared_deal', { p_code: code });
+    if(resp.error){ console.warn('[share load]', resp.error.message); return null; }
+    var row = Array.isArray(resp.data) ? resp.data[0] : resp.data;
+    if(!row || !row.payload_json) return null;
+    return JSON.parse(row.payload_json);
   } catch(e){ console.warn('[share load]', e); return null; }
 }
 
