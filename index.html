@@ -10638,6 +10638,21 @@ async function _anthropicFetch(payload, opts) {
       throw new Error(msg);
     }
   }
+  // 402 → the SERVER-SIDE payment gate refused: no payment method on file.
+  // The overlay in this page is only UX (dev-tools can delete it); the edge
+  // function is the authority. Re-open the paywall so the user sees why, and
+  // refresh the banner in case their status changed (e.g. card just lapsed).
+  if (resp.status === 402) {
+    var pmsg = 'Add a payment method to start your 7-day free trial — you will not be charged today.';
+    try {
+      var pj = JSON.parse(await resp.clone().text());
+      if (pj && pj.error) pmsg = pj.error;
+    } catch(_){}
+    try { if (typeof _profileCache !== 'undefined') _profileCache = null; } catch(_){}
+    try { if (typeof trialUpdateBanner === 'function') trialUpdateBanner(); } catch(_){}
+    try { if (typeof trialOpenPaywall === 'function') trialOpenPaywall(); } catch(_){}
+    throw new Error(pmsg);
+  }
   return resp;
 }
 
