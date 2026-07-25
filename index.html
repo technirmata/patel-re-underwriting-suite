@@ -8215,28 +8215,28 @@ Return a JSON array:
     const cards = strategies.map((s,i)=>`
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-          <div style="font-size:15px;font-weight:700;color:var(--text)">✨ ${s.strategy}</div>
-          <span style="background:${feasColors[s.feasibility]||'var(--accent)'};color:#000;font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;text-transform:uppercase">${s.feasibility||'Moderate'}</span>
+          <div style="font-size:15px;font-weight:700;color:var(--text)">✨ ${_e(s.strategy)}</div>
+          <span style="background:${feasColors[s.feasibility]||'var(--accent)'};color:#000;font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;text-transform:uppercase">${_e(s.feasibility||'Moderate')}</span>
         </div>
-        <p style="font-size:13px;color:var(--text2);margin:0 0 10px">${s.description}</p>
+        <p style="font-size:13px;color:var(--text2);margin:0 0 10px">${_e(s.description)}</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
           <div style="background:var(--surface3);border-radius:7px;padding:8px">
             <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Cash Flow Impact</div>
-            <div style="font-size:14px;font-weight:700;color:var(--green);margin-top:2px">${s.cash_flow_impact}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--green);margin-top:2px">${_e(s.cash_flow_impact)}</div>
           </div>
           <div style="background:var(--surface3);border-radius:7px;padding:8px">
             <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">CoC Return</div>
-            <div style="font-size:14px;font-weight:700;color:var(--accent);margin-top:2px">${s.coc_impact}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--accent);margin-top:2px">${_e(s.coc_impact)}</div>
           </div>
           <div style="background:var(--surface3);border-radius:7px;padding:8px">
             <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Cash Required</div>
-            <div style="font-size:13px;font-weight:600;color:var(--yellow);margin-top:2px">${s.cash_required}</div>
+            <div style="font-size:13px;font-weight:600;color:var(--yellow);margin-top:2px">${_e(s.cash_required)}</div>
           </div>
         </div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:8px"><strong style="color:var(--text)">How to Execute:</strong> ${s.how_to_execute}</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px"><strong style="color:var(--text)">How to Execute:</strong> ${_e(s.how_to_execute)}</div>
         <div style="display:flex;gap:16px;flex-wrap:wrap">
-          <div>${(s.pros||[]).map(p=>`<div style="font-size:11px;color:var(--green)">✅ ${p}</div>`).join('')}</div>
-          <div>${(s.cons||[]).map(c=>`<div style="font-size:11px;color:var(--red)">⚠️ ${c}</div>`).join('')}</div>
+          <div>${(s.pros||[]).map(p=>`<div style="font-size:11px;color:var(--green)">✅ ${_e(p)}</div>`).join('')}</div>
+          <div>${(s.cons||[]).map(c=>`<div style="font-size:11px;color:var(--red)">⚠️ ${_e(c)}</div>`).join('')}</div>
         </div>
       </div>`).join('');
     if(panel) panel.innerHTML = `
@@ -8246,7 +8246,7 @@ Return a JSON array:
         ${cards}
       </div>`;
   } catch(err) {
-    if(panel) panel.innerHTML = `<div style="color:var(--red);padding:1rem;background:var(--surface2);border-radius:8px;font-size:13px">❌ Error: ${err.message}</div>`;
+    if(panel) panel.innerHTML = `<div style="color:var(--red);padding:1rem;background:var(--surface2);border-radius:8px;font-size:13px">❌ Error: ${_e(err.message)}</div>`;
   } finally {
     if(btn) { btn.disabled = false; btn.textContent = '✨ AI: Propose Creative Financing'; }
   }
@@ -8964,6 +8964,21 @@ function _importSharedPayload(payload){
       // Hard redirect to the actual Supabase magic link. After sign-in,
       // Supabase redirects them back to the app's APP_URL (set in the
       // edge fn's redirectTo), where they land already authenticated.
+      // SECURITY 2026-07-25: scheme-only validation would allow an open
+      // redirect if the RPC ever returned an attacker-influenced URL.
+      // Pin it to our own Supabase project / app origin.
+      try {
+        var _mu = new URL(magicUrl);
+        var _hostOk = /\.supabase\.co$/i.test(_mu.hostname)
+                      || /(^|\.)patelprotocol\.com$/i.test(_mu.hostname);
+        if (!_hostOk) {
+          _banner('⚠ Invite link points somewhere unexpected — not following it.', '#7c2d12', '#fff');
+          return;
+        }
+      } catch(_) {
+        _banner('⚠ Invite link is malformed.', '#7c2d12', '#fff');
+        return;
+      }
       location.replace(magicUrl);
     }).catch(function(err){
       _banner('⚠ Could not validate invite: ' + (err && err.message || 'unknown error') + '. Try the link again or ask admin for a new one.', '#7c2d12', '#fff');
@@ -14040,11 +14055,11 @@ function renderResearchCard(r) {
 
   // Pros
   const prosEl = el('rcPros');
-  if(prosEl) prosEl.innerHTML = (r.pros||[]).map(p=>`<li style="color:var(--green)" class="fw6">✅ ${p}</li>`).join('');
+  if(prosEl) prosEl.innerHTML = (r.pros||[]).map(p=>`<li style="color:var(--green)" class="fw6">✅ ${_e(p)}</li>`).join('');
 
   // Cons
   const consEl = el('rcCons');
-  if(consEl) consEl.innerHTML = (r.cons||[]).map(p=>`<li style="color:var(--red)">⚠️ ${p}</li>`).join('');
+  if(consEl) consEl.innerHTML = (r.cons||[]).map(p=>`<li style="color:var(--red)">⚠️ ${_e(p)}</li>`).join('');
 
   // Summary
   const sumEl = el('rcSummary');
@@ -16251,7 +16266,12 @@ async function authInit() {
   // rejects any authenticated calls (the fake JWT isn't valid). Only client
   // UI chrome is unlocked.
   try {
-    var _devParams = new URLSearchParams(window.location.search);
+    // SECURITY 2026-07-25: this bypass injects a fake admin+comp session.
+    // Local development / headless QA only — never on the live domain, where
+    // it handed any anonymous visitor a tour of the admin UI.
+    var _devHostOk = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)
+                     || location.protocol === 'file:';
+    var _devParams = new URLSearchParams(_devHostOk ? window.location.search : '');
     if(_devParams.get('dev') === '1') {
       _setSession({
         userId: '00000000-0000-0000-0000-000000000dev',
@@ -20015,7 +20035,7 @@ function _tmApplyPerms(){
 window._tmSwUser=_tmSwUser;window._tmSwitchToOwner=_tmSwitchToOwner;
 
 
-function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 
 /* ── Workspace cloud sync — UI actions (inside teams IIFE) ─────────────── */
@@ -21175,10 +21195,10 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
       card.innerHTML =
         '<div class="pn-inv-hdr">'
           +'<div class="pn-inv-av">'+(inv.name||'?').charAt(0).toUpperCase()+'</div>'
-          +'<div class="pn-inv-name">'+(inv.name||'(unnamed)')+'</div>'
+          +'<div class="pn-inv-name">'+_e(inv.name||'(unnamed)')+'</div>'
           +'<div class="pn-inv-pct">'+pct+'%</div>'
         +'</div>'
-        +'<div class="pn-inv-cap">'+(isGP?'Co-GP':'LP')+' · '+_$(inv.totalIn)+' invested · '+(inv.email||'no email')+'</div>'
+        +'<div class="pn-inv-cap">'+(isGP?'Co-GP':'LP')+' · '+_$(inv.totalIn)+' invested · '+_e(inv.email||'no email')+'</div>'
         +'<div class="pn-inv-stats">'
           +'<div class="pn-inv-stat good"><div class="pn-inv-stat-label">IRR</div><div class="pn-inv-stat-val">'+_pct(inv.irr,1)+'</div></div>'
           +'<div class="pn-inv-stat good"><div class="pn-inv-stat-label">Equity Multiple</div><div class="pn-inv-stat-val">'+(isFinite(inv.em)?inv.em.toFixed(2)+'x':'—')+'</div></div>'
@@ -21280,7 +21300,7 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
     if(!w){ alert('Pop-up blocked — please allow pop-ups.'); return; }
     var appCSS = Array.from(document.querySelectorAll('style')).map(function(x){return x.textContent;}).join('\n');
     var dealName = (typeof gv==='function' && gv('prop_address')) || 'Deal';
-    w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+inv.name+' — Investor Report</title><style>'+appCSS+'</style><style>'
+    w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+_e(inv.name)+' — Investor Report</title><style>'+appCSS+'</style><style>'
       +'@page{margin:.6in .6in;size:letter}'
       +'body{background:#fff!important;color:#111!important;padding:24px;font-family:Inter,system-ui,sans-serif}'
       +'.hdr{border-bottom:2px solid #1b3d6b;padding-bottom:12px;margin-bottom:18px}'
@@ -21752,7 +21772,7 @@ setTimeout(function(){_tmChip();_tmApplyPerms();},300);
 
   function _id(x){return document.getElementById(x);}
 
-function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
   function _redact(s){
     return String(s||'')
       .replace(/sk-ant-[A-Za-z0-9_\-]{20,}/g,'[REDACTED]')
@@ -23613,7 +23633,7 @@ function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 
   function _id(x){return document.getElementById(x);}
   
-function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function _e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
   function _gv(id){ try { return (typeof gvs==='function')?gvs(id):''; } catch(e){return '';} }
   function _gn(id){ try { return (typeof gv==='function')?gv(id):0; } catch(e){return 0;} }
 
